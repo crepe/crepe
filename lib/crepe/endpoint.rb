@@ -15,6 +15,7 @@ module Crepe
     def call env
       reset!
       @env = env
+      @env['crepe.endpoint'] = self
       body = catch(:error) { render }
       [status, headers.merge('Content-Type' => content_type), body]
     end
@@ -57,7 +58,7 @@ module Crepe
     private
 
     def reset!
-      @params = nil
+      @params  = nil
       @request = nil
       @headers = nil
     end
@@ -71,13 +72,13 @@ module Crepe
     end
 
     def body_params
-      return {} unless [:post, :put].include? method
+      return {} unless [:post, :put, :patch].include? method
 
       case content_type
       when 'application/json'
-        Oj.load(request.body.read)
+        Oj.load response.body.read # FIXME: 500 on empty "" body.
       when 'application/xml'
-        Ox.parse(request.body.read)
+        Ox.parse response.body.read
       else
         {}
       end
