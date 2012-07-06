@@ -14,7 +14,6 @@ module Cape
         Cape::Middleware::Pagination,
         Cape::Middleware::RestfulStatus
       ],
-      :prefix     => '/',
       :rescuers   => []
     }
 
@@ -27,11 +26,6 @@ module Cape
           hash[key] = value.dup
           hash
         }
-      end
-
-      def prefix *prefix
-        settings[:prefix] = prefix.first unless prefix.empty?
-        settings[:prefix]
       end
 
       def version name, options = {}, &block
@@ -77,7 +71,7 @@ module Cape
       def route method, path, requirements = {}, &block
         endpoint = build_endpoint block
         mount endpoint, requirements.merge(
-          :at => path, :method => method, :anchor => true
+          :at => "#{path}(.:format)", :method => method, :anchor => true
         )
       end
 
@@ -90,11 +84,8 @@ module Cape
           options.delete app if app
         end
 
-        anchor = options.delete(:anchor) { false }
-        path = mount_path path, options, anchor
-
-        method = options.delete(:method)
-        method = nil if method == :any
+        path = mount_path path, options
+        method = options.delete :method
 
         routes.add_route app, :path_info => path, :request_method => method
       end
@@ -109,13 +100,17 @@ module Cape
         @routes ||= Rack::Mount::RouteSet.new
       end
 
-      def mount_path path, requirements, anchor = false
+      def mount_path path, requirements
         version = settings[:version] && settings[:version][:name]
-        path = [prefix, version.to_s, path].join '/'
+
+        path = "/#{version}/#{path}"
         path.squeeze! '/'
         path.sub! %r{/+\Z}, ''
         path = '/' if path.empty?
+
         separator = requirements.delete(:separator) { %w[ / . ? ] }
+        anchor = requirements.delete(:anchor) { false }
+
         Rack::Mount::Strexp.compile path, requirements, separator, anchor
       end
 
@@ -128,7 +123,6 @@ module Cape
           :handler        => handler,
           :default_format => default_format,
           :formats        => settings[:formats],
-          :prefix         => settings[:prefix],
           :rescuers       => settings[:rescuers],
           :version        => settings[:version]
         )
