@@ -38,7 +38,7 @@ module Crepe
 
     def error code, message, data = {}
       status code
-      throw :error, data.merge(:message => message)
+      throw :error, :error => data.merge(:message => message)
     end
 
     def format
@@ -85,9 +85,9 @@ module Crepe
     end
 
     def render
-      instance_eval(&settings[:handler])
-    rescue Exception => ex
-      handle_exception ex
+      instance_eval &settings[:handler]
+    rescue Exception => e
+      handle_exception e
     end
 
     def handle_exception error
