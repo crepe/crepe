@@ -51,8 +51,13 @@ module Cape
       end
 
       def helper mod = nil, &block
-        mod = Module.new &block if block_given?
-        raise ArgumentError, "module or block required" unless mod.is_a? Module
+        if block_given?
+          warn 'block takes precedence over module' if mod
+          mod = Module.new &block
+        end
+        unless mod.is_a? Module
+          raise ArgumentError, 'module or block required'
+        end
         settings[:helpers] << mod
       end
 

@@ -8,6 +8,7 @@ module Cape
 
       def call env
         if env['REQUEST_METHOD'] == 'HEAD'
+          env['cape.original_request_method'] = 'HEAD'
           env['REQUEST_METHOD'] = 'GET'
           status, headers, _ = @app.call env
           [status, headers, []]
