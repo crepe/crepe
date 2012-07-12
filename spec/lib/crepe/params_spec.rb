@@ -1,7 +1,7 @@
 require_relative '../../../lib/crepe/params'
 
 describe Crepe::Params do
-  let(:params) { subject }
+  subject :params
 
   describe '#require' do
     context 'with a present key' do
