@@ -1,7 +1,7 @@
 require_relative '../../../lib/cape/params'
 
 describe Cape::Params do
-  let(:params) { subject }
+  subject :params
 
   describe '#require' do
     context 'with a present key' do
