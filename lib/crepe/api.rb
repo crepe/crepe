@@ -14,7 +14,8 @@ module Crepe
         Crepe::Middleware::Pagination,
         Crepe::Middleware::RestfulStatus
       ],
-      :rescuers   => []
+      :rescuers   => [],
+      :endpoints  => []
     }
 
     class << self
@@ -62,7 +63,7 @@ module Crepe
       end
 
       def call env
-        routes.freeze.call env
+        app.call env
       end
 
       %w[get post put patch delete].each do |method|
@@ -74,10 +75,11 @@ module Crepe
       end
 
       def route method, path, requirements = {}, &block
-        endpoint = build_endpoint block
-        mount endpoint, requirements.merge(
-          :at => "#{path}(.:format)", :method => method, :anchor => true
-        )
+        settings[:endpoints] << {
+          :handler => block, :options => requirements.merge(
+            :at => "#{path}(.:format)", :method => method, :anchor => true
+          )
+        }
       end
 
       def mount app, options = nil
@@ -100,6 +102,15 @@ module Crepe
       attr_writer :settings
 
       private
+
+      def app
+        @app ||= begin
+          settings[:endpoints].each do |route|
+            mount build_endpoint(route[:handler]), route[:options]
+          end
+          routes.freeze
+        end
+      end
 
       def routes
         @routes ||= Rack::Mount::RouteSet.new
