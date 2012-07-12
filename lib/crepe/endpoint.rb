@@ -90,17 +90,17 @@ module Crepe
       handle_exception e
     end
 
-    def handle_exception error
+    def handle_exception exception
       rescuer = settings[:rescuers].find do |r|
-        error_class = eval("::#{r[:class_name]}") rescue nil
-        error_class && error.kind_of?(error_class)
+        exception_class = eval("::#{r[:class_name]}") rescue nil
+        exception_class && exception.kind_of?(exception_class)
       end
 
       if rescuer && rescuer[:block]
-        instance_exec(error, &rescuer[:block])
+        instance_exec(exception, &rescuer[:block])
       else
         code = rescuer && rescuer[:options][:status] || 500
-        error! code, error.message, :backtrace => error.backtrace
+        error! code, exception.message, :backtrace => exception.backtrace
       end
     end
 
