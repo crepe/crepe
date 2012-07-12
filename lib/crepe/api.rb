@@ -139,6 +139,7 @@ module Crepe
           :handler        => handler,
           :default_format => default_format,
           :formats        => settings[:formats],
+          :helpers        => settings[:helpers],
           :rescuers       => settings[:rescuers],
           :version        => settings[:version]
         )

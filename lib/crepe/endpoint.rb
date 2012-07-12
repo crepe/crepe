@@ -13,11 +13,7 @@ module Crepe
     end
 
     def call env
-      reset!
-      @env = env
-      @env['crepe.endpoint'] = self
-      body = catch(:error) { render }
-      [status, headers.merge('Content-Type' => content_type), body]
+      dup.call! env
     end
 
     def logger
@@ -55,13 +51,17 @@ module Crepe
       @status || 200
     end
 
-    private
+    protected
 
-    def reset!
-      @params  = nil
-      @request = nil
-      @headers = nil
+    def call! env
+      extend *settings[:helpers]
+      @env = env
+      @env['crepe.endpoint'] = self
+      body = catch(:error) { render }
+      [status, headers.merge('Content-Type' => content_type), body]
     end
+
+    private
 
     def method
       request.request_method.downcase.to_sym
