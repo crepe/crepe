@@ -36,7 +36,7 @@ module Cape
       @request ||= Rack::Request.new env
     end
 
-    def error code, message, data = {}
+    def error! code, message, data = {}
       status code
       throw :error, :error => data.merge(:message => message)
     end
@@ -100,7 +100,7 @@ module Cape
         instance_exec(error, &rescuer[:block])
       else
         code = rescuer && rescuer[:options][:status] || 500
-        error code, error.message, :backtrace => error.backtrace
+        error! code, error.message, :backtrace => error.backtrace
       end
     end
 
