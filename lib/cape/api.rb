@@ -7,12 +7,8 @@ module Cape
       :formats    => %w[json],
       :helpers    => [],
       :middleware => [
-        Rack::Deflater,
-        Rack::ETag,
         Cape::Middleware::Format,
-        Cape::Middleware::Head,
-        Cape::Middleware::Pagination,
-        Cape::Middleware::RestfulStatus
+        Cape::Middleware::Pagination
       ],
       :rescuers   => [],
       :endpoints  => []
@@ -108,7 +104,15 @@ module Cape
           settings[:endpoints].each do |route|
             mount build_endpoint(route[:handler]), route[:options]
           end
-          routes.freeze
+          app = Rack::Builder.new do
+            use Rack::Deflater
+            use Rack::ETag
+            use Cape::Middleware::ContentNegotiation
+            use Cape::Middleware::Head
+            use Cape::Middleware::RestfulStatus
+          end
+          app.run routes.freeze
+          app.to_app
         end
       end
 
