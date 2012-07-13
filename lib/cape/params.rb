@@ -49,10 +49,10 @@ module Cape
 
     private
 
-    def method_missing method_name, *args, &block
-      value = @params.send method_name, *args, &block
-      value.is_a?(::Hash) ? ::Cape::Params.new(value) : value
-    end
+      def method_missing method_name, *args, &block
+        value = @params.send method_name, *args, &block
+        value.is_a?(::Hash) ? ::Cape::Params.new(value) : value
+      end
 
   end
 end
