@@ -18,6 +18,8 @@ module Crepe
 
       attr_reader :settings
 
+      attr_accessor :running
+
       def inherited subclass
         subclass.settings = settings.inject({}) { |hash, (key, value)|
           hash[key] = value.dup
@@ -104,15 +106,22 @@ module Crepe
             settings[:endpoints].each do |route|
               mount build_endpoint(route[:handler]), route[:options]
             end
-            app = Rack::Builder.new do
-              use Rack::Deflater
-              use Rack::ETag
-              use Crepe::Middleware::ContentNegotiation
-              use Crepe::Middleware::Head
-              use Crepe::Middleware::RestfulStatus
+
+            if Crepe::API.running
+              app = routes.freeze
+            else
+              builder = Rack::Builder.new do
+                use Rack::Deflater
+                use Rack::ETag
+                use Crepe::Middleware::ContentNegotiation
+                use Crepe::Middleware::Head
+                use Crepe::Middleware::RestfulStatus
+              end
+              builder.run routes.freeze
+              app = builder.to_app
+              Crepe::API.running = true
             end
-            app.run routes.freeze
-            app.to_app
+            app
           end
         end
 
@@ -139,7 +148,7 @@ module Crepe
         end
 
         def build_endpoint handler
-          app = Endpoint.new(
+          endpoint = Endpoint.new(
             :handler        => handler,
             :default_format => default_format,
             :formats        => settings[:formats],
@@ -152,10 +161,7 @@ module Crepe
 
           settings[:middleware].each { |middleware| builder.use *middleware }
 
-          helpers = settings[:helpers]
-          app.extend *helpers unless helpers.empty?
-
-          builder.run app
+          builder.run endpoint
           builder.to_app
         end
 
