@@ -13,14 +13,14 @@ module Cape
 
         status, headers, resource = @app.call env
 
-        resource = resource.to_a if resource.respond_to? :to_a
+        resource = resource.to_ary if resource.respond_to? :to_ary
         resource_name = Helper.data_name resource
 
         engine = Tilt.new template_path(resource_name.pluralize)
 
         context = env['cape.endpoint']
         context.instance_variable_set "@#{resource_name}", resource
-        body = engine.render context, {}
+        body = engine.render context
 
         [status, headers, [body]]
       end
