@@ -27,13 +27,13 @@ module Crepe
 
       private
 
-      def template_path path
-        unless view_path = Rabl.configuration.view_paths.first
-          raise 'Use Rabl.configuration to set #view_paths'
+        def template_path path
+          unless view_path = Rabl.configuration.view_paths.first
+            raise 'Use Rabl.configuration to set #view_paths'
+          end
+          path += '.rabl' unless File.extname(path) == '.rabl'
+          File.join view_path, path
         end
-        path += '.rabl' unless File.extname(path) == '.rabl'
-        File.join view_path, path
-      end
 
     end
   end

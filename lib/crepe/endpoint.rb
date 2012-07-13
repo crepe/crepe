@@ -53,56 +53,56 @@ module Crepe
 
     protected
 
-    def call! env
-      extend *settings[:helpers]
-      @env = env
-      @env['crepe.endpoint'] = self
-      body = catch(:error) { render }
-      [status, headers.merge('Content-Type' => content_type), body]
-    end
+      def call! env
+        extend *settings[:helpers]
+        @env = env
+        @env['crepe.endpoint'] = self
+        body = catch(:error) { render }
+        [status, headers.merge('Content-Type' => content_type), body]
+      end
 
     private
 
-    def method
-      request.request_method.downcase.to_sym
-    end
-
-    def query_params
-      request.params.merge(env["rack.routing_args"] || {})
-    end
-
-    def body_params
-      return {} unless [:post, :put, :patch].include? method
-
-      case content_type
-      when 'application/json'
-        Oj.load response.body.read # FIXME: 500 on empty "" body.
-      when 'application/xml'
-        Ox.parse response.body.read
-      else
-        {}
-      end
-    end
-
-    def render
-      instance_eval &settings[:handler]
-    rescue Exception => e
-      handle_exception e
-    end
-
-    def handle_exception exception
-      rescuer = settings[:rescuers].find do |r|
-        exception_class = eval("::#{r[:class_name]}") rescue nil
-        exception_class && exception.kind_of?(exception_class)
+      def method
+        request.request_method.downcase.to_sym
       end
 
-      if rescuer && rescuer[:block]
-        instance_exec(exception, &rescuer[:block])
-      else
-        code = rescuer && rescuer[:options][:status] || 500
-        error! code, exception.message, :backtrace => exception.backtrace
+      def query_params
+        request.params.merge(env["rack.routing_args"] || {})
       end
-    end
+
+      def body_params
+        return {} unless [:post, :put, :patch].include? method
+
+        case content_type
+        when 'application/json'
+          Oj.load response.body.read # FIXME: 500 on empty "" body.
+        when 'application/xml'
+          Ox.parse response.body.read
+        else
+          {}
+        end
+      end
+
+      def render
+        instance_eval &settings[:handler]
+      rescue Exception => e
+        handle_exception e
+      end
+
+      def handle_exception exception
+        rescuer = settings[:rescuers].find do |r|
+          exception_class = eval("::#{r[:class_name]}") rescue nil
+          exception_class && exception.kind_of?(exception_class)
+        end
+
+        if rescuer && rescuer[:block]
+          instance_exec(exception, &rescuer[:block])
+        else
+          code = rescuer && rescuer[:options][:status] || 500
+          error! code, exception.message, :backtrace => exception.backtrace
+        end
+      end
 
   end
 end

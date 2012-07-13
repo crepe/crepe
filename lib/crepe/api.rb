@@ -95,69 +95,69 @@ module Crepe
 
       protected
 
-      attr_writer :settings
+        attr_writer :settings
 
       private
 
-      def app
-        @app ||= begin
-          settings[:endpoints].each do |route|
-            mount build_endpoint(route[:handler]), route[:options]
+        def app
+          @app ||= begin
+            settings[:endpoints].each do |route|
+              mount build_endpoint(route[:handler]), route[:options]
+            end
+            app = Rack::Builder.new do
+              use Rack::Deflater
+              use Rack::ETag
+              use Crepe::Middleware::ContentNegotiation
+              use Crepe::Middleware::Head
+              use Crepe::Middleware::RestfulStatus
+            end
+            app.run routes.freeze
+            app.to_app
           end
-          app = Rack::Builder.new do
-            use Rack::Deflater
-            use Rack::ETag
-            use Crepe::Middleware::ContentNegotiation
-            use Crepe::Middleware::Head
-            use Crepe::Middleware::RestfulStatus
-          end
-          app.run routes.freeze
-          app.to_app
         end
-      end
 
-      def routes
-        @routes ||= Rack::Mount::RouteSet.new
-      end
+        def routes
+          @routes ||= Rack::Mount::RouteSet.new
+        end
 
-      def mount_path path, requirements
-        version = settings[:version] && settings[:version][:name]
+        def mount_path path, requirements
+          version = settings[:version] && settings[:version][:name]
 
-        path = "/#{version}/#{path}"
-        path.squeeze! '/'
-        path.sub! %r{/+\Z}, ''
-        path = '/' if path.empty?
+          path = "/#{version}/#{path}"
+          path.squeeze! '/'
+          path.sub! %r{/+\Z}, ''
+          path = '/' if path.empty?
 
-        separator = requirements.delete(:separator) { %w[ / . ? ] }
-        anchor = requirements.delete(:anchor) { false }
+          separator = requirements.delete(:separator) { %w[ / . ? ] }
+          anchor = requirements.delete(:anchor) { false }
 
-        Rack::Mount::Strexp.compile path, requirements, separator, anchor
-      end
+          Rack::Mount::Strexp.compile path, requirements, separator, anchor
+        end
 
-      def default_format
-        settings[:formats].first
-      end
+        def default_format
+          settings[:formats].first
+        end
 
-      def build_endpoint handler
-        app = Endpoint.new(
-          :handler        => handler,
-          :default_format => default_format,
-          :formats        => settings[:formats],
-          :helpers        => settings[:helpers],
-          :rescuers       => settings[:rescuers],
-          :version        => settings[:version]
-        )
+        def build_endpoint handler
+          app = Endpoint.new(
+            :handler        => handler,
+            :default_format => default_format,
+            :formats        => settings[:formats],
+            :helpers        => settings[:helpers],
+            :rescuers       => settings[:rescuers],
+            :version        => settings[:version]
+          )
 
-        builder = Rack::Builder.new
+          builder = Rack::Builder.new
 
-        settings[:middleware].each { |middleware| builder.use *middleware }
+          settings[:middleware].each { |middleware| builder.use *middleware }
 
-        helpers = settings[:helpers]
-        app.extend *helpers unless helpers.empty?
+          helpers = settings[:helpers]
+          app.extend *helpers unless helpers.empty?
 
-        builder.run app
-        builder.to_app
-      end
+          builder.run app
+          builder.to_app
+        end
 
     end
 
