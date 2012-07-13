@@ -7,12 +7,8 @@ module Crepe
       :formats    => %w[json],
       :helpers    => [],
       :middleware => [
-        Rack::Deflater,
-        Rack::ETag,
         Crepe::Middleware::Format,
-        Crepe::Middleware::Head,
-        Crepe::Middleware::Pagination,
-        Crepe::Middleware::RestfulStatus
+        Crepe::Middleware::Pagination
       ],
       :rescuers   => [],
       :endpoints  => []
@@ -108,7 +104,15 @@ module Crepe
           settings[:endpoints].each do |route|
             mount build_endpoint(route[:handler]), route[:options]
           end
-          routes.freeze
+          app = Rack::Builder.new do
+            use Rack::Deflater
+            use Rack::ETag
+            use Crepe::Middleware::ContentNegotiation
+            use Crepe::Middleware::Head
+            use Crepe::Middleware::RestfulStatus
+          end
+          app.run routes.freeze
+          app.to_app
         end
       end
 
