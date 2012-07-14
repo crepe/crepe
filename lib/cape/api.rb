@@ -3,6 +3,8 @@ require 'rack/mount'
 module Cape
   class API
 
+    @running = false
+
     @settings = {
       :formats    => %w[json],
       :helpers    => [],
@@ -18,7 +20,13 @@ module Cape
 
       attr_reader :settings
 
-      attr_accessor :running
+      def running?
+        @running
+      end
+
+      def running!
+        @running = true
+      end
 
       def inherited subclass
         subclass.settings = settings.inject({}) { |hash, (key, value)|
@@ -107,7 +115,7 @@ module Cape
               mount build_endpoint(route[:handler]), route[:options]
             end
 
-            if Cape::API.running
+            if Cape::API.running?
               app = routes.freeze
             else
               builder = Rack::Builder.new do
@@ -120,8 +128,9 @@ module Cape
               end
               builder.run routes.freeze
               app = builder.to_app
-              Cape::API.running = true
+              Cape::API.running!
             end
+
             app
           end
         end
