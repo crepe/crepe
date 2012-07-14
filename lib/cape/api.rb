@@ -111,11 +111,12 @@ module Cape
               app = routes.freeze
             else
               builder = Rack::Builder.new do
-                use Rack::Deflater
-                use Rack::ETag
+                use Rack::Runtime
                 use Cape::Middleware::ContentNegotiation
-                use Cape::Middleware::Head
                 use Cape::Middleware::RestfulStatus
+                use Cape::Middleware::Head
+                use Rack::ConditionalGet
+                use Rack::ETag
               end
               builder.run routes.freeze
               app = builder.to_app
