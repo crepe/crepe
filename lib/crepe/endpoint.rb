@@ -75,7 +75,7 @@ module Crepe
       end
 
       def query_params
-        request.params.merge(env["rack.routing_args"] || {})
+        request.params.merge env["rack.routing_args"] || {}
       end
 
       def body_params
