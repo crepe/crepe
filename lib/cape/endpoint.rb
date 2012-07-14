@@ -51,6 +51,13 @@ module Cape
       @status || 200
     end
 
+    def credentials
+      @credentials ||= begin
+        request = Rack::Auth::Basic::Request.new env
+        request.provided? ? request.credentials : []
+      end
+    end
+
     protected
 
       def call! env
