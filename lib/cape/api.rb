@@ -114,9 +114,10 @@ module Cape
             settings[:endpoints].each do |route|
               mount build_endpoint(route[:handler]), route[:options]
             end
+            routes.freeze
 
             if Cape::API.running?
-              app = routes.freeze
+              app = routes
             else
               builder = Rack::Builder.new do
                 use Rack::Runtime
@@ -126,7 +127,7 @@ module Cape
                 use Rack::ConditionalGet
                 use Rack::ETag
               end
-              builder.run routes.freeze
+              builder.run routes
               app = builder.to_app
               Cape::API.running!
             end
