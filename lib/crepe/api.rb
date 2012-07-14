@@ -111,11 +111,12 @@ module Crepe
               app = routes.freeze
             else
               builder = Rack::Builder.new do
-                use Rack::Deflater
-                use Rack::ETag
+                use Rack::Runtime
                 use Crepe::Middleware::ContentNegotiation
-                use Crepe::Middleware::Head
                 use Crepe::Middleware::RestfulStatus
+                use Crepe::Middleware::Head
+                use Rack::ConditionalGet
+                use Rack::ETag
               end
               builder.run routes.freeze
               app = builder.to_app
