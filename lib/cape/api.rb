@@ -6,12 +6,16 @@ module Cape
     @running = false
 
     @settings = {
+      :middleware => [
+        Rack::Runtime,
+        Middleware::ContentNegotiation,
+        Middleware::RestfulStatus,
+        Middleware::Head,
+        Rack::ConditionalGet,
+        Rack::ETag
+      ],
       :formats    => %w[json],
       :helpers    => [],
-      :middleware => [
-        Cape::Middleware::Format,
-        Cape::Middleware::Pagination
-      ],
       :rescuers   => [],
       :endpoints  => []
     }
@@ -80,12 +84,13 @@ module Cape
         RUBY
       end
 
-      def route method, path, requirements = {}, &block
-        settings[:endpoints] << {
-          :handler => block, :options => requirements.merge(
+      def route method, path, options = {}, &block
+        settings[:endpoints] << options.merge(
+          :handler => block,
+          :conditions => (options[:conditions] ||= {}).merge(
             :at => "#{path}(.:format)", :method => method, :anchor => true
           )
-        }
+        )
       end
 
       def mount app, options = nil
@@ -112,20 +117,19 @@ module Cape
         def app
           @app ||= begin
             settings[:endpoints].each do |route|
-              mount build_endpoint(route[:handler]), route[:options]
+              endpoint = Endpoint.new route.merge(
+                settings.slice(:version, :formats, :helpers, :rescuers)
+              )
+              mount endpoint, route[:conditions]
             end
             routes.freeze
 
             if Cape::API.running?
               app = routes
             else
-              builder = Rack::Builder.new do
-                use Rack::Runtime
-                use Cape::Middleware::ContentNegotiation
-                use Cape::Middleware::RestfulStatus
-                use Cape::Middleware::Head
-                use Rack::ConditionalGet
-                use Rack::ETag
+              builder = Rack::Builder.new
+              settings[:middleware].each do |middleware|
+                builder.use *middleware
               end
               builder.run routes
               app = builder.to_app
@@ -152,28 +156,6 @@ module Cape
           anchor = requirements.delete(:anchor) { false }
 
           Rack::Mount::Strexp.compile path, requirements, separator, anchor
-        end
-
-        def default_format
-          settings[:formats].first
-        end
-
-        def build_endpoint handler
-          endpoint = Endpoint.new(
-            :handler        => handler,
-            :default_format => default_format,
-            :formats        => settings[:formats],
-            :helpers        => settings[:helpers],
-            :rescuers       => settings[:rescuers],
-            :version        => settings[:version]
-          )
-
-          builder = Rack::Builder.new
-
-          settings[:middleware].each { |middleware| builder.use *middleware }
-
-          builder.run endpoint
-          builder.to_app
         end
 
     end

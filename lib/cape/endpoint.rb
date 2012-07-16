@@ -3,6 +3,7 @@ require 'ox'
 
 module Cape
   class Endpoint
+    autoload :Middleware, 'cape/endpoint/middleware'
 
     attr_reader :settings
 
@@ -10,10 +11,19 @@ module Cape
 
     def initialize settings
       @settings = settings
+      (@settings[:middleware] ||= []).concat [
+        Middleware::Format,
+        Middleware::Pagination
+      ]
     end
 
     def call env
-      dup.call! env
+      if endpoint = env['cape.endpoint']
+        body = catch :error, &endpoint.method(:eval_handler)
+        [endpoint.status, endpoint.headers, [body]]
+      else
+        app.call env.merge!('cape.endpoint' => instance(env))
+      end
     end
 
     def logger
@@ -21,7 +31,7 @@ module Cape
     end
 
     def headers
-      @headers ||= {}
+      @headers ||= { 'Content-Type' => content_type }
     end
 
     def params
@@ -38,12 +48,12 @@ module Cape
     end
 
     def format
-      query_params.fetch :format, settings[:default_format]
+      query_params.fetch(:format, settings[:formats].first).to_sym
     end
 
     def content_type
       mime = Rack::Mime.mime_type ".#{format}"
-      headers.fetch 'Content-Type', mime
+      env.fetch 'CONTENT_TYPE', mime
     end
 
     def status *args
@@ -60,18 +70,21 @@ module Cape
 
     protected
 
-      def call! env
-        extend *settings[:helpers]
-        @env = env
-        @env['cape.endpoint'] = self
-        body = catch(:error) { render }
-        [status, headers.merge('Content-Type' => content_type), body]
-      end
+      attr_writer :env
 
     private
 
-      def method
-        request.request_method.downcase.to_sym
+      def app
+        @app ||= begin
+          builder = Rack::Builder.new
+          settings[:middleware].each { |middleware| builder.use *middleware }
+          builder.run self
+          builder.to_app
+        end
+      end
+
+      def instance env
+        dup.extend(*settings[:helpers]).tap { |instance| instance.env = env }
       end
 
       def query_params
@@ -79,11 +92,13 @@ module Cape
       end
 
       def body_params
+        method = request.request_method.downcase.to_sym
         return {} unless [:post, :put, :patch].include? method
+        return {} unless request.body.length > 0
 
         case content_type
         when 'application/json'
-          Oj.load response.body.read # FIXME: 500 on empty "" body.
+          Oj.load response.body.read
         when 'application/xml'
           Ox.parse response.body.read
         else
@@ -91,7 +106,7 @@ module Cape
         end
       end
 
-      def render
+      def eval_handler *_
         instance_eval &settings[:handler]
       rescue Exception => e
         handle_exception e
