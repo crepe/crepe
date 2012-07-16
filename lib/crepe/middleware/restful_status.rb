@@ -1,7 +1,7 @@
 module Crepe
   module Middleware
-
     class RestfulStatus
+
       def initialize app
         @app = app
       end
