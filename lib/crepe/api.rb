@@ -44,8 +44,8 @@ module Crepe
         }
       end
 
-      def version name, options = {}, &block
-        config[:version] = options.merge(:name => name)
+      def version version, &block
+        config[:version] = version
         if block_given?
           instance_eval &block
           config.delete :version
@@ -152,9 +152,7 @@ module Crepe
         end
 
         def mount_path path, requirements
-          version = config[:version] && config[:version][:name]
-
-          path = "/#{version}/#{path}"
+          path = "/#{config[:version]}/#{path}"
           path.squeeze! '/'
           path.sub! %r{/+\Z}, ''
           path = '/' if path.empty?
