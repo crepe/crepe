@@ -1,3 +1,5 @@
+require 'rack/mime'
+
 module Cape
   class Endpoint
 
@@ -6,6 +8,8 @@ module Cape
 
         def filter endpoint
           endpoint.instance_eval do
+            headers['Content-Type'] = Rack::Mime.mime_type ".#{format}"
+
             if request.head?
               self.body = nil
               return
