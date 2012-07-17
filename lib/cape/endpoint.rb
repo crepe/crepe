@@ -28,7 +28,7 @@ module Cape
     end
 
     def format
-      params.fetch(:format, config[:formats].first).to_sym
+      @format ||= params.fetch(:format, config[:formats].first).to_sym
     end
 
     def status *args
