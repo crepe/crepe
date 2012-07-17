@@ -50,20 +50,16 @@ module Crepe
       def call! env
         @env = env
         extend *settings[:helpers]
-        settings[:before].each { |filter| run_filter filter }
         self.body = catch :error do
           begin
+            settings[:before].each { |filter| run_filter filter }
             instance_eval &settings[:handler]
           rescue Exception => e
             handle_exception e
           end
         end
         settings[:after].each { |filter| run_filter filter }
-        [
-          status,
-          headers.merge('Content-Type' => Rack::Mime.mime_type(".#{format}")),
-          [body]
-        ]
+        [status, headers, [body]]
       end
 
     private
