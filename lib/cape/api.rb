@@ -5,7 +5,7 @@ module Cape
 
     @running = false
 
-    @settings = {
+    @config = {
       :after      => [
         Endpoint::Pagination,
         Endpoint::Rendering
@@ -27,7 +27,7 @@ module Cape
 
     class << self
 
-      attr_reader :settings
+      attr_reader :config
 
       def running?
         @running
@@ -38,30 +38,30 @@ module Cape
       end
 
       def inherited subclass
-        subclass.settings = settings.inject({}) { |hash, (key, value)|
+        subclass.config = config.inject({}) { |hash, (key, value)|
           hash[key] = value.dup
           hash
         }
       end
 
       def version name, options = {}, &block
-        settings[:version] = options.merge(:name => name)
+        config[:version] = options.merge(:name => name)
         if block_given?
           instance_eval &block
-          settings.delete :version
+          config.delete :version
         end
       end
 
       def respond_to *formats
-        settings[:formats].concat formats
+        config[:formats].concat formats
       end
 
       def use middleware, *args
-        settings[:middleware] << [middleware, *args]
+        config[:middleware] << [middleware, *args]
       end
 
       def rescue_from exception, options = {}, &block
-        settings[:rescuers] << {
+        config[:rescuers] << {
           :class_name => exception.name, :options => options, :block => block
         }
       end
@@ -74,7 +74,7 @@ module Cape
         unless mod.is_a? Module
           raise ArgumentError, 'block or module required'
         end
-        settings[:helpers] << mod
+        config[:helpers] << mod
       end
 
       def call env
@@ -90,7 +90,7 @@ module Cape
       end
 
       def route method, path, options = {}, &block
-        settings[:endpoints] << options.merge(
+        config[:endpoints] << options.merge(
           :handler => block,
           :conditions => (options[:conditions] || {}).merge(
             :at => "#{path}(.:format)", :method => method, :anchor => true
@@ -115,15 +115,15 @@ module Cape
 
       protected
 
-        attr_writer :settings
+        attr_writer :config
 
       private
 
         def app
           @app ||= begin
-            settings[:endpoints].each do |route|
+            config[:endpoints].each do |route|
               endpoint = Endpoint.new route.merge(
-                settings.slice(
+                config.slice(
                   :after, :before, :formats, :helpers, :rescuers, :version
                 )
               )
@@ -135,7 +135,7 @@ module Cape
               app = routes
             else
               builder = Rack::Builder.new
-              settings[:middleware].each do |middleware|
+              config[:middleware].each do |middleware|
                 builder.use *middleware
               end
               builder.run routes
@@ -152,7 +152,7 @@ module Cape
         end
 
         def mount_path path, requirements
-          version = settings[:version] && settings[:version][:name]
+          version = config[:version] && config[:version][:name]
 
           path = "/#{version}/#{path}"
           path.squeeze! '/'

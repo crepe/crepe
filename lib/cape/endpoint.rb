@@ -5,14 +5,14 @@ module Cape
     autoload :Pagination, 'cape/endpoint/pagination'
     autoload :Rendering,  'cape/endpoint/rendering'
 
-    attr_reader :settings
+    attr_reader :config
 
     attr_reader :env
 
     attr_accessor :body
 
-    def initialize settings
-      @settings = settings
+    def initialize config
+      @config = config
     end
 
     def call env
@@ -28,7 +28,7 @@ module Cape
     end
 
     def format
-      params.fetch(:format, settings[:formats].first).to_sym
+      params.fetch(:format, config[:formats].first).to_sym
     end
 
     def status *args
@@ -49,16 +49,16 @@ module Cape
 
       def call! env
         @env = env
-        extend *settings[:helpers]
+        extend *config[:helpers]
         self.body = catch :error do
           begin
-            settings[:before].each { |filter| run_filter filter }
-            instance_eval &settings[:handler]
+            config[:before].each { |filter| run_filter filter }
+            instance_eval &config[:handler]
           rescue Exception => e
             handle_exception e
           end
         end
-        settings[:after].each { |filter| run_filter filter }
+        config[:after].each { |filter| run_filter filter }
         [status, headers, [body]]
       end
 
@@ -71,7 +71,7 @@ module Cape
       end
 
       def handle_exception exception
-        rescuer = settings[:rescuers].find do |r|
+        rescuer = config[:rescuers].find do |r|
           exception_class = eval("::#{r[:class_name]}") rescue nil
           exception_class && exception.kind_of?(exception_class)
         end
