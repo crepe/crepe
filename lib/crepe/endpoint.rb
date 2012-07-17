@@ -42,7 +42,7 @@ module Crepe
 
     def error! code, message, data = {}
       status code
-      throw :error, :error => data.merge(:message => message)
+      throw :error, error: data.merge(message: message)
     end
 
     protected
@@ -80,7 +80,7 @@ module Crepe
           instance_exec(exception, &rescuer[:block])
         else
           code = rescuer && rescuer[:options][:status] || 500
-          error! code, exception.message, :backtrace => exception.backtrace
+          error! code, exception.message, backtrace: exception.backtrace
         end
       end
 

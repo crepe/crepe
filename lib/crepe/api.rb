@@ -6,15 +6,15 @@ module Crepe
     @running = false
 
     @config = {
-      :after      => [
+      after:      [
         Endpoint::Pagination,
         Endpoint::Rendering
       ],
-      :before     => [],
-      :endpoints  => [],
-      :formats    => %w[json],
-      :helpers    => [],
-      :middleware => [
+      before:     [],
+      endpoints:  [],
+      formats:    %w[json],
+      helpers:    [],
+      middleware: [
         Rack::Runtime,
         Middleware::ContentNegotiation,
         Middleware::RestfulStatus,
@@ -22,7 +22,7 @@ module Crepe
         Rack::ConditionalGet,
         Rack::ETag
       ],
-      :rescuers   => []
+      rescuers:   []
     }
 
     class << self
@@ -62,7 +62,7 @@ module Crepe
 
       def rescue_from exception, options = {}, &block
         config[:rescuers] << {
-          :class_name => exception.name, :options => options, :block => block
+          class_name: exception.name, options: options, block: block
         }
       end
 
@@ -91,9 +91,9 @@ module Crepe
 
       def route method, path, options = {}, &block
         config[:endpoints] << options.merge(
-          :handler => block,
-          :conditions => (options[:conditions] || {}).merge(
-            :at => "#{path}(.:format)", :method => method, :anchor => true
+          handler: block,
+          conditions: (options[:conditions] || {}).merge(
+            at: "#{path}(.:format)", method: method, anchor: true
           )
         )
       end
@@ -110,7 +110,7 @@ module Crepe
         path = mount_path path, options
         method = options.delete :method
 
-        routes.add_route app, :path_info => path, :request_method => method
+        routes.add_route app, path_info: path, request_method: method
       end
 
       protected
