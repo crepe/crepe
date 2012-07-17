@@ -45,6 +45,11 @@ module Cape
       throw :error, error: data.merge(message: message)
     end
 
+    def unauthorized! message = nil, realm = nil
+      headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
+      error! 401, message || 'Unauthorized'
+    end
+
     protected
 
       def call! env
