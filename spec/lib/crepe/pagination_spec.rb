@@ -1,38 +1,42 @@
-require 'spec_helper'
-require_relative '../../../../lib/crepe/middleware/pagination'
+require_relative '../../../../lib/crepe/endpoint/pagination'
+require 'active_support/core_ext/hash/slice'
+require 'ostruct'
 
-describe Crepe::Middleware::Pagination do
-
-  describes_middleware
+describe Crepe::Endpoint::Pagination do
+  subject { Crepe::Endpoint::Pagination }
+  let(:endpoint) { OpenStruct.new body: body, headers: {}, params: params }
+  let(:params) { {} }
 
   context 'paging content' do
-    let(:body) { double paginate: 'paged', count: 0 }
+    let(:body) { double paginate: 'Paged response', count: 0 }
 
     it 'sets the Count header' do
-      get '/'
-      last_response.headers['Count'].should eq('0')
+      subject.filter endpoint
+      endpoint.headers['Count'].should eq('0')
     end
 
     it 'paginates' do
-      get '/'
-      last_response.body.should eq('paged')
+      subject.filter endpoint
+      endpoint.body.should eq('Paged response')
     end
 
     context 'with parameters' do
+      let(:params) { { page: 2, per_page: 4, q: 'query' } }
+
       it 'sends the paging parameters' do
-        body.should_receive(:paginate).with 'page'=>'2', 'per_page'=>'4'
-        get '/?page=2&per_page=4&q=test'
+        body.should_receive(:paginate).with page: 2, per_page: 4
+        subject.filter endpoint
       end
     end
   end
 
   context 'non-paging content' do
-    let(:body) { 'unpaged' }
+    let(:body) { 'Unpaging response' }
 
     it 'passes through' do
-      get '/'
-      last_response.headers.should_not have_key('Count')
-      last_response.body.should eq('unpaged')
+      subject.filter endpoint
+      endpoint.headers.should_not have_key('Count')
+      endpoint.body.should eq('Unpaging response')
     end
   end
 end
