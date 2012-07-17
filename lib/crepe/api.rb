@@ -6,6 +6,14 @@ module Crepe
     @running = false
 
     @settings = {
+      :after      => [
+        Endpoint::Pagination,
+        Endpoint::Rendering
+      ],
+      :before     => [],
+      :endpoints  => [],
+      :formats    => %w[json],
+      :helpers    => [],
       :middleware => [
         Rack::Runtime,
         Middleware::ContentNegotiation,
@@ -14,10 +22,7 @@ module Crepe
         Rack::ConditionalGet,
         Rack::ETag
       ],
-      :formats    => %w[json],
-      :helpers    => [],
-      :rescuers   => [],
-      :endpoints  => []
+      :rescuers   => []
     }
 
     class << self
@@ -67,7 +72,7 @@ module Crepe
           mod = Module.new &block
         end
         unless mod.is_a? Module
-          raise ArgumentError, 'module or block required'
+          raise ArgumentError, 'block or module required'
         end
         settings[:helpers] << mod
       end
@@ -87,7 +92,7 @@ module Crepe
       def route method, path, options = {}, &block
         settings[:endpoints] << options.merge(
           :handler => block,
-          :conditions => (options[:conditions] ||= {}).merge(
+          :conditions => (options[:conditions] || {}).merge(
             :at => "#{path}(.:format)", :method => method, :anchor => true
           )
         )
@@ -118,7 +123,9 @@ module Crepe
           @app ||= begin
             settings[:endpoints].each do |route|
               endpoint = Endpoint.new route.merge(
-                settings.slice(:version, :formats, :helpers, :rescuers)
+                settings.slice(
+                  :after, :before, :formats, :helpers, :rescuers, :version
+                )
               )
               mount endpoint, route[:conditions]
             end
