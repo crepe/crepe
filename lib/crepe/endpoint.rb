@@ -17,11 +17,15 @@ module Crepe
       @config = {
         after:    [],
         before:   [],
-        formats:  [],
+        formats:  %w[json],
         handler:  block,
         helpers:  [],
         rescuers: []
       }.merge config
+
+      if @config[:formats].empty?
+        raise ArgumentError, 'wrong number of formats (at least 1)'
+      end
     end
 
     def call env
