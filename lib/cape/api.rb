@@ -121,12 +121,11 @@ module Cape
 
         def app
           @app ||= begin
+            global_options = config.slice(
+              :after, :before, :formats, :helpers, :rescuers, :version
+            )
             config[:endpoints].each do |route|
-              endpoint = Endpoint.new route.merge(
-                config.slice(
-                  :after, :before, :formats, :helpers, :rescuers, :version
-                )
-              )
+              endpoint = Endpoint.new Util.deeper_merge(global_options, route)
               mount endpoint, route[:conditions]
             end
             routes.freeze
