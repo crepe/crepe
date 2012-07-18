@@ -63,7 +63,7 @@ module Crepe
 
       def call! env
         @env = env
-        extend *config[:helpers]
+        extend *config[:helpers] unless config[:helpers].empty?
         self.body = catch :error do
           begin
             config[:before].each { |filter| run_filter filter }
