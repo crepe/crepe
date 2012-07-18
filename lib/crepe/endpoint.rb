@@ -13,8 +13,15 @@ module Crepe
 
     attr_accessor :body
 
-    def initialize config
-      @config = config
+    def initialize config = {}, &block
+      @config = {
+        after:    [],
+        before:   [],
+        formats:  [],
+        handler:  block,
+        helpers:  [],
+        rescuers: []
+      }.merge config
     end
 
     def call env
