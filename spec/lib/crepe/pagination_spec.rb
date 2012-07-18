@@ -1,6 +1,6 @@
-require_relative '../../../../lib/crepe/endpoint/pagination'
 require 'active_support/core_ext/hash/slice'
 require 'ostruct'
+require_relative '../../../../lib/crepe/endpoint/pagination'
 
 describe Crepe::Endpoint::Pagination do
   subject { Crepe::Endpoint::Pagination }
