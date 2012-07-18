@@ -4,10 +4,10 @@ module Crepe
   class Endpoint
     class Request < Rack::Request
 
-      @@env_cache = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }
+      @@env_keys = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }
 
       def headers
-        @headers ||= Hash.new { |h, k| h[@@env_cache[k]] }.update super
+        @headers ||= Hash.new { |h, k| h.fetch @@env_keys[k], nil }.update env
       end
 
       def method
