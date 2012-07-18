@@ -1,3 +1,5 @@
+require 'cape/params'
+
 module Cape
   class Endpoint
 
