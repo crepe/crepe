@@ -1,3 +1,5 @@
+require 'crepe/params'
+
 module Crepe
   class Endpoint
 
