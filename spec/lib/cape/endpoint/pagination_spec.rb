@@ -1,6 +1,6 @@
-require_relative '../../../../lib/cape/endpoint/pagination'
 require 'active_support/core_ext/hash/slice'
 require 'ostruct'
+require_relative '../../../../lib/cape/endpoint/pagination'
 
 describe Cape::Endpoint::Pagination do
   subject { Cape::Endpoint::Pagination }
