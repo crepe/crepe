@@ -14,14 +14,16 @@ module Crepe
     attr_accessor :body
 
     def initialize config = {}, &block
-      @config = {
+      defaults = {
         after:    [],
         before:   [],
         formats:  %w[json],
         handler:  block,
         helpers:  [],
         rescuers: []
-      }.merge config
+      }
+
+      @config = defaults.update config
 
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
