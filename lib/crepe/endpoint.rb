@@ -97,7 +97,7 @@ module Crepe
         end
 
         if rescuer && rescuer[:block]
-          instance_exec(exception, &rescuer[:block])
+          instance_exec exception, &rescuer[:block]
         else
           code = rescuer && rescuer[:options][:status] || 500
           error! code, exception.message, backtrace: exception.backtrace
