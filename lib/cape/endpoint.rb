@@ -74,7 +74,7 @@ module Cape
           begin
             config[:before].each { |filter| run_filter filter }
             instance_eval &config[:handler]
-          rescue Exception => e
+          rescue => e
             handle_exception e
           end
         end
