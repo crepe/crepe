@@ -1,5 +1,5 @@
 require 'active_support/core_ext/hash/indifferent_access'
-require 'active_support/core_ext/object/blank'
+require 'cape/util'
 
 module Cape
   #--
@@ -18,6 +18,7 @@ module Cape
 
     def initialize params = {}
       @params = ::HashWithIndifferentAccess.new params
+      ::Cape::Util.deep_freeze @params
       @permitted = false
     end
 
@@ -31,15 +32,17 @@ module Cape
 
     def permit *secure_keys
       insecure_keys = keys - secure_keys.map(&:to_s)
-      if insecure_keys.present?
-        raise Invalid, insecure_keys.join(', ')
-      end
+      raise Invalid, insecure_keys.join(', ') unless insecure_keys.empty?
       @permitted = true
       self
     end
 
     def permitted?
       @permitted
+    end
+
+    def dup
+      @params.dup
     end
 
     def respond_to? method_name, include_private = false

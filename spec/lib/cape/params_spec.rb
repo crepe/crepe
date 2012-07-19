@@ -1,13 +1,14 @@
 require_relative '../../../lib/cape/params'
 
 describe Cape::Params do
-  subject :params
+  subject(:params) { Cape::Params.new input }
+  let(:input) { {} }
 
   describe '#require' do
     context 'with a present key' do
       it 'returns its value' do
-        params[:key] = {}
-        params.require(:key).should eq(params[:key])
+        input[:key] = {}
+        params.require(:key).should eq(input[:key])
       end
     end
 
@@ -22,7 +23,8 @@ describe Cape::Params do
 
   describe '#permit' do
     context 'with secure keys' do
-      let(:permitted) { params.update(secure_key: 1).permit(:secure_key) }
+      let(:input) { { secure_key: 1 } }
+      let(:permitted) { params.permit(:secure_key) }
 
       it { expect(permitted).to be_permitted }
       it 'returns itself' do
@@ -31,7 +33,7 @@ describe Cape::Params do
     end
 
     context 'with an insecure key' do
-      before { params.update permitted: 1 }
+      let(:input) { { permitted: 1 } }
 
       it { expect(params).to_not be_permitted }
       it {
@@ -43,4 +45,5 @@ describe Cape::Params do
   end
 
   it { should respond_to(:permitted?) }
+  it { should be_frozen }
 end
