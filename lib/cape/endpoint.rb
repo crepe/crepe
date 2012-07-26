@@ -57,9 +57,7 @@ module Cape
     end
 
     def error! code, message = nil, data = {}
-      status code
-      message ||= Rack::Utils::HTTP_STATUS_CODES[status]
-      throw :error, error: data.merge(message: message)
+      throw :error, error(code, message, data)
     end
 
     def unauthorized! message = nil, data = {}
@@ -106,6 +104,12 @@ module Cape
             :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
+      end
+
+      def error code, message = nil, data = {}
+        status code
+        message ||= Rack::Utils::HTTP_STATUS_CODES[status]
+        { error: data.merge(message: message) }
       end
 
   end
