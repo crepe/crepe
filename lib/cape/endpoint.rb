@@ -24,6 +24,7 @@ module Cape
       }
 
       @config = defaults.update config
+      @status = 200
 
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
@@ -46,9 +47,9 @@ module Cape
       @format ||= params.fetch(:format, config[:formats].first).to_sym
     end
 
-    def status *args
-      @status = args.first unless args.empty?
-      @status || 200
+    def status value = nil
+      @status = Rack::Utils.status_code value if value
+      @status
     end
 
     def headers
@@ -62,7 +63,7 @@ module Cape
 
     def unauthorized! message = nil, realm = nil
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
-      error! 401, message || 'Unauthorized'
+      error! :unauthorized, message || 'Unauthorized'
     end
 
     protected
@@ -99,7 +100,8 @@ module Cape
         if rescuer && rescuer[:block]
           instance_exec exception, &rescuer[:block]
         else
-          code = rescuer && rescuer[:options][:status] || 500
+          code = rescuer && rescuer[:options][:status] ||
+            :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
       end
