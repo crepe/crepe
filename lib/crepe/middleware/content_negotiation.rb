@@ -18,6 +18,7 @@ module Crepe
 
       MIME_TYPES = {
         'application/json' => :json,
+        'application/pdf'  => :pdf,
         'application/xml'  => :xml
       }
 

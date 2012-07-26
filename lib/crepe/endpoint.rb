@@ -11,7 +11,7 @@ module Crepe
 
     attr_reader :env
 
-    attr_accessor :body
+    attr_reader :body
 
     def initialize config = {}, &block
       defaults = {
@@ -84,6 +84,8 @@ module Crepe
       end
 
     private
+
+      attr_writer :body
 
       def run_filter filter
         return filter.filter self if filter.respond_to? :filter
