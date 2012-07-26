@@ -48,7 +48,7 @@ describe Cape::Endpoint do
   end
 
   describe '#unauthorized!' do
-    let(:handler) { proc { unauthorized! 'Not allowed', 'Cape' } }
+    let(:handler) { proc { unauthorized! 'Not allowed', realm: 'Cape' } }
 
     it 'returns 401 Unauthorized' do
       response.status.should eq 401

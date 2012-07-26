@@ -62,9 +62,10 @@ module Cape
       throw :error, error: data.merge(message: message)
     end
 
-    def unauthorized! message = nil, realm = nil
-      headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
-      error! :unauthorized, message
+    def unauthorized! message = nil, data = {}
+      data = message if message.is_a? Hash
+      headers['WWW-Authenticate'] = %(Basic realm="#{data.delete :realm}")
+      error! :unauthorized, message || data.delete(:message), data
     end
 
     protected
