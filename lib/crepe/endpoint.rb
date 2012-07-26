@@ -56,14 +56,15 @@ module Crepe
       @headers ||= {}
     end
 
-    def error! code, message, data = {}
+    def error! code, message = nil, data = {}
       status code
+      message ||= Rack::Utils::HTTP_STATUS_CODES[status]
       throw :error, error: data.merge(message: message)
     end
 
     def unauthorized! message = nil, realm = nil
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
-      error! :unauthorized, message || 'Unauthorized'
+      error! :unauthorized, message
     end
 
     protected
