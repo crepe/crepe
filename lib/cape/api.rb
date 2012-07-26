@@ -53,7 +53,7 @@ module Cape
       end
 
       def respond_to *formats
-        config[:formats].concat formats
+        config[:formats].concat formats.map(&:to_s)
       end
 
       def use middleware, *args
