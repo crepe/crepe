@@ -48,7 +48,7 @@ describe Crepe::Endpoint do
   end
 
   describe '#unauthorized!' do
-    let(:handler) { proc { unauthorized! 'Not allowed', 'Crepe' } }
+    let(:handler) { proc { unauthorized! 'Not allowed', realm: 'Crepe' } }
 
     it 'returns 401 Unauthorized' do
       response.status.should eq 401
