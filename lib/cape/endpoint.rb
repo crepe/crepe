@@ -3,8 +3,8 @@ require 'cape/params'
 module Cape
   class Endpoint
 
-    autoload :Request,    'cape/endpoint/request'
     autoload :Pagination, 'cape/endpoint/pagination'
+    autoload :Request,    'cape/endpoint/request'
     autoload :Rendering,  'cape/endpoint/rendering'
 
     attr_reader :config
