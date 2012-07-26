@@ -3,8 +3,8 @@ require 'crepe/params'
 module Crepe
   class Endpoint
 
-    autoload :Request,    'crepe/endpoint/request'
     autoload :Pagination, 'crepe/endpoint/pagination'
+    autoload :Request,    'crepe/endpoint/request'
     autoload :Rendering,  'crepe/endpoint/rendering'
 
     attr_reader :config
