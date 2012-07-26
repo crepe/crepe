@@ -3,6 +3,7 @@ require 'cape/params'
 module Cape
   class Endpoint
 
+    autoload :Acceptance, 'cape/endpoint/acceptance'
     autoload :Pagination, 'cape/endpoint/pagination'
     autoload :Request,    'cape/endpoint/request'
     autoload :Rendering,  'cape/endpoint/rendering'
@@ -15,8 +16,13 @@ module Cape
 
     def initialize config = {}, &block
       defaults = {
-        after:    [],
-        before:   [],
+        after:    [
+          Pagination,
+          Rendering
+        ],
+        before:   [
+          Acceptance
+        ],
         formats:  %w[json],
         handler:  block,
         helpers:  [],

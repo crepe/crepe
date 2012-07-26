@@ -8,11 +8,6 @@ module Cape
 
         def filter endpoint
           endpoint.instance_eval do
-            unless config[:formats].include? format.to_s
-              @format = config[:formats].first
-              self.body = error :not_acceptable
-            end
-
             headers['Content-Type'] = Rack::Mime.mime_type ".#{format}"
 
             if request.head?
