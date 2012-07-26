@@ -10,7 +10,9 @@ module Crepe
         Endpoint::Pagination,
         Endpoint::Rendering
       ],
-      before:     [],
+      before:     [
+        Endpoint::Acceptance
+      ],
       endpoints:  [],
       formats:    %w[json],
       helpers:    [],

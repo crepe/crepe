@@ -3,6 +3,7 @@ require 'crepe/params'
 module Crepe
   class Endpoint
 
+    autoload :Acceptance, 'crepe/endpoint/acceptance'
     autoload :Pagination, 'crepe/endpoint/pagination'
     autoload :Request,    'crepe/endpoint/request'
     autoload :Rendering,  'crepe/endpoint/rendering'
@@ -15,8 +16,13 @@ module Crepe
 
     def initialize config = {}, &block
       defaults = {
-        after:    [],
-        before:   [],
+        after:    [
+          Pagination,
+          Rendering
+        ],
+        before:   [
+          Acceptance
+        ],
         formats:  %w[json],
         handler:  block,
         helpers:  [],
