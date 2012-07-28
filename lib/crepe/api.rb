@@ -24,7 +24,8 @@ module Crepe
         Rack::ConditionalGet,
         Rack::ETag
       ],
-      rescuers:   []
+      rescuers:   [],
+      vendor:     'crepe'
     }
 
     class << self
@@ -44,6 +45,10 @@ module Crepe
           hash[key] = value.dup
           hash
         }
+      end
+
+      def vendor vendor
+        config[:vendor] = vendor
       end
 
       def version version, &block
@@ -124,7 +129,7 @@ module Crepe
         def app
           @app ||= begin
             global_options = config.slice(
-              :after, :before, :formats, :helpers, :rescuers, :version
+              :after, :before, :formats, :helpers, :rescuers, :vendor
             )
             config[:endpoints].each do |route|
               endpoint = Endpoint.new Util.deeper_merge(global_options, route)
