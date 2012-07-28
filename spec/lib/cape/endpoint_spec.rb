@@ -48,20 +48,34 @@ describe Cape::Endpoint do
   end
 
   describe '#unauthorized!' do
-    let(:handler) { proc { unauthorized! 'Not allowed', realm: 'Cape' } }
+    let(:handler) { proc { unauthorized! realm: 'Cape' } }
 
     it 'returns 401 Unauthorized' do
       response.status.should eq 401
-    end
-
-    it 'returns specified error message' do
-      response.body.should include('Not allowed')
+      response.body.should eq('{"error":{"message":"Unauthorized"}}')
     end
 
     it 'sets WWW-Authenticate header' do
       response.headers.should include(
         'WWW-Authenticate'=>'Basic realm="Cape"'
       )
+    end
+
+    context 'with a message' do
+      let(:handler) { proc { unauthorized! 'Not Allowed', realm: 'Cape' } }
+
+      it 'returns the specified error message' do
+        response.body.should eq('{"error":{"message":"Not Allowed"}}')
+      end
+    end
+
+    context 'with data' do
+      let(:handler) { proc { unauthorized! extra: 'data' } }
+
+      it 'returns the data' do
+        json = '{"error":{"extra":"data","message":"Unauthorized"}}'
+        response.body.should eq(json)
+      end
     end
   end
 end
