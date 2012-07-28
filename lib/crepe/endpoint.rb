@@ -67,7 +67,7 @@ module Crepe
     end
 
     def unauthorized! message = nil, data = {}
-      data = message if message.is_a? Hash
+      data, message = message if message.is_a? Hash
       headers['WWW-Authenticate'] = %(Basic realm="#{data.delete :realm}")
       error! :unauthorized, message || data.delete(:message), data
     end

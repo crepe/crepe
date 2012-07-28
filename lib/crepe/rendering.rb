@@ -1,4 +1,5 @@
 require 'rack/mime'
+require 'active_support/all' # For #to_json.
 
 module Crepe
   class Endpoint
