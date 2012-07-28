@@ -116,8 +116,12 @@ module Cape
 
         path = mount_path path, options
         method = options.delete :method
+        conditions = { path_info: path, request_method: method }
 
-        routes.add_route app, path_info: path, request_method: method
+        defaults = { format: config[:formats].first }
+        defaults[:version] = config[:version].to_s if config[:version]
+
+        routes.add_route app, conditions, defaults
       end
 
       protected

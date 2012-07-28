@@ -50,7 +50,7 @@ module Cape
     end
 
     def format
-      @format ||= params.fetch(:format, config[:formats].first).to_sym
+      @format ||= params[:format].to_sym
     end
 
     def status value = nil
