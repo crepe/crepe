@@ -9,7 +9,12 @@ module Crepe
 
         def filter endpoint
           endpoint.instance_eval do
-            headers['Content-Type'] = Rack::Mime.mime_type ".#{format}"
+            headers['Content-Type'] = '%s+%s' % [
+              [
+                'application/vnd', config[:vendor], params[:version]
+              ].compact.join('.'),
+              Rack::Mime.mime_type(".#{format}").split('/').last || format
+            ]
 
             if request.head?
               self.body = nil
