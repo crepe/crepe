@@ -19,7 +19,9 @@ module Crepe
       MIME_TYPES = {
         'application/json' => :json,
         'application/pdf'  => :pdf,
-        'application/xml'  => :xml
+        'application/xml'  => :xml,
+        'text/html'        => :html,
+        'text/plain'       => :text
       }
 
       def initialize app

@@ -6,15 +6,16 @@ module Crepe
     @running = false
 
     @config = {
+      # FIXME: Don't define this here and in Endpoint. Fix Endpoint#initialize.
       after:      [
-        Endpoint::Pagination,
-        Endpoint::Rendering
       ],
       before:     [
-        Endpoint::Acceptance
+        Endpoint::Filter::Acceptance,
+        Endpoint::Filter::Parser
       ],
       endpoints:  [],
       formats:    %w[json],
+      renderer:   Endpoint::Renderer::Tilt,
       helpers:    [],
       middleware: [
         Rack::Runtime,
