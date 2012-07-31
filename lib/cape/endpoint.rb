@@ -3,28 +3,27 @@ require 'cape/params'
 module Cape
   class Endpoint
 
-    autoload :Acceptance, 'cape/endpoint/acceptance'
-    autoload :Pagination, 'cape/endpoint/pagination'
-    autoload :Request,    'cape/endpoint/request'
-    autoload :Rendering,  'cape/endpoint/rendering'
+    autoload :Filter,   'cape/endpoint/filter'
+    autoload :Renderer, 'cape/endpoint/renderer'
+    autoload :Request,  'cape/endpoint/request'
 
     attr_reader :config
 
     attr_reader :env
 
-    attr_reader :body
+    attr_accessor :body
 
     def initialize config = {}, &block
       defaults = {
         after:    [
-          Pagination,
-          Rendering
         ],
         before:   [
-          Acceptance
+          Filter::Acceptance,
+          Filter::Parser
         ],
         formats:  %w[json],
         handler:  block,
+        renderer: Renderer::Tilt,
         helpers:  [],
         rescuers: []
       }
@@ -62,6 +61,12 @@ module Cape
       @headers ||= {}
     end
 
+    def render object, options = {}
+      self.body ||= catch :head do
+        config[:renderer].new(self).render object, options
+      end
+    end
+
     def error! code, message = nil, data = {}
       throw :error, error(code, message, data)
     end
@@ -77,21 +82,23 @@ module Cape
       def call! env
         @env = env
         extend *config[:helpers] unless config[:helpers].empty?
-        self.body = catch :error do
+
+        error = catch :error do
           begin
             config[:before].each { |filter| run_filter filter }
-            instance_eval &config[:handler]
+            render instance_eval(&config[:handler])
+            break
           rescue => e
             handle_exception e
           end
         end
+        render error if error
         config[:after].each { |filter| run_filter filter }
+
         [status, headers, [body]]
       end
 
     private
-
-      attr_writer :body
 
       def run_filter filter
         return filter.filter self if filter.respond_to? :filter
