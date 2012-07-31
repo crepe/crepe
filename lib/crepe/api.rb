@@ -59,18 +59,28 @@ module Crepe
         end
       end
 
-      def respond_to *formats
-        config[:formats].concat formats.map(&:to_s)
-      end
-
       def use middleware, *args
         config[:middleware] << [middleware, *args]
+      end
+
+      def respond_to *formats
+        config[:formats].concat formats.map(&:to_s)
       end
 
       def rescue_from exception, options = {}, &block
         config[:rescuers] << {
           class_name: exception.name, options: options, block: block
         }
+      end
+
+      def before_filter mod = nil, &block
+        filter = block || mod
+        config[:before] << filter if filter
+      end
+
+      def after_filter mod = nil, &block
+        filter = block || mod
+        config[:after] << filter if filter
       end
 
       def helper mod = nil, &block
