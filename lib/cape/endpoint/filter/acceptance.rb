@@ -8,7 +8,6 @@ module Cape
           def filter endpoint
             endpoint.instance_eval do
               unless config[:formats].include? format.to_s
-                @format = config[:formats].first
                 not_acceptable = true
               end
 
