@@ -1,5 +1,20 @@
+require 'active_support/core_ext/object/duplicable'
+
 module Cape
   module Util
+
+    # Deeply duplicates values in the object passed in. If the object
+    # is a Hash or Array, it recursively dups the object's values.
+    def deep_dup object
+      object = object.dup if object.duplicable?
+
+      case object
+        when Hash  then object.each { |k, v| object[k] = deep_dup v }
+        when Array then object.map { |o| deep_dup o }
+      end
+
+      object
+    end
 
     # See `deeper_merge!`: returns a copy of the original hash, rather
     # than merging it in place.

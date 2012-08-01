@@ -7,28 +7,37 @@ module Cape
     autoload :Renderer, 'cape/endpoint/renderer'
     autoload :Request,  'cape/endpoint/request'
 
+    class << self
+
+      def default_config
+        {
+          after_filters:    [
+          ],
+          before_filters:   [
+            Filter::Acceptance,
+            Filter::Parser
+          ],
+          formats:  %w[json],
+          handler:  nil,
+          helpers:  [],
+          renderer: Renderer::Tilt,
+          rescuers: []
+        }
+      end
+
+    end
+
     attr_reader :config
+
+    attr_reader :handler
 
     attr_reader :env
 
     attr_accessor :body
 
     def initialize config = {}, &block
-      defaults = {
-        after:    [
-        ],
-        before:   [
-          Filter::Acceptance,
-          Filter::Parser
-        ],
-        formats:  %w[json],
-        handler:  block,
-        renderer: Renderer::Tilt,
-        helpers:  [],
-        rescuers: []
-      }
-
-      @config = defaults.update config
+      @config = self.class.default_config.update config
+      @handler = @config[:handler] || block || ->{}
       @status = 200
 
       if @config[:formats].empty?
@@ -85,15 +94,15 @@ module Cape
 
         error = catch :error do
           begin
-            config[:before].each { |filter| run_filter filter }
-            render instance_eval(&config[:handler])
+            config[:before_filters].each { |filter| run_filter filter }
+            render instance_eval(&handler)
             break
           rescue => e
             handle_exception e
           end
         end
         render error if error
-        config[:after].each { |filter| run_filter filter }
+        config[:after_filters].each { |filter| run_filter filter }
 
         [status, headers, [body]]
       end
