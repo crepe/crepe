@@ -28,16 +28,18 @@ module Crepe
 
     attr_reader :config
 
-    attr_reader :handler
-
     attr_reader :env
 
     attr_accessor :body
 
     def initialize config = {}, &block
       @config = self.class.default_config.update config
-      @handler = @config[:handler] || block || ->{}
       @status = 200
+
+      if block
+        warn 'block takes precedence over handler option' if @config[:handler]
+        @config[:handler] = block
+      end
 
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
@@ -94,7 +96,7 @@ module Crepe
         error = catch :error do
           begin
             config[:before_filters].each { |filter| run_filter filter }
-            render instance_eval(&handler)
+            render instance_eval(&config[:handler])
             break
           rescue => e
             handle_exception e
