@@ -1,8 +1,8 @@
 require 'ostruct'
-require_relative '../../../../lib/cape/endpoint/acceptance'
+require_relative '../../../../../lib/cape/endpoint/filter/acceptance'
 
-describe Cape::Endpoint::Acceptance do
-  subject { Cape::Endpoint::Acceptance }
+describe Cape::Endpoint::Filter::Acceptance do
+  subject { Cape::Endpoint::Filter::Acceptance }
   let(:endpoint) {
     # FIXME: Test an actual endpoint?
     OpenStruct.new config: { formats: %w[json] }, format: :pdf
