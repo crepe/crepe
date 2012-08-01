@@ -1,3 +1,4 @@
+require 'active_support/json'
 require 'ostruct'
 require 'rack/mock'
 require_relative '../../../lib/crepe/endpoint'
