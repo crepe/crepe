@@ -11,15 +11,14 @@ module Cape
 
       def default_config
         {
-          after_filters:    [
-          ],
-          before_filters:   [
+          after_filters: [],
+          before_filters: [
             Filter::Acceptance,
             Filter::Parser
           ],
-          formats:  %w[json],
-          handler:  nil,
-          helpers:  [],
+          formats: %w[json],
+          handler: nil,
+          helpers: [],
           renderer: Renderer::Tilt,
           rescuers: []
         }

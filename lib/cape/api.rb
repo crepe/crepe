@@ -25,6 +25,7 @@ module Cape
     class << self
 
       attr_reader :config
+
       attr_reader :endpoint_config
 
       def running?
@@ -130,6 +131,7 @@ module Cape
       protected
 
         attr_writer :config
+
         attr_writer :endpoint_config
 
       private
