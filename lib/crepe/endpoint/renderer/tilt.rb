@@ -40,7 +40,14 @@ module Crepe
               "Missing template #{template_name} with #{path_options}"
           end
 
-          template.render endpoint, template_name => resource
+          # FIXME: this is only needed for Rabl, which doesn't support Tilt
+          # locals properly. Can probably move into a Renderer::Rabl.
+          endpoint.instance_variable_set :"@#{template_name}", resource
+          endpoint.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+            attr_reader :#{template_name}
+          RUBY
+
+          template.render endpoint
         end
 
         private
