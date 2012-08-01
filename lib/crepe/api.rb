@@ -1,3 +1,4 @@
+require 'active_support/core_ext/hash/deep_dup'
 require 'rack/mount'
 
 module Crepe
@@ -6,17 +7,7 @@ module Crepe
     @running = false
 
     @config = {
-      # FIXME: Don't define this here and in Endpoint. Fix Endpoint#initialize.
-      after:      [
-      ],
-      before:     [
-        Endpoint::Filter::Acceptance,
-        Endpoint::Filter::Parser
-      ],
-      endpoints:  [],
-      formats:    %w[json],
-      renderer:   Endpoint::Renderer::Tilt,
-      helpers:    [],
+      endpoints: [],
       middleware: [
         Rack::Runtime,
         Middleware::ContentNegotiation,
@@ -25,13 +16,16 @@ module Crepe
         Rack::ConditionalGet,
         Rack::ETag
       ],
-      rescuers:   [],
-      vendor:     'crepe'
+      vendor: nil,
+      version: nil
     }
+
+    @endpoint_config = Endpoint.default_config
 
     class << self
 
       attr_reader :config
+      attr_reader :endpoint_config
 
       def running?
         @running
@@ -42,10 +36,8 @@ module Crepe
       end
 
       def inherited subclass
-        subclass.config = config.inject({}) { |hash, (key, value)|
-          hash[key] = value.dup
-          hash
-        }
+        subclass.config = Util.deep_dup config
+        subclass.endpoint_config = Util.deep_dup endpoint_config
       end
 
       def vendor vendor
@@ -65,23 +57,23 @@ module Crepe
       end
 
       def respond_to *formats
-        config[:formats].concat formats.map(&:to_s)
+        endpoint_config[:formats].concat formats.map(&:to_s)
       end
 
       def rescue_from exception, options = {}, &block
-        config[:rescuers] << {
+        endpoint_config[:rescuers] << {
           class_name: exception.name, options: options, block: block
         }
       end
 
       def before_filter mod = nil, &block
         filter = block || mod
-        config[:before] << filter if filter
+        endpoint_config[:after_filters] << filter if filter
       end
 
       def after_filter mod = nil, &block
         filter = block || mod
-        config[:after] << filter if filter
+        endpoint_config[:after_filters] << filter if filter
       end
 
       def helper mod = nil, &block
@@ -92,7 +84,7 @@ module Crepe
         unless mod.is_a? Module
           raise ArgumentError, 'block or module required'
         end
-        config[:helpers] << mod
+        endpoint_config[:helpers] << mod
       end
 
       def call env
@@ -129,7 +121,7 @@ module Crepe
         method = options.delete :method
         conditions = { path_info: path, request_method: method }
 
-        defaults = { format: config[:formats].first }
+        defaults = { format: endpoint_config[:formats].first }
         defaults[:version] = config[:version].to_s if config[:version]
 
         routes.add_route app, conditions, defaults
@@ -138,14 +130,13 @@ module Crepe
       protected
 
         attr_writer :config
+        attr_writer :endpoint_config
 
       private
 
         def app
           @app ||= begin
-            global_options = config.slice(
-              :after, :before, :formats, :helpers, :rescuers, :vendor
-            )
+            global_options = endpoint_config.merge config.slice(:vendor)
             config[:endpoints].each do |route|
               endpoint = Endpoint.new Util.deeper_merge(global_options, route)
               mount endpoint, route[:conditions]
