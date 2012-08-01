@@ -47,7 +47,7 @@ module Cape
 
       def version version, &block
         config[:version] = version
-        if block_given?
+        if block
           instance_eval &block
           config.delete :version
         end
@@ -68,17 +68,19 @@ module Cape
       end
 
       def before_filter mod = nil, &block
+        warn 'block takes precedence over module' if block && mod
         filter = block || mod
         endpoint_config[:after_filters] << filter if filter
       end
 
       def after_filter mod = nil, &block
+        warn 'block takes precedence over module' if block && mod
         filter = block || mod
         endpoint_config[:after_filters] << filter if filter
       end
 
       def helper mod = nil, &block
-        if block_given?
+        if block
           warn 'block takes precedence over module' if mod
           mod = Module.new &block
         end
