@@ -2,6 +2,9 @@ require 'crepe/params'
 
 module Crepe
   class Endpoint
+    class Helper < Module
+      include Util::ChainedInclude
+    end
 
     autoload :Filter,   'crepe/endpoint/filter'
     autoload :Renderer, 'crepe/endpoint/renderer'
@@ -18,7 +21,7 @@ module Crepe
           ],
           formats: %w[json],
           handler: nil,
-          helpers: [],
+          helper: Helper.new,
           renderer: Renderer::Tilt,
           rescuers: []
         }
@@ -37,11 +40,11 @@ module Crepe
       @status = 200
 
       if block
-        warn 'block takes precedence over handler option' if @config[:handler]
-        @config[:handler] = block
+        warn 'block takes precedence over handler option' if config[:handler]
+        config[:handler] = block
       end
 
-      if @config[:formats].empty?
+      if config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
     end
@@ -91,7 +94,7 @@ module Crepe
 
       def call! env
         @env = env
-        extend *config[:helpers] unless config[:helpers].empty?
+        extend config[:helper]
 
         error = catch :error do
           begin
