@@ -70,7 +70,7 @@ module Crepe
       def before_filter mod = nil, &block
         warn 'block takes precedence over module' if block && mod
         filter = block || mod
-        endpoint_config[:after_filters] << filter if filter
+        endpoint_config[:before_filters] << filter if filter
       end
 
       def after_filter mod = nil, &block
