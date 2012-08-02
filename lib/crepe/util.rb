@@ -10,7 +10,7 @@ module Crepe
 
       case object
         when Hash  then object.each { |k, v| object[k] = deep_dup v }
-        when Array then object.map { |o| deep_dup o }
+        when Array then object.map! { |o| deep_dup o }
       end
 
       object
