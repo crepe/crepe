@@ -113,16 +113,18 @@ module Cape
 
       def mount app, options = nil
         if options
-          path = options.delete :at
+          path = options.delete(:at) { '/' }
         else
           options = app
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
         end
 
-        path = mount_path path, options
         method = options.delete :method
-        conditions = { path_info: path, request_method: method }
+        method = %r{#{method.join '|'}}i if method.is_a? Array
+
+        path_info = mount_path path, options
+        conditions = { path_info: path_info, request_method: method }
 
         defaults = { format: endpoint_config[:formats].first }
         defaults[:version] = config[:version].to_s if config[:version]
