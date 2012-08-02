@@ -6,8 +6,11 @@ module Cape
 
     @running = false
 
-    @config = {
+    @config = Util::HashStack.new(
+      routes: [],
+      endpoint: Endpoint.default_config,
       endpoints: [],
+      helpers: [],
       middleware: [
         Rack::Runtime,
         Middleware::ContentNegotiation,
@@ -16,17 +19,14 @@ module Cape
         Rack::ConditionalGet,
         Rack::ETag
       ],
+      namespace: nil,
       vendor: nil,
       version: nil
-    }
-
-    @endpoint_config = Endpoint.default_config
+    )
 
     class << self
 
       attr_reader :config
-
-      attr_reader :endpoint_config
 
       def running?
         @running
@@ -38,7 +38,19 @@ module Cape
 
       def inherited subclass
         subclass.config = Util.deep_dup config
-        subclass.endpoint_config = Util.deep_dup endpoint_config
+      end
+
+      def namespace path, options = {}, &block
+        if block
+          config.with namespaced_config(path, options), &block
+        else
+          config[:namespace] = path
+        end
+      end
+      alias_method :resource, :namespace
+
+      def param name, &block
+        namespace "/:#{name}", &block
       end
 
       def vendor vendor
@@ -46,10 +58,8 @@ module Cape
       end
 
       def version version, &block
-        config[:version] = version
-        if block
-          instance_eval &block
-          config.delete :version
+        config.with version: version do
+          namespace version, &block
         end
       end
 
@@ -58,11 +68,11 @@ module Cape
       end
 
       def respond_to *formats
-        endpoint_config[:formats].concat formats.map(&:to_s)
+        config[:endpoint][:formats].concat formats.map(&:to_s)
       end
 
       def rescue_from exception, options = {}, &block
-        endpoint_config[:rescuers] << {
+        config[:endpoint][:rescuers] << {
           class_name: exception.name, options: options, block: block
         }
       end
@@ -70,24 +80,21 @@ module Cape
       def before_filter mod = nil, &block
         warn 'block takes precedence over module' if block && mod
         filter = block || mod
-        endpoint_config[:before_filters] << filter if filter
+        config[:endpoint][:before_filters] << filter if filter
       end
 
       def after_filter mod = nil, &block
         warn 'block takes precedence over module' if block && mod
         filter = block || mod
-        endpoint_config[:after_filters] << filter if filter
+        config[:endpoint][:after_filters] << filter if filter
       end
 
       def helper mod = nil, &block
         if block
           warn 'block takes precedence over module' if mod
-          mod = Module.new &block
+          mod = Module.new(&block)
         end
-        unless mod.is_a? Module
-          raise ArgumentError, 'block or module required'
-        end
-        endpoint_config[:helpers] << mod
+        config[:endpoint][:helper].send :include, mod
       end
 
       def call env
@@ -102,12 +109,15 @@ module Cape
         RUBY
       end
 
-      def route method, path, options = {}, &block
-        config[:endpoints] << options.merge(
-          handler: block,
-          conditions: (options[:conditions] || {}).merge(
-            at: "#{path}(.:format)", method: method, anchor: true
-          )
+      def any *args, &block
+        route nil, *args, &block
+      end
+
+      def route method, path = '/', options = {}, &block
+        options = config[:endpoint].merge(handler: block).merge options
+        config[:endpoints] << (endpoint = Endpoint.new options)
+        mount endpoint, (options[:conditions] || {}).merge(
+          at: path, method: method, anchor: true
         )
       end
 
@@ -126,27 +136,32 @@ module Cape
         path_info = mount_path path, options
         conditions = { path_info: path_info, request_method: method }
 
-        defaults = { format: endpoint_config[:formats].first }
+        defaults = { format: config[:endpoint][:formats].first }
         defaults[:version] = config[:version].to_s if config[:version]
 
-        routes.add_route app, conditions, defaults
+        config[:routes] << [app, conditions, defaults]
       end
 
       protected
 
         attr_writer :config
 
-        attr_writer :endpoint_config
-
       private
+
+        def namespaced_config namespace, options = {}
+          parent_helper = config[:endpoint][:helper]
+          options.merge({
+            namespace: namespace,
+            endpoint: Util.deep_dup(config[:endpoint]).merge(
+              helper: Endpoint::Helper.new { include parent_helper }
+            )
+          })
+        end
 
         def app
           @app ||= begin
-            global_options = endpoint_config.merge config.slice(:vendor)
-            config[:endpoints].each do |route|
-              endpoint = Endpoint.new Util.deeper_merge(global_options, route)
-              mount endpoint, route[:conditions]
-            end
+            routes = Rack::Mount::RouteSet.new
+            config[:routes].each { |route| routes.add_route *route }
             routes.freeze
 
             if Cape::API.running?
@@ -165,20 +180,18 @@ module Cape
           end
         end
 
-        def routes
-          @routes ||= Rack::Mount::RouteSet.new
-        end
+        def mount_path path, conditions
+          namespaces = config.all(:namespace).compact
+          separator = conditions.delete(:separator) { %w[ / . ? ] }
+          anchor = conditions.delete(:anchor) { false }
 
-        def mount_path path, requirements
-          path = "/#{config[:version]}/#{path}"
+          path = '/' + [namespaces, path].flatten.join('/')
           path.squeeze! '/'
           path.sub! %r{/+\Z}, ''
           path = '/' if path.empty?
+          path << '(.:format)' if anchor
 
-          separator = requirements.delete(:separator) { %w[ / . ? ] }
-          anchor = requirements.delete(:anchor) { false }
-
-          Rack::Mount::Strexp.compile path, requirements, separator, anchor
+          Rack::Mount::Strexp.compile path, conditions, separator, anchor
         end
 
     end
