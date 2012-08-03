@@ -1,10 +1,8 @@
+require 'set'
 require 'cape/params'
 
 module Cape
   class Endpoint
-    class Helper < Module
-      include Util::ChainedInclude
-    end
 
     autoload :Filter,   'cape/endpoint/filter'
     autoload :Renderer, 'cape/endpoint/renderer'
@@ -19,10 +17,9 @@ module Cape
             Filter::Acceptance,
             Filter::Parser
           ],
-          formats: %w[json],
+          formats: Set.new([:json]),
           handler: nil,
-          helper: Helper.new,
-          renderer: Renderer::Tilt,
+          renderers: Hash.new(Renderer::Tilt),
           rescuers: []
         }
       end
@@ -36,21 +33,23 @@ module Cape
     attr_accessor :body
 
     def initialize config = {}, &block
-      @config = self.class.default_config.update config
+      @config = self.class.default_config.deep_merge config
       @status = 200
 
       if block
-        warn 'block takes precedence over handler option' if config[:handler]
-        config[:handler] = block
+        warn 'block takes precedence over handler option' if @config[:handler]
+        @config[:handler] = block
       end
 
-      if config[:formats].empty?
+      if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
+
+      @config.freeze
     end
 
     def call env
-      dup.call! env
+      clone.call! env
     end
 
     def request
@@ -74,18 +73,37 @@ module Cape
       @headers ||= {}
     end
 
-    def render object, options = {}
-      self.body ||= catch :head do
-        config[:renderer].new(self).render object, options
+    def content_type
+      @content_type ||= begin
+        extension = format == :json && params[:callback] ? :js : format
+        content_type = Rack::Mime.mime_type ".#{extension}"
+        vendor = config[:vendor]
+        version = params[:version]
+
+        if vendor || version
+          type, subtype = content_type.split '/'
+          content_type  = "#{type}/vnd.#{vendor || 'cape'}"
+          content_type << ".#{version}" if version
+          content_type << "+#{subtype}"
+        end
+
+        content_type
       end
     end
 
-    def error! code, message = nil, data = {}
-      throw :error, error(code, message, data)
+    def render object, options = {}
+      headers['Content-Type'] ||= content_type
+      self.body ||= catch :head do
+        config[:renderers][format].new(self).render object, options
+      end
+    end
+
+    def error! *args
+      throw :error, error(*args)
     end
 
     def unauthorized! message = nil, data = {}
-      data, message = message if message.is_a? Hash
+      data, message = message, nil if message.respond_to? :each_pair
       headers['WWW-Authenticate'] = %(Basic realm="#{data.delete :realm}")
       error! :unauthorized, message || data.delete(:message), data
     end
@@ -94,7 +112,6 @@ module Cape
 
       def call! env
         @env = env
-        extend config[:helper]
 
         error = catch :error do
           begin
@@ -135,6 +152,7 @@ module Cape
       end
 
       def error code, message = nil, data = {}
+        data, message = message, nil if message.respond_to? :each_pair
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
         { error: data.merge(message: message) }
