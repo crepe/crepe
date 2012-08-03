@@ -15,10 +15,6 @@ module Cape
 
       delegate :[]=, :merge!, :delete, to: :top
 
-      def at idx
-        stack[idx]
-      end
-
       def merge hash
         dup.merge! hash
       end
