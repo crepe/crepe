@@ -7,11 +7,20 @@ module Crepe
 
           def filter endpoint
             endpoint.instance_eval do
-              unless config[:formats].include? format.to_s
+              unless config[:formats].include? format
+                @format = config[:formats].first
                 not_acceptable = true
               end
 
-              error! :not_acceptable if not_acceptable
+              if [config[:vendor], env['crepe.vendor']].compact.uniq.length > 1
+                not_acceptable = true
+              end
+
+              if not_acceptable
+                error! :not_acceptable, accepts: config[:formats].map { |f|
+                  content_type.sub(/#{format}$/, f.to_s)
+                }
+              end
             end
           end
 

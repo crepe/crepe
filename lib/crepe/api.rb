@@ -4,13 +4,16 @@ require 'rack/mount'
 module Crepe
   class API
 
+    class Helper < Module
+      include Util::ChainedInclude
+    end
+
     @running = false
 
     @config = Util::HashStack.new(
       routes: [],
       endpoint: Endpoint.default_config,
-      endpoints: [],
-      helpers: [],
+      helper: Helper.new,
       middleware: [
         Rack::Runtime,
         Middleware::ContentNegotiation,
@@ -68,7 +71,16 @@ module Crepe
       end
 
       def respond_to *formats
-        config[:endpoint][:formats].concat formats.map(&:to_s)
+        formats.each do |format|
+          if format.respond_to? :each_pair
+            format.each_pair do |f, renderer|
+              config[:endpoint][:formats] << f.to_sym
+              config[:endpoint][:renderers][f.to_sym] = renderer
+            end
+          else
+            config[:endpoint][:formats] << format.to_sym
+          end
+        end
       end
 
       def rescue_from exception, options = {}, &block
@@ -94,7 +106,7 @@ module Crepe
           warn 'block takes precedence over module' if mod
           mod = Module.new(&block)
         end
-        config[:endpoint][:helper].send :include, mod
+        config[:helper].send :include, mod
       end
 
       def call env
@@ -115,7 +127,7 @@ module Crepe
 
       def route method, path = '/', options = {}, &block
         options = config[:endpoint].merge(handler: block).merge options
-        config[:endpoints] << (endpoint = Endpoint.new options)
+        endpoint = Endpoint.new(options).extend config[:helper]
         mount endpoint, (options[:conditions] || {}).merge(
           at: path, method: method, anchor: true
         )
@@ -131,7 +143,7 @@ module Crepe
         end
 
         method = options.delete :method
-        method = %r{#{method.join '|'}}i if method.is_a? Array
+        method = %r{#{method.join '|'}}i if method.respond_to? :join
 
         path_info = mount_path path, options
         conditions = { path_info: path_info, request_method: method }
@@ -149,13 +161,12 @@ module Crepe
       private
 
         def namespaced_config namespace, options = {}
-          parent_helper = config[:endpoint][:helper]
-          options.merge({
+          parent_helper = config[:helper]
+          options.merge(
             namespace: namespace,
-            endpoint: Util.deep_dup(config[:endpoint]).merge(
-              helper: Endpoint::Helper.new { include parent_helper }
-            )
-          })
+            endpoint: Util.deep_dup(config[:endpoint]),
+            helper: Helper.new { include parent_helper }
+          )
         end
 
         def app
