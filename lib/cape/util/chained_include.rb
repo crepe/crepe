@@ -34,6 +34,17 @@ module Cape
     #   module A
     #     extend ChainedInclude
     #   end
+    #   class B
+    #     include Module A
+    #   end
+    #   module C
+    #     def c
+    #     end
+    #   end
+    #   module A
+    #     include Module C
+    #   end
+    #   B.new.c # => nil
     module ChainedInclude
 
       private
