@@ -1,4 +1,5 @@
 require 'set'
+require 'active_support/core_ext/hash/deep_merge'
 require 'cape/params'
 
 module Cape
