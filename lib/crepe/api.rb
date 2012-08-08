@@ -57,7 +57,7 @@ module Crepe
       end
 
       def vendor vendor
-        config[:vendor] = vendor
+        config[:endpoint][:vendor] = vendor
       end
 
       def version version, &block
