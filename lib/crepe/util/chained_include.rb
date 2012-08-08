@@ -28,8 +28,8 @@ module Crepe
     #   # ...the class will not have access to its methods.
     #   B.new.c # NoMethodError: undefined method `c' for #<B>
     #
-    # To prevent the above error, the original module could have
-    # included ChainedInclude:
+    # To prevent the above error, the original module could have been
+    # extended with ChainedInclude:
     #
     #   module A
     #     extend ChainedInclude
@@ -51,13 +51,13 @@ module Crepe
 
         def include mod
           super
-          extended_by.each { |object| object.extend mod }
+          extending.each { |object| object.extend mod }
           included_by.each { |base| base.__send__ :include, mod }
         end
 
         def extended object
           super
-          extended_by << object
+          extending << object
         end
 
         def included base
@@ -65,8 +65,8 @@ module Crepe
           included_by << base
         end
 
-        def extended_by
-          @_extended_by ||= []
+        def extending
+          @_extending ||= []
         end
 
         def included_by
