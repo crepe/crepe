@@ -3,7 +3,7 @@ module Crepe
     module Renderer
       class Tilt < Base
 
-        class MissingTemplate < StandardError
+        class MissingTemplate < RenderError
         end
 
         class << self
