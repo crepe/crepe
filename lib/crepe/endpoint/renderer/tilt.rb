@@ -76,14 +76,6 @@ module Crepe
             template_path && ::Tilt.new(template_path)
           end
 
-          def model_name object
-            if object.respond_to? :model_name
-              object.model_name.tableize
-            elsif object.class.respond_to? :model_name
-              object.class.model_name.underscore
-            end
-          end
-
       end
     end
   end
