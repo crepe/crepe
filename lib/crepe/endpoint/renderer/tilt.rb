@@ -24,17 +24,14 @@ module Crepe
           resource      = super
 
           format        = options.fetch :format,   endpoint.format
-          handlers      = options.fetch :handlers, [:rabl, :erb]
+          handlers      = options.fetch :handlers, [:rabl, :erb, :*]
           template_name = options.fetch :template, model_name(resource)
 
           unless template_name
             return Simple.new(endpoint).render resource, options
           end
 
-          # FIXME: I think this is part of the problem where we can render an
-          # ERb HTML template for a JSON request and it will still return
-          # Content-Type: 'application/json' instead of 'text/html'...
-          path_options = { formats: [format, :'*'], handlers: handlers }
+          path_options = { format: format, handlers: handlers }
           unless template = find_template(template_name, path_options)
             raise MissingTemplate,
               "Missing template #{template_name} with #{path_options}"
@@ -64,12 +61,13 @@ module Crepe
             search_path = File.expand_path self.class.template_path
             path_query = File.join search_path, original_template_path
 
-            path_options.values.map(&:presence).compact.each do |ext|
-              path_query << '{' + ext.map {|e| ".#{e}" if e }.join(',') + ',}'
-            end
+            format, handlers = path_options.values
+            path_query << '.{%{format}.{%{handlers}},{%{handlers}}}' % {
+              format: format, handlers: handlers.join(',')
+            }
 
             template_path = Dir[path_query].reject { |path|
-              ext = File.basename(path).split(".").last
+              ext = File.basename(path).split('.').last
               File.directory?(path) || ::Tilt.mappings[ext].nil?
             }.first
 
