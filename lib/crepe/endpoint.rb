@@ -1,4 +1,3 @@
-require 'set'
 require 'active_support/core_ext/hash/deep_merge'
 require 'crepe/params'
 
@@ -13,15 +12,15 @@ module Crepe
 
       def default_config
         {
-          after_filters: [],
+          after_filters:  [],
           before_filters: [
             Filter::Acceptance,
             Filter::Parser
           ],
-          formats: Set.new([:json]),
-          handler: nil,
-          renderers: Hash.new(Renderer::Tilt),
-          rescuers: []
+          formats:        [:json],
+          handler:        nil,
+          renderers:      Hash.new(Renderer::Tilt),
+          rescuers:       []
         }
       end
 
