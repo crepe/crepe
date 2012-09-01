@@ -20,5 +20,7 @@ EOF
   s.add_dependency 'activesupport', '~> 3.2.7'
   s.add_dependency 'rack',          '~> 1.4.1'
 
+  s.add_development_dependency 'cane'
+  s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'
 end
