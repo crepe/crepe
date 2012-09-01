@@ -8,10 +8,10 @@ module Crepe
 
         class << self
 
-          attr_writer :template_path
+          attr_reader :template_path
 
-          def template_path
-            @template_path ||= 'app/views'
+          def template_path= template_path
+            @template_path = File.expand_path template_path
           end
 
           def configure
@@ -19,6 +19,8 @@ module Crepe
           end
 
         end
+
+        self.template_path = 'app/views'
 
         def render resource, options = {}
           resource      = super
@@ -57,9 +59,8 @@ module Crepe
             end
           end
 
-          def find_template original_template_path, path_options
-            search_path = File.expand_path self.class.template_path
-            path_query = File.join search_path, original_template_path
+          def find_template relative_path, path_options
+            path_query = File.join self.class.template_path, relative_path
 
             format, handlers = path_options.values
             path_query << '.{%{format}.{%{handlers}},{%{handlers}}}' % {
