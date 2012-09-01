@@ -1,5 +1,13 @@
 module Crepe
   module Middleware
+    # This middleware wraps boths sides of a request.
+    #
+    # Going in, it munges the Rack environment so that a HEAD request
+    # masquerades as a GET request by the time it hits a Crepe Endpoint. The
+    # Crepe request helper will know it's a HEAD request by referring to the
+    # `crepe.original_request_method` environment value.
+    #
+    # Going out, it ensures an empty response body.
     class Head
 
       def initialize app

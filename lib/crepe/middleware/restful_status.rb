@@ -1,5 +1,11 @@
 module Crepe
   module Middleware
+    # This middleware provides intelligent defaults for response status codes
+    # depending on the HTTP verb:
+    #
+    # - POST will provide 201 Created.
+    #
+    # - DELETE will provide 204 No Content (and clear the response body).
     class RestfulStatus
 
       def initialize app

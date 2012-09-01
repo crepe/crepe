@@ -10,9 +10,11 @@ module Crepe
 
     instance_methods.grep(/^[^_]/).each { |m| undef_method m }
 
+    # Raised when a required parameter is missing (see Crepe::Params#require).
     class Missing < ::IndexError
     end
 
+    # Raised when an unpermitted parameter is found (see Crepe::Params#permit).
     class Invalid < ::StandardError
     end
 
