@@ -8,19 +8,17 @@ module Crepe
 
         class << self
 
-          attr_reader :template_path
-
-          def template_path= template_path
-            @template_path = File.expand_path template_path
-          end
-
           def configure
             yield self
           end
 
-        end
+          def template_path
+            @template_path ||= 'app/views'
+          end
 
-        self.template_path = 'app/views'
+          attr_writer :template_path
+
+        end
 
         def render resource, options = {}
           resource      = super
