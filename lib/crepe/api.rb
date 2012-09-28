@@ -102,6 +102,10 @@ module Crepe
         config[:endpoint][:after_filters] << filter if filter
       end
 
+      def basic_auth *args
+        before_filter { unauthorized! *args unless yield request.credentials }
+      end
+
       def helper mod = nil, &block
         if block
           warn 'block takes precedence over module' if mod

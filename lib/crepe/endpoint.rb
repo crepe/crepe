@@ -104,7 +104,8 @@ module Crepe
 
     def unauthorized! message = nil, data = {}
       data, message = message, nil if message.respond_to? :each_pair
-      headers['WWW-Authenticate'] = %(Basic realm="#{data.delete :realm}")
+      realm = data.delete(:realm) { config[:vendor] }
+      headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
       error! :unauthorized, message || data.delete(:message), data
     end
 
