@@ -9,9 +9,9 @@ PATH
   remote: .
   specs:
     crepe (0.0.1.pre)
-      activesupport (~> 3.2.8)
-      rack (~> 1.4.1)
-      rack-mount (~> 0.8.3)
+      activesupport (~> 3.2)
+      rack (~> 1.4)
+      rack-mount (~> 0.8)
 
 GEM
   remote: http://rubygems.org/
