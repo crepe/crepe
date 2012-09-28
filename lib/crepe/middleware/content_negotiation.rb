@@ -71,6 +71,7 @@ module Crepe
 
           if accept[:version]
             path = ::File.join '/', accept[:version], path
+            Util.normalize_path! path
           end
 
           if accept[:format]
