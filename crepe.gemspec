@@ -21,7 +21,8 @@ EOF
   s.add_dependency 'rack',          '~> 1.4'
   s.add_dependency 'rack-mount',    '~> 0.8'
 
-  s.add_development_dependency 'cane'
-  s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'cane',      '~> 2.3'
+  s.add_development_dependency 'rake',      '~> 0.9'
+  s.add_development_dependency 'rspec',     '~> 2.11'
+  s.add_development_dependency 'rack-test', '~> 0.6.2'
 end
