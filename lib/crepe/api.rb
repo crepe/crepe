@@ -2,6 +2,7 @@ require 'active_support/core_ext/hash/deep_dup'
 require 'rack/mount'
 
 module Crepe
+  # The API class provides a DSL to build Endpoints.
   class API
 
     class Helper < Module
