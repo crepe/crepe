@@ -17,8 +17,9 @@ EOF
   s.email       = %w[stephen@stephencelis.com kainosnoema@gmail.com]
   s.homepage    = 'https://github.com/stephencelis/crepe'
 
-  s.add_dependency 'activesupport', '~> 3.2.7'
+  s.add_dependency 'activesupport', '~> 3.2.8'
   s.add_dependency 'rack',          '~> 1.4.1'
+  s.add_dependency 'rack-mount',    '~> 0.8.3'
 
   s.add_development_dependency 'cane'
   s.add_development_dependency 'rake'
