@@ -1,6 +1,8 @@
 module Crepe
   class Endpoint
     module Filter
+      # A default before filter that makes sure an endpoint is capable of
+      # responding with a format acceptable to the request.
       class Acceptance
 
         class << self

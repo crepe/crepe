@@ -2,9 +2,12 @@ require 'active_support/core_ext/hash/deep_dup'
 require 'rack/mount'
 
 module Crepe
-  # The API class provides a DSL to build Endpoints.
+  # The API class provides a DSL to build a collection of endpoints.
   class API
 
+    # Module class that is instantiated and stores an API's helper methods.
+    # Supports dynamic extensibility via {Util::ChainedInclude}, ensuring that
+    # helpers defined after endpoints are still accessible to those endpoints.
     class Helper < Module
       include Util::ChainedInclude
     end

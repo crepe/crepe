@@ -1,8 +1,8 @@
-require 'rack/mime'
 
 module Crepe
   class Endpoint
     module Renderer
+      # A base renderer class that sets pagination headers.
       class Base
 
         attr_reader :endpoint
