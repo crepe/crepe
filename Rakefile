@@ -19,3 +19,10 @@ rescue LoadError
 end
 
 task default: defaults
+
+task :loc do
+  print '  lib   '
+  puts `zsh -c "grep -vE '^ *#|^$' lib/**/*.rb | wc -l"`.strip
+  print '  spec  '
+  puts `zsh -c "grep -vE '^ *#|^$' spec/**/*.rb | wc -l"`.strip
+end
