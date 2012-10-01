@@ -15,7 +15,6 @@ module Crepe
     @running = false
 
     @config = Util::HashStack.new(
-      routes: [],
       endpoint: Endpoint.default_config,
       helper: Helper.new,
       middleware: [
@@ -27,6 +26,7 @@ module Crepe
         Rack::ETag
       ],
       namespace: nil,
+      routes: [],
       vendor: nil,
       version: nil
     )

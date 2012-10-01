@@ -12,15 +12,15 @@ module Crepe
 
       def default_config
         {
-          after_filters:  [],
+          after_filters: [],
           before_filters: [
             Filter::Acceptance,
             Filter::Parser
           ],
-          formats:        [:json],
-          handler:        nil,
-          renderers:      Hash.new(Renderer::Tilt),
-          rescuers:       []
+          formats: [:json],
+          handler: nil,
+          renderers: Hash.new(Renderer::Tilt),
+          rescuers: []
         }
       end
 
