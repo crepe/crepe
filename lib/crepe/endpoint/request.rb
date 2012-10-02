@@ -18,6 +18,10 @@ module Crepe
         method == 'HEAD'
       end
 
+      def path
+        Util.normalize_path! super
+      end
+
       alias query_parameters GET
 
       alias request_parameters POST
