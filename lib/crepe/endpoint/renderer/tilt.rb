@@ -1,8 +1,16 @@
 module Crepe
   class Endpoint
     module Renderer
+      # Sends a resource and template to [Tilt][] for rendering, falling back
+      # to {Renderer::Simple} if no template name is provided (or can be
+      # derived). Template names are derived by the resource class's ability to
+      # return a {.model_name}.
+      #
+      # [Tilt]: https://github.com/rtomayko/tilt
       class Tilt < Base
 
+        # Raised when a template name is derived but cannot be found in the
+        # template path.
         class MissingTemplate < RenderError
         end
 

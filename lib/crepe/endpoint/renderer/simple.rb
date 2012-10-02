@@ -1,6 +1,7 @@
 module Crepe
   class Endpoint
     module Renderer
+      # The simplest renderer delegates rendering to the resource itself.
       class Simple < Base
 
         def render resource, options = {}

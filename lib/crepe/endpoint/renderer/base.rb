@@ -10,6 +10,7 @@ module Crepe
       # A base renderer class that sets pagination headers.
       class Base
 
+        # Generates pagination links based on provided page, limit, and total.
         class Links < Struct.new :page, :per_page, :count
 
           def render request
@@ -61,11 +62,10 @@ module Crepe
 
         def render resource, options = {}
           if resource.respond_to? :paginate
-            params = endpoint.params.slice :page, :per_page
-
             count = resource.count if resource.respond_to? :count
             endpoint.headers['Count'] = count.to_s if count
 
+            params = endpoint.params.slice :page, :per_page
             page = validate_param params, :page, 1
             per_page = resource.per_page if resource.respond_to? :per_page
             per_page = validate_param params, :per_page, per_page || PER_PAGE

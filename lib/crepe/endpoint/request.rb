@@ -2,6 +2,8 @@ require 'rack/request'
 
 module Crepe
   class Endpoint
+    # A thin wrapper over {Rack::Request} that provides helper methods to
+    # better access request attributes.
     class Request < Rack::Request
 
       @@env_keys = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }

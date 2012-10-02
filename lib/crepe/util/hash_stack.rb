@@ -3,6 +3,8 @@ require 'active_support/core_ext/module/delegation'
 
 module Crepe
   module Util
+    # A {Hash}-like object that can scope state changes using an underlying
+    # stack.
     class HashStack
 
       def initialize first = {}
