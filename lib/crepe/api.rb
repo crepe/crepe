@@ -75,6 +75,8 @@ module Crepe
       end
 
       def respond_to *formats
+        config[:endpoint][:formats] = []
+
         formats.each do |format|
           if format.respond_to? :each_pair
             format.each_pair do |f, renderer|
