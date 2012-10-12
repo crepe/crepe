@@ -210,7 +210,7 @@ module Crepe
           separator = conditions.delete(:separator) { %w[ / . ? ] }
           anchor = conditions.delete(:anchor) { false }
 
-          path = '/' + [namespaces, path].flatten.join('/')
+          path = '/' + [namespaces, path].join('/')
           Util.normalize_path! path
           path << '(.:format)' if anchor
 
