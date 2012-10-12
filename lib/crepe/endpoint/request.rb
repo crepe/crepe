@@ -21,7 +21,7 @@ module Crepe
       end
 
       def path
-        Util.normalize_path! super
+        @path ||= Util.normalize_path! super
       end
 
       alias query_parameters GET
