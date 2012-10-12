@@ -1,6 +1,7 @@
+require 'crepe/util'
+
 module Crepe
   module Middleware
-
     # Negotiates API content type and version from an Accept header.
     #
     # Given an Accept header with a vendor-specific mime type, it will
@@ -11,7 +12,7 @@ module Crepe
     # E.g., the following request:
     #
     #   GET /users
-    #   Accept: application/vnd.crepe.v2+json
+    #   Accept: application/vnd.crepe-v2+json
     #
     # Will pass through to the next middleware as this:
     #
@@ -25,7 +26,7 @@ module Crepe
     #--
     # TODO: Support Accept headers with multiple mime types:
     #
-    #   Accept: application/vnd.crepe.v2+xml, application/vnd.crepe.v1+xml;q=0.7
+    #   Accept: application/vnd.crepe-v2+xml, application/vnd.crepe-v1+xml;q=0.7
     #
     # XXX: Should the env be modified more? Should we store version
     # somewhere? As is, this middleware depends heavily on Crepe and
@@ -41,7 +42,7 @@ module Crepe
         (?:
           (?:
             (?:vnd\.)?
-            (?<vendor>[^/;,\s\.+]+)\.
+            (?<vendor>[^/;,\s\.+]+)-
             (?<version>[^/;,\s\.+]+)
             (?:\+)?
           )?
@@ -54,7 +55,7 @@ module Crepe
         'application/pdf'  => :pdf,
         'application/xml'  => :xml,
         'text/html'        => :html,
-        'text/plain'       => :text
+        'text/plain'       => :txt
       }
 
       def initialize app
@@ -75,12 +76,12 @@ module Crepe
           end
 
           if accept[:format]
-            env['HTTP_ACCEPT'] = [accept[:type], accept[:format]].join '/'
+            content_type = [accept[:type], accept[:format]].join '/'
+            env['HTTP_ACCEPT'][ACCEPT_HEADER] = content_type
 
             if ::File.extname(path).empty?
-              if extension = MIME_TYPES[env['HTTP_ACCEPT']]
-                path += ".#{extension}"
-              end
+              extension = MIME_TYPES.fetch content_type, accept[:format]
+              path += ".#{extension}" unless extension == '*'
             end
           end
 

@@ -15,10 +15,21 @@ describe Crepe::Middleware::ContentNegotiation do
   }
 
   it 'negotiates version and format' do
-    get '/test', {}, 'HTTP_ACCEPT' => 'application/vnd.recurly.v3+json'
+    get '/test', {}, 'HTTP_ACCEPT' => 'application/vnd.acme-v3+json'
 
-    last_response.headers['Content-Type'].should eq('application/json')
-    last_response.headers['Location'].should eq('/v3/test.json')
-    last_response.headers['Vendor'].should eq('recurly')
+    last_response.headers['Content-Type'].should eq 'application/json'
+    last_response.headers['Location'].should eq '/v3/test.json'
+    last_response.headers['Vendor'].should eq 'acme'
+  end
+
+  it 'negotiates version and format' do
+    get '/test', {},
+      'HTTP_ACCEPT' => 'application/vnd.acme-v3+xml; charset=utf-8'
+
+    last_response.headers['Content-Type'].should eq(
+      'application/xml; charset=utf-8'
+    )
+    last_response.headers['Location'].should eq '/v3/test.xml'
+    last_response.headers['Vendor'].should eq 'acme'
   end
 end
