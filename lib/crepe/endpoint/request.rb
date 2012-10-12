@@ -26,6 +26,9 @@ module Crepe
 
       alias query_parameters GET
 
+      def POST
+        env['crepe.input'] || super
+      end
       alias request_parameters POST
 
       def path_parameters
@@ -33,9 +36,16 @@ module Crepe
       end
 
       def parameters
-        @parameters ||= path_parameters.merge self.GET.merge(self.POST)
+        @parameters ||= path_parameters.merge self.GET.merge self.POST
       end
       alias params parameters
+
+      def body
+        env['crepe.input'] || begin
+          body = super
+          body.respond_to?(:read) ? body.read : body
+        end
+      end
 
       def credentials
         @credentials ||= begin
