@@ -1,3 +1,4 @@
+require 'rack/utils'
 require 'crepe/util'
 
 module Crepe
@@ -70,8 +71,16 @@ module Crepe
             env['crepe.vendor'] = accept[:vendor]
           end
 
-          if accept[:version]
-            path = ::File.join '/', accept[:version], path
+          unless version = accept[:version]
+            query = Rack::Utils.parse_nested_query env['QUERY_STRING']
+            if version = query.delete('v')
+              version.prepend 'v'
+              env['QUERY_STRING'] = query.to_query
+            end
+          end
+
+          if version
+            path = ::File.join '/', version, path
             Util.normalize_path! path
           end
 
