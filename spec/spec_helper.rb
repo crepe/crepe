@@ -6,7 +6,7 @@ RSpec.configure do |config|
   config.include Rack::Test::Methods
 
   def describes_middleware middleware = described_class
-    let(:core)    { ->(env) { [status, headers, body] } }
+    let(:core)    { -> env { [status, headers, body] } }
 
     let(:status)  { 200 }
     let(:headers) { {} }

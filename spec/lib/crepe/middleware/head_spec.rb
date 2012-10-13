@@ -2,7 +2,6 @@ require 'spec_helper'
 require_relative '../../../../lib/crepe/middleware/head'
 
 describe Crepe::Middleware::Head do
-
   describes_middleware
 
   context 'a HEAD request' do
@@ -22,7 +21,7 @@ describe Crepe::Middleware::Head do
       before { send method.downcase, '/' }
 
       it "sends as a #{method} request" do
-        last_request.request_method.should eq(method)
+        last_request.request_method.should eq method
       end
 
       it 'returns content' do

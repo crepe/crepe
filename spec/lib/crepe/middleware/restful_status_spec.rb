@@ -2,7 +2,6 @@ require 'spec_helper'
 require_relative '../../../../lib/crepe/middleware/restful_status'
 
 describe Crepe::Middleware::RestfulStatus do
-
   describes_middleware
 
   subject { last_response.status } # Status.

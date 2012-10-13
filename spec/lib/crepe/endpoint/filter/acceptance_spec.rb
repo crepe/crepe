@@ -3,7 +3,7 @@ require 'rack/mock'
 require_relative '../../../../../lib/crepe/endpoint'
 
 describe Crepe::Endpoint::Filter::Acceptance do
-  subject { Crepe::Endpoint::Filter::Acceptance }
+  subject { described_class }
 
   let(:env) {
     Rack::MockRequest.env_for

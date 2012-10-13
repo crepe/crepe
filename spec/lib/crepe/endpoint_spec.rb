@@ -4,7 +4,7 @@ require 'rack/mock'
 require_relative '../../../lib/crepe/endpoint'
 
 describe Crepe::Endpoint do
-  let(:endpoint) { Crepe::Endpoint.new config }
+  let(:endpoint) { described_class.new config }
   let(:config) { { handler: handler } }
   let(:handler) { proc { 'Hello, world!' } }
   let(:response) {
@@ -19,12 +19,12 @@ describe Crepe::Endpoint do
 
     context 'with formats configured' do
       let(:config) { { formats: %w[xml json] } }
-      it { should eq(:xml) }
+      it { should eq :xml }
     end
 
     context 'with a format parameter' do
       before { env['QUERY_STRING'] = 'format=json' }
-      it { should eq(:json) }
+      it { should eq :json }
     end
   end
 
@@ -32,7 +32,7 @@ describe Crepe::Endpoint do
     let(:handler) { proc { headers['Awesome'] = 'You are awesome!' } }
 
     it 'become response headers' do
-      response.headers.should include('Awesome'=>'You are awesome!')
+      response.headers.should include 'Awesome'=>'You are awesome!'
     end
   end
 
@@ -40,11 +40,11 @@ describe Crepe::Endpoint do
     let(:handler) { proc { error! 404, 'Not found' } }
 
     it 'sets status code' do
-      response.status.should eq(404)
+      response.status.should eq 404
     end
 
     it 'sets message' do
-      response.body.should include('Not found')
+      response.body.should include 'Not found'
     end
   end
 
@@ -53,20 +53,18 @@ describe Crepe::Endpoint do
 
     it 'returns 401 Unauthorized' do
       response.status.should eq 401
-      response.body.should eq('{"error":{"message":"Unauthorized"}}')
+      response.body.should eq '{"error":{"message":"Unauthorized"}}'
     end
 
     it 'sets WWW-Authenticate header' do
-      response.headers.should include(
-        'WWW-Authenticate'=>'Basic realm="Crepe"'
-      )
+      response.headers.should include 'WWW-Authenticate'=>'Basic realm="Crepe"'
     end
 
     context 'with a message' do
       let(:handler) { proc { unauthorized! 'Not Allowed', realm: 'Crepe' } }
 
       it 'returns the specified error message' do
-        response.body.should eq('{"error":{"message":"Not Allowed"}}')
+        response.body.should eq '{"error":{"message":"Not Allowed"}}'
       end
     end
 
@@ -75,7 +73,7 @@ describe Crepe::Endpoint do
 
       it 'returns the data' do
         json = '{"error":{"extra":"data","message":"Unauthorized"}}'
-        response.body.should eq(json)
+        response.body.should eq json
       end
     end
   end

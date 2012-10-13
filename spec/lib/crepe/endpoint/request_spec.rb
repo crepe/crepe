@@ -3,14 +3,14 @@ require_relative '../../../../lib/crepe/endpoint/request'
 
 describe Crepe::Endpoint::Request do
   subject(:request) {
-    Crepe::Endpoint::Request.new env.update(Rack::MockRequest.env_for)
+    described_class.new env.update Rack::MockRequest.env_for
   }
   let(:env) { {} }
 
   describe '#headers' do
     it 'indexes with human-readable header keys' do
       env['HTTP_IF_NONE_MATCH'] = '"ETag!"'
-      request.headers['If-None-Match'].should eq('"ETag!"')
+      request.headers['If-None-Match'].should eq '"ETag!"'
     end
   end
 
@@ -20,17 +20,9 @@ describe Crepe::Endpoint::Request do
       env['crepe.original_request_method'] = 'HEAD'
     end
 
-    describe '#method' do
-      it 'references original methods when transformed earlier' do
-        request.method.should eq('HEAD')
-      end
-    end
-
-    describe '#head?' do
-      it 'returns true' do
-        request.should be_head
-      end
-    end
+    it { should be_head }
+    it { should be_get }
+    its(:method) { should eq 'HEAD' }
   end
 
   describe '#params' do

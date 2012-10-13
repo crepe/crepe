@@ -24,7 +24,7 @@ describe Crepe::Params do
   describe '#permit' do
     context 'with secure keys' do
       let(:input) { { secure_key: 1 } }
-      let(:permitted) { params.permit(:secure_key) }
+      let(:permitted) { params.permit :secure_key }
 
       it { expect(permitted).to be_permitted }
       it 'returns itself' do
@@ -44,6 +44,6 @@ describe Crepe::Params do
     end
   end
 
-  it { should respond_to(:permitted?) }
+  it { should respond_to :permitted? }
   it { should be_frozen }
 end
