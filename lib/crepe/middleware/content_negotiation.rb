@@ -1,3 +1,4 @@
+require 'active_support/core_ext/object/to_query'
 require 'rack/utils'
 require 'crepe/util'
 
@@ -42,11 +43,11 @@ module Crepe
           /
         (?:
           (?:
-            (?:vnd\.)?
-            (?<vendor>[^/;,\s\.+]+)-
-            (?<version>[^/;,\s\.+]+)
-            (?:\+)?
-          )?
+            (?:vnd\.)(?<vendor>[^/;,\s\.+-]+)
+            (?:-(?<version>[^/;,\s\.+-]+))?
+            (?:\+(?<format>[^/;,\s\.+-]+))?
+          )
+        |
           (?<format>[^/;,\s\.+]+)
         )
       }ix
@@ -64,41 +65,45 @@ module Crepe
       end
 
       def call env
-        if accept = ACCEPT_HEADER.match(env['HTTP_ACCEPT'])
-          path = env['crepe.original_path_info'] = env['PATH_INFO']
+        accept = ACCEPT_HEADER.match(env['HTTP_ACCEPT']) || {}
+        path = env['crepe.original_path_info'] = env['PATH_INFO']
 
-          if accept[:vendor]
-            env['crepe.vendor'] = accept[:vendor]
-          end
+        env['crepe.vendor'] = accept[:vendor] if accept[:vendor]
 
-          unless version = accept[:version]
-            query = Rack::Utils.parse_nested_query env['QUERY_STRING']
-            if version = query.delete('v')
-              version.prepend 'v'
-              env['QUERY_STRING'] = query.to_query
-            end
-          end
-
-          if version
-            path = ::File.join '/', version, path
-            Util.normalize_path! path
-          end
-
-          if accept[:format]
-            content_type = [accept[:type], accept[:format]].join '/'
-            env['HTTP_ACCEPT'][ACCEPT_HEADER] = content_type
-
-            if ::File.extname(path).empty?
-              extension = MIME_TYPES.fetch content_type, accept[:format]
-              path += ".#{extension}" unless extension == '*'
-            end
-          end
-
-          env['PATH_INFO'] = path
+        version = accept[:version] || query_string_version(env)
+        if version && !path.start_with?("/#{version}")
+          path = ::File.join '/', version, path
         end
+
+        if accept[:format]
+          env['crepe.original_http_accept'] = env['HTTP_ACCEPT'].dup
+          content_type = [accept[:type], accept[:format]].join '/'
+
+          env['HTTP_ACCEPT'][ACCEPT_HEADER] = content_type
+          extension = MIME_TYPES.fetch content_type, accept[:format]
+
+          if ::File.extname(path) != ".#{extension}"
+            path += ".#{extension}" unless extension == '*'
+          end
+        end
+
+        env['PATH_INFO'] = Util.normalize_path path
 
         @app.call env
       end
+
+      private
+
+        def query_string_version env
+          env['crepe.original_query_string'] = env['QUERY_STRING']
+          query = Rack::Utils.parse_nested_query env['QUERY_STRING']
+
+          version = query.delete('v')
+          if version
+            env['QUERY_STRING'] = query.to_query
+            version
+          end
+        end
 
     end
   end

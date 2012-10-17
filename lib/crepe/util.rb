@@ -53,6 +53,10 @@ module Crepe
       hash.freeze
     end
 
+    def normalize_path path
+      normalize_path! path.dup
+    end
+
     def normalize_path! path
       path.squeeze! '/'
       path.sub! %r{/+\z}, ''
