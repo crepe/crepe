@@ -1,16 +1,31 @@
 require 'crepe'
 require 'json'
 
-# Accessible only via basic auth:
+# Basic authentication can be scoped easily. In this example, the root doesn't
+# require it.
 #
-#   $ curl admin:password@0.0.0.0:9292/admin.json
+#   $ curl 0.0.0.0:9292
+#   {"message":"Hello, world!"}
+#
+# The admin layer, on the other hand, does.
+#
+#   $ curl 0.0.0.0:9292/admin
+#   {"error":{"message":"Unauthorized"}}
+#   $ curl admin:password@0.0.0.0:9292/admin
+#   {"message":"Hello, admin!"}
 class BasicAuth < Crepe::API
-  basic_auth do |username, password|
-    username == 'admin' && password == 'password'
+  get do
+    { message: 'Hello, world!' }
   end
 
-  get '/admin' do
-    { message: 'Hello, world!' }
+  namespace :admin do
+    basic_auth do |username, password|
+      username == 'admin' && password == 'password'
+    end
+
+    get do
+      { message: 'Hello, admin!' }
+    end
   end
 end
 
