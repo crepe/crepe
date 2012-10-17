@@ -72,8 +72,8 @@ module Crepe
         end
       end
 
-      def use middleware, *args
-        config[:middleware] << [middleware, *args]
+      def use middleware, *args, &block
+        config[:middleware] << [middleware, args, block]
       end
 
       def respond_to *formats
@@ -196,8 +196,8 @@ module Crepe
               app = routes
             else
               builder = Rack::Builder.new
-              config[:middleware].each do |middleware|
-                builder.use *middleware
+              config[:middleware].each do |middleware, args, block|
+                builder.use middleware, *args, &block
               end
               builder.run routes
               app = builder.to_app
