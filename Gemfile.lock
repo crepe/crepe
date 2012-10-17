@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/rack/rack.git
+  revision: 869c4c346a2b6bfd55a41947039b5b217b57d398
+  specs:
+    rack (1.4.1)
+
 PATH
   remote: .
   specs:
@@ -14,12 +20,15 @@ GEM
       multi_json (~> 1.0)
     cane (2.3.0)
       parallel
+    daemons (1.1.9)
     diff-lcs (1.1.3)
+    eventmachine (1.0.0)
     i18n (0.6.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
     parallel (0.5.19)
-    rack (1.4.1)
+    puma (1.6.3)
+      rack (~> 1.2)
     rack-mount (0.8.3)
       rack (>= 1.0.0)
     rack-test (0.6.2)
@@ -33,6 +42,10 @@ GEM
     rspec-expectations (2.11.3)
       diff-lcs (~> 1.1.3)
     rspec-mocks (2.11.3)
+    thin (1.5.0)
+      daemons (>= 1.0.9)
+      eventmachine (>= 0.12.6)
+      rack (>= 1.0.0)
     tilt (1.3.3)
 
 PLATFORMS
@@ -43,7 +56,10 @@ DEPENDENCIES
   crepe!
   multi_json (~> 1.3)
   multi_xml (~> 0.5)
+  puma
+  rack!
   rack-test (~> 0.6.2)
   rake (~> 0.9)
   rspec (~> 2.11)
+  thin
   tilt (~> 1.3)
