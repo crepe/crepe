@@ -12,6 +12,8 @@ module Crepe
       include Util::ChainedInclude
     end
 
+    METHODS = %w[GET POST PUT PATCH DELETE]
+
     @running = false
 
     @config = Util::HashStack.new(
@@ -127,10 +129,10 @@ module Crepe
         app.call env
       end
 
-      %w[get post put patch delete].each do |method|
+      METHODS.each do |method|
         class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{method} *args, &block
-            route '#{method.upcase}', *args, &block
+          def #{method.downcase} *args, &block
+            route '#{method}', *args, &block
           end
         RUBY
       end
@@ -185,6 +187,7 @@ module Crepe
 
         def app
           @app ||= begin
+            generate_options_routes
             routes = Rack::Mount::RouteSet.new
             config[:routes].each { |route| routes.add_route *route }
             routes.freeze
@@ -210,11 +213,23 @@ module Crepe
           separator = conditions.delete(:separator) { %w[ / . ? ] }
           anchor = conditions.delete(:anchor) { false }
 
-          path = '/' + [namespaces, path].join('/')
-          Util.normalize_path! path
+          path = Util.normalize_path ['/', namespaces, path].join('/')
           path << '(.:format)' if anchor
 
           Rack::Mount::Strexp.compile path, conditions, separator, anchor
+        end
+
+        def generate_options_routes
+          paths = config[:routes].group_by { |_, cond| cond[:path_info] }
+          paths.each do |path, routes|
+            allowed = routes.map { |_, cond| cond[:request_method] }
+            headers = { 'Allow' => allowed.join(', ') }
+
+            mount proc { [204, headers, []] } => path, method: 'OPTIONS'
+            mount proc {
+              [405, headers.merge('Content-Type' => 'text/plain'), []]
+            } => path, method: METHODS - allowed
+          end
         end
 
     end
