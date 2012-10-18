@@ -187,7 +187,7 @@ module Crepe
 
         def app
           @app ||= begin
-            generate_options_routes
+            generate_options_routes!
             routes = Rack::Mount::RouteSet.new
             config[:routes].each { |route| routes.add_route *route }
             routes.freeze
@@ -219,7 +219,7 @@ module Crepe
           Rack::Mount::Strexp.compile path, conditions, separator, anchor
         end
 
-        def generate_options_routes
+        def generate_options_routes!
           paths = config[:routes].group_by { |_, cond| cond[:path_info] }
           paths.each do |path, routes|
             allowed = routes.map { |_, cond| cond[:request_method] }
