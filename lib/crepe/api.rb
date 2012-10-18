@@ -213,7 +213,7 @@ module Crepe
           separator = conditions.delete(:separator) { %w[ / . ? ] }
           anchor = conditions.delete(:anchor) { false }
 
-          path = Util.normalize_path ['/', namespaces, path].join('/')
+          path = Util.normalize_path ['/', namespaces, path].join '/'
           path << '(.:format)' if anchor
 
           Rack::Mount::Strexp.compile path, conditions, separator, anchor
