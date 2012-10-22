@@ -13,7 +13,7 @@ module Crepe
               body = request.body
               return if body.blank?
 
-              env['crepe.input'] = case request.content_type
+              input = env['crepe.input'] = case request.content_type
               when %r{application/json}
                 begin
                   MultiJson.load body
@@ -30,6 +30,8 @@ module Crepe
                 error! :unsupported_media_type,
                   %(Content-type "#{request.content_type}" not supported)
               end
+
+              @params = @params.merge input if input.is_a? Hash
             end
           end
 
