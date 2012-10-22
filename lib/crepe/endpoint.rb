@@ -99,8 +99,8 @@ module Crepe
       end
     end
 
-    def error! *args
-      throw :error, error(*args)
+    def error! code = :bad_request, message = nil, data = {}
+      throw :halt, error(code, message, data)
     end
 
     def unauthorized! message = nil, data = {}
@@ -115,7 +115,7 @@ module Crepe
       def call! env
         @env = env
 
-        error = catch :error do
+        halt = catch :halt do
           begin
             config[:before_filters].each { |filter| run_filter filter }
             render instance_eval(&config[:handler])
@@ -124,7 +124,7 @@ module Crepe
             handle_exception e
           end
         end
-        render error if error
+        render halt if halt
         config[:after_filters].each { |filter| run_filter filter }
 
         [status, headers, [body]]
