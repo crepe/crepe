@@ -141,7 +141,7 @@ module Crepe
       def handle_exception exception
         rescuer = config[:rescuers].find do |r|
           exception_class = eval("::#{r[:class_name]}") rescue nil
-          exception_class && exception.kind_of?(exception_class)
+          exception_class && exception.is_a?(exception_class)
         end
 
         if rescuer && rescuer[:block]

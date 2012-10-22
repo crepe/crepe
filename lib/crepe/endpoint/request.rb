@@ -8,10 +8,6 @@ module Crepe
 
       @@env_keys = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }
 
-      def headers
-        @headers ||= Hash.new { |h, k| h.fetch @@env_keys[k], nil }.update env
-      end
-
       def method
         @method ||= env['crepe.original_request_method'] || request_method
       end
@@ -22,6 +18,10 @@ module Crepe
 
       def path
         @path ||= Util.normalize_path! super
+      end
+
+      def headers
+        @headers ||= Hash.new { |h, k| h.fetch @@env_keys[k], nil }.update env
       end
 
       alias query_parameters GET
