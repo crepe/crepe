@@ -209,6 +209,8 @@ module Crepe
         end
 
         def mount_path path, conditions
+          return path if path.is_a? Regexp
+
           namespaces = config.all(:namespace).compact
           separator = conditions.delete(:separator) { %w[ / . ? ] }
           anchor = conditions.delete(:anchor) { false }
@@ -223,12 +225,15 @@ module Crepe
           paths = config[:routes].group_by { |_, cond| cond[:path_info] }
           paths.each do |path, routes|
             allowed = routes.map { |_, cond| cond[:request_method] }
-            headers = { 'Allow' => allowed.join(', ') }
 
-            mount proc { [204, headers, []] } => path, method: 'OPTIONS'
-            mount proc {
-              [405, headers.merge('Content-Type' => 'text/plain'), []]
-            } => path, method: METHODS - allowed
+            route 'OPTIONS', path do
+              headers['Allow'] = allowed.join ', '
+              { allow: allowed }
+            end
+            route METHODS - allowed, path do
+              headers['Allow'] = allowed.join ', '
+              error! :method_not_allowed, allow: allowed
+            end
           end
         end
 
