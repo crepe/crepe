@@ -12,10 +12,26 @@ module Crepe
 
     # Raised when a required parameter is missing (see Crepe::Params#require).
     class Missing < ::IndexError
+
+      attr_reader :key
+
+      def initialize key
+        @key = key
+        super "Missing parameter: #{key}"
+      end
+
     end
 
     # Raised when an unpermitted parameter is found (see Crepe::Params#permit).
     class Invalid < ::StandardError
+
+      attr_reader :keys
+
+      def initialize keys
+        @keys = keys
+        super "Invalid parameter(s): #{keys.join ', '}"
+      end
+
     end
 
     def initialize params = {}
@@ -25,16 +41,12 @@ module Crepe
     end
 
     def require required_key
-      value = @params[required_key]
-      unless value.is_a? ::Hash # Consider checking presence instead.
-        raise Missing, required_key
-      end
-      ::Crepe::Params.new value
+      fetch(required_key) { raise Missing, required_key }
     end
 
     def permit *secure_keys
       insecure_keys = keys - secure_keys.map(&:to_s)
-      raise Invalid, insecure_keys.join(', ') unless insecure_keys.empty?
+      raise Invalid, insecure_keys unless insecure_keys.empty?
       @permitted = true
       self
     end
@@ -48,8 +60,7 @@ module Crepe
     end
 
     def respond_to? method_name, include_private = false
-      public_methods.grep(method_name) ||
-        @params.respond_to?(method_name, include_private)
+      [:require, :permit, :permitted?].include? method_name or super
     end
 
     private
