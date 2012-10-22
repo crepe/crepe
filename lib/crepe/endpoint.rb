@@ -2,6 +2,7 @@ require 'active_support/core_ext/hash/deep_merge'
 require 'rack/utils'
 
 module Crepe
+  # A single API endpoint.
   class Endpoint
 
     autoload :Filter,   'crepe/endpoint/filter'
