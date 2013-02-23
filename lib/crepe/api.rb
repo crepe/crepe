@@ -93,7 +93,7 @@ module Crepe
 
       def rescue_from exception, options = {}, &block
         config[:endpoint][:rescuers] << {
-          class_name: exception.name, options: options, block: block
+          exception_class: exception, options: options, block: block
         }
       end
 
