@@ -23,7 +23,7 @@ module Crepe
               when %r{application/xml}
                 begin
                   MultiXml.parse body
-                rescue MultiXml::ParseError => e
+                rescue MultiXml::ParseError
                   error! :bad_request, "Invalid XML"
                 end
               else

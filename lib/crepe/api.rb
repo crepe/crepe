@@ -112,7 +112,7 @@ module Crepe
       def basic_auth *args, &block
         before_filter do
           unless instance_exec request.credentials, &block
-            unauthorized! *args
+            unauthorized!(*args)
           end
         end
       end
@@ -189,7 +189,7 @@ module Crepe
           @app ||= begin
             generate_options_routes!
             routes = Rack::Mount::RouteSet.new
-            config[:routes].each { |route| routes.add_route *route }
+            config[:routes].each { |route| routes.add_route(*route) }
             routes.freeze
 
             if Crepe::API.running?
