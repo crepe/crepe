@@ -17,15 +17,15 @@ EOF
   s.email       = %w[stephen@stephencelis.com kainosnoema@gmail.com]
   s.homepage    = 'https://github.com/stephencelis/crepe'
 
-  s.add_dependency 'activesupport', '~> 3.2'
-  s.add_dependency 'rack',          '~> 1.4'
-  s.add_dependency 'rack-mount',    '~> 0.8'
+  s.add_dependency 'activesupport', '~> 3.2.x'
+  s.add_dependency 'rack',          '~> 1.5.x'
+  s.add_dependency 'rack-mount',    '~> 0.8.x'
 
-  s.add_development_dependency 'cane',       '~> 2.3'
-  s.add_development_dependency 'multi_json', '~> 1.3'
-  s.add_development_dependency 'multi_xml',  '~> 0.5'
-  s.add_development_dependency 'rake',       '~> 0.9'
-  s.add_development_dependency 'rspec',      '~> 2.11'
-  s.add_development_dependency 'rack-test',  '~> 0.6.2'
-  s.add_development_dependency 'tilt',       '~> 1.3'
+  s.add_development_dependency 'cane',       '~> 2.3.x'
+  s.add_development_dependency 'multi_json', '~> 1.6.x'
+  s.add_development_dependency 'multi_xml',  '~> 0.5.x'
+  s.add_development_dependency 'rake',       '~> 10.0.x'
+  s.add_development_dependency 'rspec',      '~> 2.13.x'
+  s.add_development_dependency 'rack-test',  '~> 0.6.x'
+  s.add_development_dependency 'tilt',       '~> 1.3.x'
 end
