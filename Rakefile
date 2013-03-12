@@ -12,7 +12,9 @@ end
 
 begin
   require 'cane/rake_task'
-  Cane::RakeTask.new :quality
+  Cane::RakeTask.new :quality do |t|
+    t.no_doc = true
+  end
   defaults << :quality
 rescue LoadError
   warn 'cane not available, quality task not provided.'
