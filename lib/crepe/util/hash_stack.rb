@@ -3,23 +3,22 @@ require 'active_support/core_ext/module/delegation'
 
 module Crepe
   module Util
-    # A {Hash}-like object that can scope state changes using an underlying
-    # stack.
+    # A {Hash}-like object that scopes state changes using an underlying stack.
     class HashStack
 
       def initialize first = {}
         @stack = Array.wrap first
       end
 
+      delegate :pop, :push, :<<,
+        to: :stack
+
       def top
         stack.last
       end
 
-      delegate :[]=, :merge!, :delete, to: :top
-
-      def merge hash
-        dup.merge! hash
-      end
+      delegate :[]=, :delete,
+        to: :top
 
       def key? key
         stack.any? { |frame| frame.key? key }
@@ -30,16 +29,8 @@ module Crepe
         found_at && found_at[key]
       end
 
-      def push hash = {}
-        stack << hash
-        self
-      end
-      alias_method :<<, :push
-
-      delegate :pop, to: :stack
-
       def all key
-        stack.collect { |frame| frame[key] }.flatten 1
+        stack.map { |frame| frame[key] }.flatten 1
       end
 
       def with frame = {}
@@ -49,8 +40,9 @@ module Crepe
       end
 
       def to_hash
-        stack.inject({}) { |hash, frame| hash.merge frame }
+        stack.inject({}, &:merge)
       end
+      alias_method :to_h, :to_hash
 
       def dup
         self.class.new Util.deep_dup stack

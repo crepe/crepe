@@ -46,7 +46,7 @@ module Crepe
       end
 
       def inherited subclass
-        subclass.config = Util.deep_dup config
+        subclass.config = config.dup
       end
 
       def namespace path, options = {}, &block
