@@ -17,12 +17,10 @@ require 'json'
 #   {"timestamp":1363212647}
 #   ^C
 class Stream < Crepe::API
-  get do
-    stream do
-      loop do
-        render timestamp: Time.now.to_i
-        sleep 1
-      end
+  stream do
+    loop do
+      render timestamp: Time.now.to_i
+      sleep 1
     end
   end
 end

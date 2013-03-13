@@ -140,6 +140,10 @@ module Crepe
         route nil, *args, &block
       end
 
+      def stream *args, &block
+        get(*args) { stream { instance_eval(&block) } }
+      end
+
       def route method, path = '/', options = {}, &block
         options = config[:endpoint].merge(handler: block).merge options
         endpoint = Endpoint.new(options).extend config[:helper]
