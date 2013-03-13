@@ -2,6 +2,6 @@ source 'https://rubygems.org'
 gemspec
 
 group :development do
-  gem 'puma'
-  gem 'thin'
+  gem 'rack', github: 'rack/rack'
+  gem 'puma', github: 'puma/puma'
 end
