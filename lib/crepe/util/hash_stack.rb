@@ -48,9 +48,8 @@ module Crepe
         self.class.new Util.deep_dup stack
       end
 
-      private
-
-        attr_reader :stack
+      attr_reader :stack
+      private :stack
 
     end
   end

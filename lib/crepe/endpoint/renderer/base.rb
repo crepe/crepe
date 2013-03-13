@@ -1,7 +1,6 @@
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/hash/slice'
 require 'active_support/core_ext/object/to_query'
-require 'rational'
 require 'uri'
 
 module Crepe
@@ -46,7 +45,7 @@ module Crepe
           end
 
           def last
-            last = Rational(count, per_page).ceil
+            last = (count.to_f / per_page).ceil
             { page: last } unless page == last
           end
 
