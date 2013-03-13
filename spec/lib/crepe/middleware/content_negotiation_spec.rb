@@ -5,7 +5,7 @@ describe Crepe::Middleware::ContentNegotiation do
   describes_middleware
 
   let(:core) {
-    ->(env) {
+    -> env {
       headers['Content-Type'] = env['HTTP_ACCEPT']
       headers['Location']     = env['PATH_INFO']
       headers['Vendor']       = env['crepe.vendor']
