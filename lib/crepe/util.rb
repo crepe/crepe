@@ -8,6 +8,8 @@ module Crepe
 
     # Deeply duplicates values in the object passed in. If the object
     # is a Hash or Array, it recursively dups the object's values.
+    #
+    # Active Support's deep_dup does not dup array contents.
     def deep_dup object
       object = object.dup if object.duplicable?
 
