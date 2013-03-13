@@ -105,7 +105,14 @@ module Crepe
     end
 
     def stream
-      headers['rack.hijack'] = -> io { @io = io and yield }
+      headers['rack.hijack'] = -> io do
+        begin
+          @io = io
+          yield
+        ensure
+          io.close
+        end
+      end
       throw :halt, [status, headers, nil]
     end
 
