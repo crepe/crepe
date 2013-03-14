@@ -33,8 +33,6 @@ module Crepe
 
     attr_accessor :body
 
-    attr_reader :io
-
     def initialize config = {}, &block
       @config = self.class.default_config.deep_merge config
       @status = 200
@@ -96,8 +94,8 @@ module Crepe
 
     def render object, options = {}
       renderer = config[:renderers][format].new self
-      if io
-        io.puts renderer.render object, options
+      if stream
+        stream.puts renderer.render object, options
       else
         headers['Content-Type'] ||= content_type
         self.body ||= catch(:head) { renderer.render object, options }
@@ -105,15 +103,19 @@ module Crepe
     end
 
     def stream
-      headers['rack.hijack'] = -> io do
-        begin
-          @io = io
-          yield
-        ensure
-          io.close
+      if block_given?
+        headers['rack.hijack'] = -> io do
+          begin
+            @stream = io
+            yield
+          ensure
+            io.close
+          end
         end
+        throw :halt, [status, headers, nil]
+      else
+        @stream if instance_variable_defined? :@stream
       end
-      throw :halt, [status, headers, nil]
     end
 
     def error! code = :bad_request, message = nil, data = {}
