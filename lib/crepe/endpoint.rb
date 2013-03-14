@@ -102,6 +102,17 @@ module Crepe
       end
     end
 
+    def head code = :ok
+      status code
+      headers['Content-Length'] = 0
+      throw :halt
+    end
+
+    def redirect_to location, options = {}
+      headers['Location'] = location
+      head options.fetch :status, :see_other
+    end
+
     def stream
       if block_given?
         headers['rack.hijack'] = -> io do
