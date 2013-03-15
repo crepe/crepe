@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/deep_merge'
+require 'json'
 require 'rack/utils'
 
 module Crepe

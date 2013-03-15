@@ -1,5 +1,4 @@
 require 'crepe'
-require 'json'
 
 # Demonstrates several versions:
 #

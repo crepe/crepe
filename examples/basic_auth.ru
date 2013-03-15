@@ -1,5 +1,4 @@
 require 'crepe'
-require 'json'
 
 # Basic authentication can be scoped easily. In this example, the root doesn't
 # require it.
