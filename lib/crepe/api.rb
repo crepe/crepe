@@ -19,7 +19,6 @@ module Crepe
       endpoint: Endpoint.default_config,
       helper: Helper.new,
       middleware: [
-        Rack::Runtime,
         Middleware::ContentNegotiation,
         Middleware::RestfulStatus,
         Middleware::Head,
