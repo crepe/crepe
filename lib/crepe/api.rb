@@ -227,6 +227,9 @@ module Crepe
           paths = config[:routes].group_by { |_, cond| cond[:path_info] }
           paths.each do |path, routes|
             allowed = routes.map { |_, cond| cond[:request_method] }
+            allowed << 'HEAD' if allowed.include? 'GET'
+            allowed << 'OPTIONS'
+            allowed.sort!
 
             route 'OPTIONS', path do
               headers['Allow'] = allowed.join ', '
