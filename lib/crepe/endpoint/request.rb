@@ -54,6 +54,16 @@ module Crepe
         end
       end
 
+      def if_modified_since
+        datetime = headers['If-Modified-Since']
+        Time.httpdate datetime if datetime
+      end
+      alias last_modified if_modified_since
+
+      def if_none_match
+        headers['If-None-Match']
+      end
+      alias etag if_none_match
     end
   end
 end
