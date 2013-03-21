@@ -102,15 +102,17 @@ module Crepe
       end
     end
 
-    def head code = :ok
-      status code
-      headers['Content-Length'] = 0
+    def head code = nil, options = {}
+      options, code = code if code.is_a? Hash
+      status code if code
+      options.each do |key, value|
+        headers[key.to_s.tr('_', '-').gsub(/\b[a-z]/) { $&.upcase }] = value
+      end
       throw :halt
     end
 
     def redirect_to location, options = {}
-      headers['Location'] = location
-      head options.fetch :status, :see_other
+      head options.fetch :status, :see_other, location: location
     end
 
     def stream
