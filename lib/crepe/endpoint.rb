@@ -178,7 +178,7 @@ module Crepe
         if rescuer && rescuer[:block]
           instance_exec exception, &rescuer[:block]
         else
-          code = rescuer && rescuer[:options][:status] ||
+          code = rescuer && rescuer[:options].fetch(:status, :bad_request) ||
             :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
