@@ -157,7 +157,7 @@ module Crepe
         render halt if halt
         config[:after_filters].each { |filter| run_filter filter }
 
-        [status, headers, [body]]
+        [status, headers, [*body]]
       end
 
     private
