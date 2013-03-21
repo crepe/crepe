@@ -142,6 +142,39 @@ module Crepe
       error! :unauthorized, message || data.delete(:message), data
     end
 
+    def fresh_when object, options = {}
+      options, object = object if object.is_a? Hash
+
+      etag options.fetch :etag, object unless etag
+      last_modified options.fetch(:last_modified) {
+        object.updated_at if object.respond_to? :updated_at
+      } unless last_modified
+      headers['Cache-Control'] = 'public' if options[:public]
+
+      if request.last_modified && last_modified
+        modified = last_modified > request.last_modified
+      end
+      if request.etag
+        modified = etag != request.etag
+      end
+
+      head :not_modified unless modified
+
+      object
+    end
+
+    def etag object = nil
+      return headers['ETag'] unless object
+      headers['ETag'] ||= Digest::MD5.hexdigest(
+        ActiveSupport::Cache.expand_cache_key object
+      )
+    end
+
+    def last_modified at = nil
+      return headers['Last-Modified'] unless at
+      headers['Last-Modified'] = at
+    end
+
     protected
 
       def call! env
@@ -150,7 +183,7 @@ module Crepe
         halt = catch :halt do
           begin
             config[:before_filters].each { |filter| run_filter filter }
-            render instance_eval(&config[:handler])
+            render fresh_when instance_eval(&config[:handler])
             break
           rescue => e
             handle_exception e
