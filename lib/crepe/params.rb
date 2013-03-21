@@ -1,4 +1,3 @@
-require 'active_support/core_ext/hash/indifferent_access'
 require 'crepe/util'
 
 module Crepe

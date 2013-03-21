@@ -1,5 +1,3 @@
-require 'active_support/core_ext/object/duplicable'
-
 module Crepe
   module Util
 

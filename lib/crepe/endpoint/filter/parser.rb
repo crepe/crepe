@@ -1,5 +1,3 @@
-require 'active_support/core_ext/object/blank'
-
 module Crepe
   class Endpoint
     module Filter

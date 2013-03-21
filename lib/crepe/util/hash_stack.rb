@@ -1,6 +1,3 @@
-require 'active_support/core_ext/array/wrap'
-require 'active_support/core_ext/module/delegation'
-
 module Crepe
   module Util
     # A {Hash}-like object that scopes state changes using an underlying stack.

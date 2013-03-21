@@ -1,3 +1,5 @@
+require 'active_support/all'
+
 module Crepe
 
   autoload :API,        'crepe/api'
