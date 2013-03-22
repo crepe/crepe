@@ -11,10 +11,12 @@ module Crepe
         {
           callbacks: {
             after: [],
+            after_stream: [],
             before: [
               Filter::Acceptance,
               Filter::Parser
-            ]
+            ],
+            before_stream: []
           },
           formats: [:json],
           handler: nil,
@@ -118,8 +120,10 @@ module Crepe
         headers['rack.hijack'] = -> io do
           begin
             @stream = io
+            run_callbacks :before_stream
             yield
           ensure
+            run_callbacks :after_stream
             io.close
           end
         end
