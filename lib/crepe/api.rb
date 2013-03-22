@@ -95,20 +95,22 @@ module Crepe
         }
       end
 
-      def before_filter mod = nil, &block
+      def before mod = nil, &block
         warn 'block takes precedence over module' if block && mod
-        filter = block || mod
-        config[:endpoint][:before_filters] << filter if filter
+        callback = block || mod
+        raise ArgumentError, 'block or module required' unless callback
+        config[:endpoint][:callbacks][:before] << callback
       end
 
-      def after_filter mod = nil, &block
+      def after mod = nil, &block
         warn 'block takes precedence over module' if block && mod
-        filter = block || mod
-        config[:endpoint][:after_filters] << filter if filter
+        callback = block || mod
+        raise ArgumentError, 'block or module required' unless callback
+        config[:endpoint][:callbacks][:after] << callback
       end
 
       def basic_auth *args, &block
-        before_filter do
+        before do
           unless instance_exec request.credentials, &block
             unauthorized!(*args)
           end
