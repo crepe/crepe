@@ -5,10 +5,6 @@ module Crepe
   # A single API endpoint.
   class Endpoint
 
-    autoload :Filter,   'crepe/endpoint/filter'
-    autoload :Renderer, 'crepe/endpoint/renderer'
-    autoload :Request,  'crepe/endpoint/request'
-
     class << self
 
       def default_config

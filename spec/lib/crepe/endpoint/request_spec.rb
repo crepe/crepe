@@ -1,7 +1,7 @@
 require 'rack/mock'
-require_relative '../../../../lib/crepe/endpoint/request'
+require_relative '../../../../lib/crepe/request'
 
-describe Crepe::Endpoint::Request do
+describe Crepe::Request do
   subject(:request) {
     described_class.new env.update Rack::MockRequest.env_for
   }
