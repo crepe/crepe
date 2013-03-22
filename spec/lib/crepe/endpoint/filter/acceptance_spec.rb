@@ -2,7 +2,7 @@ require 'ostruct'
 require 'rack/mock'
 require_relative '../../../../../lib/crepe/endpoint'
 
-describe Crepe::Endpoint::Filter::Acceptance do
+describe Crepe::Filter::Acceptance do
   subject { described_class }
 
   let(:env) {
