@@ -70,9 +70,7 @@ module Crepe
       end
 
       def version version, &block
-        config.with version: version do
-          namespace version, &block
-        end
+        namespace version, version: version, &block
       end
 
       def use middleware, *args, &block
