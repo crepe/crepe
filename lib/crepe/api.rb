@@ -223,7 +223,7 @@ module Crepe
           paths = config[:routes].group_by { |_, cond| cond[:path_info] }
           paths.each do |path, routes|
             allowed = routes.map { |_, cond| cond[:request_method] }
-            next if allowed.none?
+            next if allowed.include?('OPTIONS') || allowed.none?
 
             allowed << 'HEAD' if allowed.include? 'GET'
             allowed << 'OPTIONS'
