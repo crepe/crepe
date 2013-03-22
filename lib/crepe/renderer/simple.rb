@@ -1,7 +1,7 @@
 module Crepe
   module Renderer
     # The simplest renderer delegates rendering to the resource itself.
-    class Simple < Base
+    class Simple < Paginate
 
       def render resource, options = {}
         resource = super
