@@ -13,8 +13,6 @@ module Crepe
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
-    @running = false
-
     @config = Util::HashStack.new(
       endpoint: Endpoint.default_config,
       helper: Helper.new,
@@ -34,14 +32,6 @@ module Crepe
     class << self
 
       attr_reader :config
-
-      def running?
-        @running
-      end
-
-      def running!
-        @running = true
-      end
 
       def inherited subclass
         subclass.config = config.dup
@@ -177,6 +167,27 @@ module Crepe
         config[:routes] << [app, conditions, defaults]
       end
 
+      def to_app options = {}
+        exclude = options.fetch(:exclude, [])
+        middleware = config[:middleware] - exclude
+
+        generate_options_routes!
+
+        route_set = Rack::Mount::RouteSet.new
+        config[:routes].each do |app, conditions, defaults|
+          if app.is_a?(Class) && app.ancestors.include?(API)
+            app = app.to_app exclude: exclude | middleware
+          end
+          route_set.add_route app, conditions, defaults
+        end
+        route_set.freeze
+
+        Rack::Builder.app do
+          middleware.each { |ware, args, block| use ware, *args, &block }
+          run route_set
+        end
+      end
+
       protected
 
         attr_writer :config
@@ -184,26 +195,7 @@ module Crepe
       private
 
         def app
-          @app ||= begin
-            generate_options_routes!
-            routes = Rack::Mount::RouteSet.new
-            config[:routes].each { |route| routes.add_route(*route) }
-            routes.freeze
-
-            if Crepe::API.running?
-              app = routes
-            else
-              builder = Rack::Builder.new
-              config[:middleware].each do |middleware, args, block|
-                builder.use middleware, *args, &block
-              end
-              builder.run routes
-              app = builder.to_app
-              Crepe::API.running!
-            end
-
-            app
-          end
+          @app ||= to_app
         end
 
         def mount_path path, conditions
