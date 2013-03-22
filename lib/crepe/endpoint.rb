@@ -123,11 +123,14 @@ module Crepe
             run_callbacks :before_stream
             yield
           ensure
-            run_callbacks :after_stream
-            io.close
+            begin
+              run_callbacks :after_stream
+            ensure
+              io.close
+            end
           end
         end
-        throw :halt, [status, headers, nil]
+        throw :halt
       else
         @stream if instance_variable_defined? :@stream
       end
