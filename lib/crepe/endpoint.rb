@@ -9,11 +9,15 @@ module Crepe
 
       def default_config
         {
-          after_filters: [],
-          before_filters: [
-            Filter::Acceptance,
-            Filter::Parser
-          ],
+          callbacks: {
+            after: [],
+            after_stream: [],
+            before: [
+              Filter::Acceptance,
+              Filter::Parser
+            ],
+            before_stream: []
+          },
           formats: [:json],
           handler: nil,
           renderers: Hash.new(Renderer::Tilt),
@@ -116,8 +120,10 @@ module Crepe
         headers['rack.hijack'] = -> io do
           begin
             @stream = io
+            run_callbacks :before_stream
             yield
           ensure
+            run_callbacks :after_stream
             io.close
           end
         end
@@ -145,7 +151,7 @@ module Crepe
 
         halt = catch :halt do
           begin
-            config[:before_filters].each { |filter| run_filter filter }
+            run_callbacks :before
             render instance_eval(&config[:handler])
             break
           rescue => e
@@ -153,17 +159,19 @@ module Crepe
           end
         end
         render halt if halt
-        config[:after_filters].each { |filter| run_filter filter }
+        run_callbacks :after
 
         [status, headers, [*body]]
       end
 
     private
 
-      def run_filter filter
-        return filter.filter self if filter.respond_to? :filter
-        filter = filter.to_proc if filter.respond_to? :to_proc
-        instance_eval(&filter)
+      def run_callbacks type
+        config[:callbacks][type].each do |callback|
+          next callback.filter self if callback.respond_to? :filter
+          callback = callback.to_proc if callback.respond_to? :to_proc
+          instance_eval(&callback)
+        end
       end
 
       def handle_exception exception
