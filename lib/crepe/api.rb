@@ -154,10 +154,12 @@ module Crepe
         )
       end
 
-      def mount app, options = nil
-        if options
-          path = options.delete(:at) { '/' }
-        else
+      def mount app, options = {}
+        path = '/'
+
+        if options.key? :at
+          path = options.delete :at
+        elsif app.is_a? Hash
           options = app
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
