@@ -4,6 +4,8 @@ module Crepe
     autoload :HashStack,      'crepe/util/hash_stack'
     autoload :ChainedInclude, 'crepe/util/chained_include'
 
+    module_function
+
     # Deeply duplicates values in the object passed in. If the object
     # is a Hash or Array, it recursively dups the object's values.
     #
@@ -64,8 +66,6 @@ module Crepe
       path.replace '/' if path.empty?
       path
     end
-
-    extend self
 
   end
 end
