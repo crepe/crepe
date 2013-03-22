@@ -49,7 +49,12 @@ module Crepe
 
       def namespace path, options = {}, &block
         if block
-          config.with namespaced_config(path, options), &block
+          outer_helper = config[:helper]
+          config.with options.merge(
+            namespace: path,
+            endpoint: Util.deep_dup(config[:endpoint]),
+            helper: Helper.new { include outer_helper }
+          ), &block
         else
           config[:namespace] = path
         end
@@ -177,15 +182,6 @@ module Crepe
         attr_writer :config
 
       private
-
-        def namespaced_config namespace, options = {}
-          parent_helper = config[:helper]
-          options.merge(
-            namespace: namespace,
-            endpoint: Util.deep_dup(config[:endpoint]),
-            helper: Helper.new { include parent_helper }
-          )
-        end
 
         def app
           @app ||= begin
