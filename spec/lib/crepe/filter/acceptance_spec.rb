@@ -1,6 +1,6 @@
 require 'ostruct'
 require 'rack/mock'
-require_relative '../../../../../lib/crepe/endpoint'
+require_relative '../../../../lib/crepe/endpoint'
 
 describe Crepe::Filter::Acceptance do
   subject { described_class }

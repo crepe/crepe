@@ -13,8 +13,6 @@ module Crepe
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
-    @running = false
-
     @config = Util::HashStack.new(
       endpoint: Endpoint.default_config,
       helper: Helper.new,
@@ -35,21 +33,18 @@ module Crepe
 
       attr_reader :config
 
-      def running?
-        @running
-      end
-
-      def running!
-        @running = true
-      end
-
       def inherited subclass
         subclass.config = config.dup
       end
 
       def namespace path, options = {}, &block
         if block
-          config.with namespaced_config(path, options), &block
+          outer_helper = config[:helper]
+          config.with options.merge(
+            namespace: path,
+            endpoint: Util.deep_dup(config[:endpoint]),
+            helper: Helper.new { include outer_helper }
+          ), &block
         else
           config[:namespace] = path
         end
@@ -65,9 +60,7 @@ module Crepe
       end
 
       def version version, &block
-        config.with version: version do
-          namespace version, &block
-        end
+        namespace version, version: version, &block
       end
 
       def use middleware, *args, &block
@@ -151,10 +144,12 @@ module Crepe
         )
       end
 
-      def mount app, options = nil
-        if options
-          path = options.delete(:at) { '/' }
-        else
+      def mount app, options = {}
+        path = '/'
+
+        if options.key? :at
+          path = options.delete :at
+        elsif app.is_a? Hash
           options = app
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
@@ -172,42 +167,35 @@ module Crepe
         config[:routes] << [app, conditions, defaults]
       end
 
+      def to_app options = {}
+        exclude = options.fetch(:exclude, [])
+        middleware = config[:middleware] - exclude
+
+        generate_options_routes!
+
+        route_set = Rack::Mount::RouteSet.new
+        config[:routes].each do |app, conditions, defaults|
+          if app.is_a?(Class) && app.ancestors.include?(API)
+            app = app.to_app exclude: exclude | middleware
+          end
+          route_set.add_route app, conditions, defaults
+        end
+        route_set.freeze
+
+        Rack::Builder.app do
+          middleware.each { |ware, args, block| use ware, *args, &block }
+          run route_set
+        end
+      end
+
       protected
 
         attr_writer :config
 
       private
 
-        def namespaced_config namespace, options = {}
-          parent_helper = config[:helper]
-          options.merge(
-            namespace: namespace,
-            endpoint: Util.deep_dup(config[:endpoint]),
-            helper: Helper.new { include parent_helper }
-          )
-        end
-
         def app
-          @app ||= begin
-            generate_options_routes!
-            routes = Rack::Mount::RouteSet.new
-            config[:routes].each { |route| routes.add_route(*route) }
-            routes.freeze
-
-            if Crepe::API.running?
-              app = routes
-            else
-              builder = Rack::Builder.new
-              config[:middleware].each do |middleware, args, block|
-                builder.use middleware, *args, &block
-              end
-              builder.run routes
-              app = builder.to_app
-              Crepe::API.running!
-            end
-
-            app
-          end
+          @app ||= to_app
         end
 
         def mount_path path, conditions
@@ -227,7 +215,7 @@ module Crepe
           paths = config[:routes].group_by { |_, cond| cond[:path_info] }
           paths.each do |path, routes|
             allowed = routes.map { |_, cond| cond[:request_method] }
-            next if allowed.none?
+            next if allowed.include?('OPTIONS') || allowed.none?
 
             allowed << 'HEAD' if allowed.include? 'GET'
             allowed << 'OPTIONS'
