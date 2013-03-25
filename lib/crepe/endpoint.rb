@@ -120,6 +120,14 @@ module Crepe
       error! :unauthorized, message || data.delete(:message), data
     end
 
+    def expires_in seconds, options = {}
+      response.cache_control.update options.merge max_age: seconds
+    end
+
+    def expires_now
+      response.cache_control.replace no_cache: true
+    end
+
     protected
 
       def call! env
