@@ -1,5 +1,5 @@
 require 'rack/mock'
-require_relative '../../../../lib/crepe/request'
+require_relative '../../../lib/crepe/request'
 
 describe Crepe::Request do
   subject(:request) {
