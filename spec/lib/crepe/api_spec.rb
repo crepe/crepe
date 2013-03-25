@@ -3,6 +3,27 @@ require 'crepe'
 
 describe Crepe::API do
 
+  describe '.namespace' do
+    app { namespace(:namespaced) { get { head } } }
+    it 'wraps endpoints with prefix' do
+      get('/namespaced').should be_ok
+    end
+  end
+
+  describe '.param' do
+    app { param(:action) { get { params[:action] } } }
+    it 'wraps endpoints with a param-based path component' do
+      get('/dig').body.should include 'dig'
+    end
+  end
+
+  describe '.vendor' do
+    app { vendor :pancake and get { 'OK' } }
+    it 'sets vendor' do
+      get('/').content_type.should eq 'application/vnd.pancake+json'
+    end
+  end
+
   describe '.use' do
     let(:app)    { Class.new base, &routes }
     let(:base)   { Class.new Crepe::API, &routes }
@@ -52,8 +73,8 @@ describe Crepe::API do
         get('/').body.should eq '123'
       end
 
-      context 'that mounts another app that mounts another, etc' do
-        let(:app3) { Class.new(base, &routes) }
+      context 'that mounts another app that mounts another and so on' do
+        let(:app3) { Class.new base, &routes }
 
         before do
           app2.mount app3, at: '/again'
@@ -116,4 +137,50 @@ describe Crepe::API do
       { 'HTTP_AUTHORIZATION' => "Basic #{Base64.encode64 "#{user}:#{pass}"}" }
     end
   end
+
+  describe '.helper' do
+    context 'with a block' do
+      app do
+        helper { def helper_method() 'block' end }
+        get { helper_method }
+      end
+      it 'extends endpoints with block methods' do
+        get('/').body.should include 'block'
+      end
+    end
+
+    context 'with a module' do
+      app do
+        helper(Module.new { def helper_method() 'module' end })
+        get { helper_method }
+      end
+      it 'extends endpoints with module methods' do
+        get('/').body.should include 'module'
+      end
+    end
+
+    context 'defined after routes' do
+      app do
+        get { helper_method }
+        helper { def helper_method() 'later' end }
+      end
+      it 'extends previously-defined endpoints' do
+        get('/').body.should include 'later'
+      end
+    end
+
+    context 'nested' do
+      app do
+        namespace :nest do
+          get { { outer => inner } }
+          helper { def inner() 'inner' end }
+        end
+        helper { def outer() 'outer' end }
+      end
+      it 'extends nested endpoints with outer helpers' do
+        get('/nest').body.should eq '{"outer":"inner"}'
+      end
+    end
+  end
+
 end
