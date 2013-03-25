@@ -2,15 +2,16 @@ require 'spec_helper'
 require 'crepe'
 
 describe Crepe::API do
-  let(:app)    { Class.new(base, &routes) }
-  let(:base)   { Class.new(Crepe::API, &routes) }
-  let(:routes) { Proc.new { get { head } } }
 
   describe '.use' do
+    let(:app)    { Class.new base, &routes }
+    let(:base)   { Class.new Crepe::API, &routes }
+    let(:routes) { proc { get { head } } }
+
     let(:middleware) do
       Class.new do
         def initialize app, *args, &block
-          @app, @args, @block = app, args, block || ->(){}
+          @app, @args, @block = app, args, block || ->{}
         end
 
         def call env
@@ -83,6 +84,36 @@ describe Crepe::API do
           end
         end
       end
+    end
+  end
+
+  describe '.basic_auth' do
+    app do
+      namespace :admin do
+        basic_auth { |user, pass| user == 'admin' && pass == 'secret' }
+        get { head }
+
+        namespace :super_admin do
+          basic_auth { |user, pass| user == 'super' && pass == 'secreter' }
+          get { head }
+        end
+      end
+    end
+
+    it 'denies access' do
+      get('/admin').status.should eq 401
+    end
+
+    it 'accepts valid credentials' do
+      get('/admin', {}, auth('admin', 'secret')).should be_ok
+    end
+
+    it 'accepts nested credentials' do
+      get('/admin/super_admin', {}, auth('super', 'secreter')).should be_ok
+    end
+
+    def auth user, pass
+      { 'HTTP_AUTHORIZATION' => "Basic #{Base64.encode64 "#{user}:#{pass}"}" }
     end
   end
 end

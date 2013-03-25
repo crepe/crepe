@@ -5,6 +5,10 @@ $: << File.expand_path('../../config', __FILE__)
 RSpec.configure do |config|
   config.include Rack::Test::Methods
 
+  def app &block
+    let(:app) { Class.new Crepe::API, &block }
+  end
+
   def describes_middleware middleware = described_class
     let(:core)    { -> env { [status, headers, body] } }
 
