@@ -90,21 +90,25 @@ module Crepe
 
       Endpoint.default_config[:callbacks].each_key do |type|
         class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{type} mod = nil, &block
-            warn 'block takes precedence over module' if block && mod
-            callback = block || mod
-            raise ArgumentError, 'block or module required' unless callback
+          def #{type} filter = nil, &block
+            warn 'block takes precedence over object' if block && filter
+            callback = block || filter
+            raise ArgumentError, 'block or filter required' unless callback
             config[:endpoint][:callbacks][:#{type}] << callback
+          end
+
+          def skip_#{type} filter = nil, &block
+            warn 'block takes precedence over object' if block && filter
+            callback = block || proc { |c| filter == c || filter === c }
+            raise ArgumentError, 'block or filter required' unless callback
+            config[:endpoint][:callbacks][:#{type}].delete_if &callback
           end
         RUBY
       end
 
       def basic_auth *args, &block
-        before do
-          unless instance_exec request.credentials, &block
-            unauthorized!(*args)
-          end
-        end
+        skip_before Filter::BasicAuth
+        before Filter::BasicAuth.new(*args, &block)
       end
 
       def helper mod = nil, &block
