@@ -29,6 +29,8 @@ module Crepe
 
     attr_reader :config
 
+    attr_reader :routes
+
     attr_reader :env
 
     attr_accessor :body

@@ -140,11 +140,12 @@ module Crepe
       end
 
       def route method, path = '/', options = {}, &block
-        block ||= proc { head :ok }
+        block ||= proc { head }
         options = config[:endpoint].merge(handler: block).merge options
+        name = options.delete :as
         endpoint = Endpoint.new(options).extend config[:helper]
         mount endpoint, (options[:conditions] || {}).merge(
-          at: path, method: method, anchor: true
+          at: path, method: method, anchor: true, as: name
         )
       end
 
@@ -162,32 +163,26 @@ module Crepe
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
 
+        name = options.delete :as
+
         path_info = mount_path path, options
         conditions = { path_info: path_info, request_method: method }
 
         defaults = { format: config[:endpoint][:formats].first }
         defaults[:version] = config[:version].to_s if config[:version]
 
-        config[:routes] << [app, conditions, defaults]
+        config[:routes] << [app, conditions, defaults, name]
       end
 
       def to_app options = {}
-        exclude = options.fetch(:exclude, [])
-        middleware = config[:middleware] - exclude
-
         generate_options_routes!
 
-        route_set = Rack::Mount::RouteSet.new
-        config[:routes].each do |app, conditions, defaults|
-          if app.is_a?(Class) && app.ancestors.include?(API)
-            app = app.to_app exclude: exclude | middleware
-          end
-          route_set.add_route app, conditions, defaults
-        end
-        route_set.freeze
+        exclude = options.fetch(:exclude, [])
+        middleware = config[:middleware] - exclude
+        route_set = generate_route_set exclude: exclude | middleware
 
         Rack::Builder.app do
-          middleware.each { |ware, args, block| use ware, *args, &block }
+          middleware.each { |m, args, block| use m, *args, &block }
           run route_set
         end
       end
@@ -234,6 +229,19 @@ module Crepe
               error! :method_not_allowed, allow: allowed
             end
           end
+        end
+
+        def generate_route_set options = {}
+          route_set = Rack::Mount::RouteSet.new
+          config[:routes].each do |app, *args|
+            if app.is_a?(Class) && app.ancestors.include?(API)
+              app = app.to_app options
+            elsif app.is_a?(Endpoint)
+              app.define_singleton_method(:routes) { route_set }
+            end
+            route_set.add_route app, *args
+          end
+          route_set.freeze
         end
 
     end
