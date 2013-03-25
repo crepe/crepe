@@ -101,7 +101,7 @@ module Crepe
             warn 'block takes precedence over object' if block && filter
             callback = block || proc { |c| filter == c || filter === c }
             raise ArgumentError, 'block or filter required' unless callback
-            config[:endpoint][:callbacks][:#{type}].delete_if &callback
+            config[:endpoint][:callbacks][:#{type}].delete_if(&callback)
           end
         RUBY
       end
