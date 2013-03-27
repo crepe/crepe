@@ -51,8 +51,8 @@ module Crepe
       end
       alias_method :resource, :namespace
 
-      def param name, &block
-        namespace "/:#{name}", &block
+      def param name, options = {}, &block
+        namespace "/:#{name}", options, &block
       end
 
       def vendor vendor
