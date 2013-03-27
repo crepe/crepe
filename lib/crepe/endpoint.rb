@@ -131,9 +131,8 @@ module Crepe
           end
         end
         throw :halt
-      else
-        @stream if instance_variable_defined? :@stream
       end
+      @stream if defined? @stream
     end
 
     def error! code = :bad_request, message = nil, data = {}
