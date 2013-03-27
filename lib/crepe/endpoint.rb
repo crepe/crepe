@@ -61,6 +61,14 @@ module Crepe
       @params ||= Params.new request.params
     end
 
+    def vendor
+      config[:vendor]
+    end
+
+    def version
+      params[:version]
+    end
+
     def format
       @format ||= params.fetch(:format, config[:formats].first).to_sym
     end
@@ -78,8 +86,6 @@ module Crepe
       @content_type ||= begin
         extension = format == :json && params[:callback] ? :js : format
         content_type = Rack::Mime.mime_type ".#{extension}"
-        vendor = config[:vendor]
-        version = params[:version]
 
         if vendor || version
           type, subtype = content_type.split '/'
@@ -144,6 +150,22 @@ module Crepe
       realm = data.delete(:realm) { config[:vendor] }
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
       error! :unauthorized, message || data.delete(:message), data
+    end
+
+    def url_for *args
+      options = args.last.is_a?(Hash) ? args.pop : {}
+      url = "#{request.scheme}://#{request.host_with_port}"
+      if version
+        options[:v] = version if env['crepe.content_negotiation'] == :query
+        url << "/#{version}" if env['crepe.content_negotiation'].nil?
+      end
+      args.each { |c| url << "/#{c.to_param}" }
+      extension = options.delete :format do
+        format if File.extname(env['crepe.original_path_info']) == ".#{format}"
+      end
+      url << ".#{extension}" if extension
+      url << "?#{options.to_query}" unless options.empty?
+      url
     end
 
     protected
