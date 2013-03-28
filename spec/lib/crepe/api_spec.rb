@@ -24,6 +24,29 @@ describe Crepe::API do
     end
   end
 
+  describe '.version' do
+    app { version :v1 and get { 'OK' } }
+
+    it 'adds a namespace' do
+      get('/v1').should be_ok
+    end
+
+    it 'adds the version to content-type' do
+      get('/v1').content_type.should eq 'application/vnd.crepe.v1+json'
+    end
+
+    context 'with a block' do
+      app { version(:v1) { get { 'OK' } } and get { 'OK' } }
+      it 'sets the version for endpoints inside the block' do
+        get('/v1').content_type.should eq 'application/vnd.crepe.v1+json'
+      end
+
+      it 'does not set the version outside the block' do
+        get('/').content_type.should eq 'application/json'
+      end
+    end
+  end
+
   describe '.use' do
     let(:app)    { Class.new base, &routes }
     let(:base)   { Class.new Crepe::API, &routes }
