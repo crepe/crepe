@@ -11,12 +11,10 @@ module Crepe
         {
           callbacks: {
             after: [],
-            after_stream: [],
             before: [
               Filter::Acceptance,
               Filter::Parser
-            ],
-            before_stream: []
+            ]
           },
           formats: [:json],
           handler: nil,
@@ -99,13 +97,8 @@ module Crepe
     end
 
     def render object, options = {}
-      renderer = config[:renderers][format].new self
-      if stream
-        stream.puts renderer.render object, options
-      else
-        headers['Content-Type'] ||= content_type
-        self.body ||= catch(:head) { renderer.render object, options }
-      end
+      headers['Content-Type'] ||= content_type
+      self.body ||= catch(:head) { renderer.render object, options }
     end
 
     def head code = nil, options = {}
@@ -121,26 +114,6 @@ module Crepe
       head options.fetch :status, :see_other, location: location
     end
 
-    def stream
-      if block_given?
-        headers['rack.hijack'] = -> io do
-          begin
-            @stream = io
-            run_callbacks :before_stream
-            yield
-          ensure
-            begin
-              run_callbacks :after_stream
-            ensure
-              io.close
-            end
-          end
-        end
-        throw :halt
-      end
-      @stream if defined? @stream
-    end
-
     def error! code = :bad_request, message = nil, data = {}
       throw :halt, error(code, message, data)
     end
@@ -150,22 +123,6 @@ module Crepe
       realm = data.delete(:realm) { config[:vendor] }
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
       error! :unauthorized, message || data.delete(:message), data
-    end
-
-    def url_for *args
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      url = "#{request.scheme}://#{request.host_with_port}"
-      if version
-        options[:v] = version if env['crepe.content_negotiation'] == :query
-        url << "/#{version}" if env['crepe.content_negotiation'].nil?
-      end
-      args.each { |c| url << "/#{c.to_param}" }
-      extension = options.delete :format do
-        format if File.extname(env['crepe.original_path_info']) == ".#{format}"
-      end
-      url << ".#{extension}" if extension
-      url << "?#{options.to_query}" unless options.empty?
-      url
     end
 
     protected
@@ -210,6 +167,10 @@ module Crepe
             :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
+      end
+
+      def renderer
+        config[:renderers][format].new self
       end
 
       def error code, message = nil, data = {}
