@@ -66,9 +66,9 @@ module Crepe
         accept = ACCEPT_HEADER.match(env['HTTP_ACCEPT']) || {}
         path = env['crepe.original_path_info'] = env['PATH_INFO']
 
-        env['crepe.vendor'] = accept[:vendor] if accept[:vendor]
+        env['crepe.vendor'] = accept[:vendor]
 
-        version = accept[:version] || query_string_version(env)
+        version = accept_version(accept, env) || query_string_version(env)
         if version && !path.start_with?("/#{version}")
           path = ::File.join '/', version, path
         end
@@ -92,12 +92,20 @@ module Crepe
 
       private
 
+        def accept_version accept, env
+          if accept[:version]
+            env['crepe.content_negotiation'] = :header
+          end
+          accept[:version]
+        end
+
         def query_string_version env
           env['crepe.original_query_string'] = env['QUERY_STRING']
           query = Rack::Utils.parse_nested_query env['QUERY_STRING']
 
           version = query.delete('v')
           if version
+            env['crepe.content_negotiation'] = :query
             env['QUERY_STRING'] = query.to_query
             version
           end
