@@ -109,8 +109,8 @@ module Crepe
       throw :halt
     end
 
-    def redirect_to location, options = {}
-      head options.fetch :status, :see_other, location: location
+    def redirect_to location, status: :see_other
+      head status, location: location
     end
 
     def error! code = :bad_request, message = nil, **data

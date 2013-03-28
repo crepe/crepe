@@ -112,12 +112,12 @@ module Crepe
         before Filter::BasicAuth.new(*args, &block)
       end
 
-      def helper mod = nil, **options, &block
+      def helper mod = nil, prepend: false, &block
         if block
           warn 'block takes precedence over module' if mod
           mod = Module.new(&block)
         end
-        method = options[:prepend] ? :prepend : :include
+        method = prepend ? :prepend : :include
         config[:helper].send method, mod
       end
 
@@ -168,8 +168,7 @@ module Crepe
         config[:routes] << [app, conditions, defaults]
       end
 
-      def to_app options = {}
-        exclude = options.fetch(:exclude, [])
+      def to_app(exclude: [])
         middleware = config[:middleware] - exclude
 
         generate_options_routes!
