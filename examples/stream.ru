@@ -16,6 +16,8 @@ require 'crepe'
 #   {"timestamp":1363212647}
 #   ^C
 class Stream < Crepe::API
+  extend Crepe::Streaming
+
   stream do
     loop do
       render timestamp: Time.now.to_i

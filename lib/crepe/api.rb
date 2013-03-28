@@ -88,8 +88,10 @@ module Crepe
         }
       end
 
-      Endpoint.default_config[:callbacks].each_key do |type|
-        class_eval <<-RUBY, __FILE__, __LINE__ + 1
+      def define_callback type
+        config[:endpoint][:callbacks][type] ||= []
+
+        instance_eval <<-RUBY, __FILE__, __LINE__ + 1
           def #{type} filter = nil, &block
             warn 'block takes precedence over object' if block && filter
             callback = block || filter
@@ -111,12 +113,13 @@ module Crepe
         before Filter::BasicAuth.new(*args, &block)
       end
 
-      def helper mod = nil, &block
+      def helper mod = nil, **options, &block
         if block
           warn 'block takes precedence over module' if mod
           mod = Module.new(&block)
         end
-        config[:helper].send :include, mod
+        method = options[:prepend] ? :prepend : :include
+        config[:helper].send method, mod
       end
 
       def call env
@@ -133,10 +136,6 @@ module Crepe
 
       def any *args, &block
         route nil, *args, &block
-      end
-
-      def stream *args, &block
-        get(*args) { stream { instance_eval(&block) } }
       end
 
       def route method, path = '/', options = {}, &block
@@ -237,6 +236,9 @@ module Crepe
         end
 
     end
+
+    define_callback :before
+    define_callback :after
 
   end
 end
