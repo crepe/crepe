@@ -158,11 +158,11 @@ module Crepe
           exception.is_a? r[:exception_class]
         end
 
-        if rescuer && rescuer[:block]
-          instance_exec exception, &rescuer[:block]
+        if handler = rescuer && rescuer[:handler]
+          handler = method handler if handler.is_a? Symbol
+          instance_exec *(exception unless handler.arity.zero?), &handler
         else
-          code = rescuer && rescuer[:options].fetch(:status, :bad_request) ||
-            :internal_server_error
+          code = :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
       end

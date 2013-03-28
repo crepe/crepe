@@ -81,9 +81,12 @@ module Crepe
         end
       end
 
-      def rescue_from exception, options = {}, &block
+      def rescue_from exception, with: nil, &block
+        warn 'block takes precedence over handler' if block && with
+        handler = block || with
+        raise ArgumentError, 'block or handler required' unless handler
         config[:endpoint][:rescuers] << {
-          exception_class: exception, options: options, block: block
+          exception_class: exception, handler: handler
         }
       end
 
