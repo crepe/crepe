@@ -14,7 +14,7 @@ module Crepe
         stack.last
       end
 
-      delegate :[]=, :delete,
+      delegate :[]=, :update, :delete,
         to: :top
 
       def key? key

@@ -38,16 +38,14 @@ module Crepe
       end
 
       def namespace path, options = {}, &block
-        if block
-          outer_helper = config[:helper]
-          config.with options.merge(
-            namespace: path,
-            endpoint: Util.deep_dup(config[:endpoint]),
-            helper: Helper.new { include outer_helper }
-          ), &block
-        else
-          config[:namespace] = path
-        end
+        return config.update options.merge(namespace: path) unless block
+
+        outer_helper = config[:helper]
+        config.with options.merge(
+          namespace: path,
+          endpoint: Util.deep_dup(config[:endpoint]),
+          helper: Helper.new { include outer_helper }
+        ), &block
       end
       alias_method :resource, :namespace
 
