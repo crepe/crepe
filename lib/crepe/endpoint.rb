@@ -43,8 +43,6 @@ module Crepe
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
-
-      @config.freeze
     end
 
     def call env
@@ -174,6 +172,10 @@ module Crepe
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
         { error: data.merge(message: message) }
+      end
+
+      def initialize_dup other
+        @config = Util.deep_dup other.config
       end
 
   end

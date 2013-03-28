@@ -25,7 +25,6 @@ module Crepe
       ],
       namespace: nil,
       routes: [],
-      vendor: nil,
       version: nil
     )
 
@@ -159,6 +158,8 @@ module Crepe
           options.delete app if app
         end
 
+        extend_endpoints! app.endpoints if app.respond_to? :endpoints
+
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
 
@@ -189,6 +190,10 @@ module Crepe
           middleware.each { |ware, args, block| use ware, *args, &block }
           run route_set
         end
+      end
+
+      def endpoints
+        config[:routes].map(&:first).select { |app| app.is_a? Endpoint }
       end
 
       protected
@@ -232,6 +237,12 @@ module Crepe
               headers['Allow'] = allowed.join ', '
               error! :method_not_allowed, allow: allowed
             end
+          end
+        end
+
+        def extend_endpoints! endpoints
+          endpoints.each do |e|
+            e.config.update Util.deeper_merge config[:endpoint], e.config
           end
         end
 

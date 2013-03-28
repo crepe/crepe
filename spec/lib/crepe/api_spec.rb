@@ -22,6 +22,23 @@ describe Crepe::API do
     it 'sets vendor' do
       get('/').content_type.should eq 'application/vnd.pancake+json'
     end
+
+    context 'embedded in another API' do
+      before do
+        inner = Class.new(Crepe::API) { get { vendor } }
+        Object.const_set :Inner, inner
+      end
+
+      after do
+        Object.send :remove_const, :Inner if Object.const_defined? :Inner
+      end
+
+      app { vendor :pancake and mount Inner }
+
+      it 'carries over into the API' do
+        get('/').body.should eq '"pancake"'
+      end
+    end
   end
 
   describe '.version' do
