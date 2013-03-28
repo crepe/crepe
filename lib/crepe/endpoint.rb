@@ -148,7 +148,6 @@ module Crepe
       def run_callbacks type
         config[:callbacks][type].each do |callback|
           next callback.filter self if callback.respond_to? :filter
-          callback = callback.to_proc if callback.respond_to? :to_proc
           instance_eval(&callback)
         end
       end
