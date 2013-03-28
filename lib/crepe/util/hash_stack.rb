@@ -39,7 +39,7 @@ module Crepe
       def to_hash
         stack.inject({}, &:merge)
       end
-      alias_method :to_h, :to_hash
+      alias to_h to_hash
 
       def dup
         self.class.new Util.deep_dup stack

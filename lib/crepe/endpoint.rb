@@ -101,8 +101,7 @@ module Crepe
       self.body ||= catch(:head) { renderer.render object, options }
     end
 
-    def head code = nil, options = {}
-      options, code = code if code.is_a? Hash
+    def head code = nil, **options
       status code if code
       options.each do |key, value|
         headers[key.to_s.tr('_', '-').gsub(/\b[a-z]/) { $&.upcase }] = value
@@ -114,12 +113,11 @@ module Crepe
       head options.fetch :status, :see_other, location: location
     end
 
-    def error! code = :bad_request, message = nil, data = {}
+    def error! code = :bad_request, message = nil, **data
       throw :halt, error(code, message, data)
     end
 
-    def unauthorized! message = nil, data = {}
-      data, message = message, nil if message.respond_to? :each_pair
+    def unauthorized! message = nil, **data
       realm = data.delete(:realm) { config[:vendor] }
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
       error! :unauthorized, message || data.delete(:message), data
@@ -173,8 +171,7 @@ module Crepe
         config[:renderers][format].new self
       end
 
-      def error code, message = nil, data = {}
-        data, message = message, nil if message.respond_to? :each_pair
+      def error code, message = nil, **data
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
         { error: data.merge(message: message) }

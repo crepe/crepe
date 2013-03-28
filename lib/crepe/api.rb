@@ -37,17 +37,18 @@ module Crepe
         subclass.config = config.dup
       end
 
-      def namespace path, options = {}, &block
-        return config.update options.merge(namespace: path) unless block
+      def scope namespace = nil, **options, &block
+        return config.update options.merge(namespace: namespace) unless block
 
         outer_helper = config[:helper]
         config.with options.merge(
-          namespace: path,
+          namespace: namespace,
           endpoint: Util.deep_dup(config[:endpoint]),
           helper: Helper.new { include outer_helper }
         ), &block
       end
-      alias_method :resource, :namespace
+      alias namespace scope
+      alias resource scope
 
       def param name, options = {}, &block
         namespace "/:#{name}", options, &block
@@ -136,7 +137,7 @@ module Crepe
         route nil, *args, &block
       end
 
-      def route method, path = '/', options = {}, &block
+      def route method, path = '/', **options, &block
         block ||= proc { head :ok }
         options = config[:endpoint].merge(handler: block).merge options
         endpoint = Endpoint.new(options).extend config[:helper]
@@ -145,13 +146,12 @@ module Crepe
         )
       end
 
-      def mount app, options = {}
+      def mount app = nil, **options
         path = '/'
 
-        if options.key? :at
+        if app && options.key?(:at)
           path = options.delete :at
-        elsif app.is_a? Hash
-          options = app
+        elsif app.nil?
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
         end
