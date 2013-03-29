@@ -58,7 +58,7 @@ module Crepe
       end
 
       def version version, &block
-        namespace version, version: version, &block
+        scope version, version: version, &block
       end
 
       def use middleware, *args, &block

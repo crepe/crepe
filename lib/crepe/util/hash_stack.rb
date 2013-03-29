@@ -22,7 +22,7 @@ module Crepe
       end
 
       def [] key
-        found_at = stack.reverse.detect { |frame| frame.key? key }
+        found_at = stack.reverse.find { |frame| frame.key? key }
         found_at && found_at[key]
       end
 
