@@ -62,6 +62,9 @@ module Crepe
       end
 
       def use middleware, *args, &block
+        if config[:namespace]
+          raise ArgumentError, "can't nest middleware in a namespace"
+        end
         config[:middleware] << [middleware, args, block]
       end
 
