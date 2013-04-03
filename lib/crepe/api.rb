@@ -161,7 +161,9 @@ module Crepe
           options.delete app if app
         end
 
-        extend_endpoints! app.endpoints if app.respond_to? :endpoints
+        if app.respond_to? :extend_endpoints!
+          app.extend_endpoints! config[:endpoint]
+        end
 
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
@@ -197,6 +199,12 @@ module Crepe
 
       def endpoints
         config[:routes].map(&:first).select { |app| app.is_a? Endpoint }
+      end
+
+      def extend_endpoints! config
+        endpoints.each do |e|
+          e.config.update Util.deeper_merge config, e.config
+        end
       end
 
       protected
@@ -240,12 +248,6 @@ module Crepe
               headers['Allow'] = allowed.join ', '
               error! :method_not_allowed, allow: allowed
             end
-          end
-        end
-
-        def extend_endpoints! endpoints
-          endpoints.each do |e|
-            e.config.update Util.deeper_merge config[:endpoint], e.config
           end
         end
 
