@@ -1,8 +1,7 @@
 require 'spec_helper'
-require_relative '../../../../lib/crepe/middleware/content_negotiation'
 
 describe Crepe::Middleware::ContentNegotiation do
-  describes_middleware
+  describes_middleware except: :core
 
   let(:core) {
     -> env {

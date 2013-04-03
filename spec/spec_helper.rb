@@ -2,6 +2,8 @@ require 'rspec'
 require 'rack/test'
 $: << File.expand_path('../../config', __FILE__)
 
+require 'crepe'
+
 RSpec.configure do |config|
   config.include Rack::Test::Methods
 
@@ -9,18 +11,24 @@ RSpec.configure do |config|
     let(:app) { Class.new Crepe::API, &block }
   end
 
-  def describes_middleware middleware = described_class
-    let(:core)    { -> env { [status, headers, body] } }
+  def describes_middleware middleware = described_class, except: []
+    except = [*except]
 
-    let(:status)  { 200 }
-    let(:headers) { {} }
-    let(:body)    { ['Hello, world!'] }
+    unless except.include? :core
+      let(:core)    { -> env { [status, headers, body] } }
+    end
 
-    let :app do
-      app = Rack::Builder.new
-      app.use middleware
-      app.run core
-      app.to_app
+    let(:status)  { 200 }               unless except.include? :status
+    let(:headers) { {} }                unless except.include? :status
+    let(:body)    { ['Hello, world!'] } unless except.include? :body
+
+    unless except.include? :app
+      let :app do
+        app = Rack::Builder.new
+        app.use middleware
+        app.run core
+        app.to_app
+      end
     end
   end
 end
