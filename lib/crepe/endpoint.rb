@@ -157,7 +157,7 @@ module Crepe
 
         if handler = rescuer && rescuer[:handler]
           handler = method handler if handler.is_a? Symbol
-          instance_exec *(exception unless handler.arity.zero?), &handler
+          instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
           code = :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
