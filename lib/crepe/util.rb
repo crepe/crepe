@@ -34,7 +34,7 @@ module Crepe
         if hash[key].is_a?(Hash) && value.is_a?(Hash)
           hash[key] = deeper_merge hash[key], value
         elsif hash[key].is_a?(Array) && value.is_a?(Array)
-          hash[key] += value
+          hash[key] |= value
         else
           hash[key] = value
         end

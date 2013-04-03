@@ -1,13 +1,11 @@
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path 'lib', __dir__
 require 'crepe/version'
 
 Gem::Specification.new do |s|
   s.name        = 'crepe'
   s.version     = Crepe::VERSION
   s.summary     = 'Rack-based API framework'
-  s.description = <<EOF
-Rack-based API framework
-EOF
+  s.description = 'Rack-based API framework'
 
   s.files       = Dir['lib/**/*']
 
