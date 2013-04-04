@@ -29,11 +29,8 @@ module Crepe
 
     attr_reader :env
 
-    attr_accessor :body
-
     def initialize config = {}, &block
       @config = self.class.default_config.deep_merge config
-      @status = 200
 
       if block
         warn 'block takes precedence over handler option' if @config[:handler]
@@ -69,14 +66,16 @@ module Crepe
       @format ||= params.fetch(:format, config[:formats].first).to_sym
     end
 
-    def status value = nil
-      @status = Rack::Utils.status_code value if value
-      @status
+    def response
+      @response ||= Response.new
     end
 
-    def headers
-      @headers ||= {}
+    def status value = nil
+      response.status = Rack::Utils.status_code value if value
+      response.status
     end
+
+    delegate :headers, to: :response
 
     def content_type
       @content_type ||= begin
@@ -96,7 +95,7 @@ module Crepe
 
     def render object, options = {}
       headers['Content-Type'] ||= content_type
-      self.body ||= catch(:head) { renderer.render object, options }
+      response.body ||= catch(:head) { renderer.render object, options }
     end
 
     def head code = nil, **options
@@ -121,6 +120,14 @@ module Crepe
       error! :unauthorized, message || data.delete(:message), data
     end
 
+    def expires_in seconds, options = {}
+      response.cache_control.update options.merge max_age: seconds
+    end
+
+    def expires_now
+      response.cache_control.replace no_cache: true
+    end
+
     protected
 
       def call! env
@@ -138,7 +145,7 @@ module Crepe
         render halt if halt
         run_callbacks :after
 
-        [status, headers, [*body]]
+        response.finish
       end
 
     private

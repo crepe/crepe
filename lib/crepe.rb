@@ -10,6 +10,7 @@ module Crepe
   autoload :Renderer,   'crepe/renderer'
   autoload :Request,    'crepe/request'
   autoload :Streaming,  'crepe/streaming'
+  autoload :Response,   'crepe/response'
   autoload :Util,       'crepe/util'
   autoload :VERSION,    'crepe/version'
 
