@@ -43,8 +43,6 @@ module Crepe
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
-
-      @config.freeze
     end
 
     def call env
@@ -109,8 +107,8 @@ module Crepe
       throw :halt
     end
 
-    def redirect_to location, options = {}
-      head options.fetch :status, :see_other, location: location
+    def redirect_to location, status: :see_other
+      head status, location: location
     end
 
     def error! code = :bad_request, message = nil, **data
@@ -148,7 +146,6 @@ module Crepe
       def run_callbacks type
         config[:callbacks][type].each do |callback|
           next callback.filter self if callback.respond_to? :filter
-          callback = callback.to_proc if callback.respond_to? :to_proc
           instance_eval(&callback)
         end
       end
@@ -158,11 +155,11 @@ module Crepe
           exception.is_a? r[:exception_class]
         end
 
-        if rescuer && rescuer[:block]
-          instance_exec exception, &rescuer[:block]
+        if handler = rescuer && rescuer[:handler]
+          handler = method handler if handler.is_a? Symbol
+          instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
-          code = rescuer && rescuer[:options].fetch(:status, :bad_request) ||
-            :internal_server_error
+          code = :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
       end
@@ -175,6 +172,10 @@ module Crepe
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
         { error: data.merge(message: message) }
+      end
+
+      def initialize_dup other
+        @config = Util.deep_dup other.config
       end
 
   end

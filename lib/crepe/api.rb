@@ -25,7 +25,6 @@ module Crepe
       ],
       namespace: nil,
       routes: [],
-      vendor: nil,
       version: nil
     )
 
@@ -59,10 +58,13 @@ module Crepe
       end
 
       def version version, &block
-        namespace version, version: version, &block
+        scope version, version: version, &block
       end
 
       def use middleware, *args, &block
+        if config[:namespace]
+          raise ArgumentError, "can't nest middleware in a namespace"
+        end
         config[:middleware] << [middleware, args, block]
       end
 
@@ -81,9 +83,12 @@ module Crepe
         end
       end
 
-      def rescue_from exception, options = {}, &block
+      def rescue_from exception, with: nil, &block
+        warn 'block takes precedence over handler' if block && with
+        handler = block || with
+        raise ArgumentError, 'block or handler required' unless handler
         config[:endpoint][:rescuers] << {
-          exception_class: exception, options: options, block: block
+          exception_class: exception, handler: handler
         }
       end
 
@@ -112,12 +117,12 @@ module Crepe
         before Filter::BasicAuth.new(*args, &block)
       end
 
-      def helper mod = nil, **options, &block
+      def helper mod = nil, prepend: false, &block
         if block
           warn 'block takes precedence over module' if mod
           mod = Module.new(&block)
         end
-        method = options[:prepend] ? :prepend : :include
+        method = prepend ? :prepend : :include
         config[:helper].send method, mod
       end
 
@@ -156,6 +161,10 @@ module Crepe
           options.delete app if app
         end
 
+        if app.respond_to? :extend_endpoints!
+          app.extend_endpoints! config[:endpoint]
+        end
+
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
 
@@ -168,8 +177,7 @@ module Crepe
         config[:routes] << [app, conditions, defaults]
       end
 
-      def to_app options = {}
-        exclude = options.fetch(:exclude, [])
+      def to_app(exclude: [])
         middleware = config[:middleware] - exclude
 
         generate_options_routes!
@@ -186,6 +194,16 @@ module Crepe
         Rack::Builder.app do
           middleware.each { |ware, args, block| use ware, *args, &block }
           run route_set
+        end
+      end
+
+      def endpoints
+        config[:routes].map(&:first).select { |app| app.is_a? Endpoint }
+      end
+
+      def extend_endpoints! config
+        endpoints.each do |e|
+          e.config.update Util.deeper_merge config, e.config
         end
       end
 

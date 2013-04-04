@@ -22,6 +22,23 @@ describe Crepe::API do
     it 'sets vendor' do
       get('/').content_type.should eq 'application/vnd.pancake+json'
     end
+
+    context 'embedded in another API' do
+      before do
+        inner = Class.new(Crepe::API) { get { vendor } }
+        Object.const_set :Inner, inner
+      end
+
+      after do
+        Object.send :remove_const, :Inner if Object.const_defined? :Inner
+      end
+
+      app { vendor :pancake and mount Inner }
+
+      it 'carries over into the API' do
+        get('/').body.should eq '"pancake"'
+      end
+    end
   end
 
   describe '.version' do
@@ -73,7 +90,7 @@ describe Crepe::API do
     end
 
     context 'in an inherited app' do
-      let(:base) { super().tap {|b| b.use middleware, 0 } }
+      let(:base) { super().tap { |b| b.use middleware, 0 } }
 
       it 'is used in endpoints in the inheriting API' do
         get('/').body.should eq '0123'
@@ -81,7 +98,7 @@ describe Crepe::API do
     end
 
     context 'in a mounted app' do
-      let(:app2) { Class.new(base, &routes) }
+      let(:app2) { Class.new base, &routes }
 
       before do
         app2.use middleware, 4
