@@ -89,9 +89,7 @@ module Crepe
         warn 'block takes precedence over handler' if block && with
         handler = block || with
         raise ArgumentError, 'block or handler required' unless handler
-        config[:endpoint][:rescuers] << {
-          exception_class: exception, handler: handler
-        }
+        config[:endpoint][:rescuers][exception] = handler
       end
 
       def define_callback type

@@ -19,7 +19,7 @@ module Crepe
           formats: [:json],
           handler: nil,
           renderers: Hash.new(Renderer::Tilt),
-          rescuers: []
+          rescuers: {}
         }
       end
 
@@ -158,11 +158,9 @@ module Crepe
       end
 
       def handle_exception exception
-        rescuer = config[:rescuers].find do |r|
-          exception.is_a? r[:exception_class]
-        end
+        classes = config[:rescuers].keys.select { |c| exception.is_a? c }
 
-        if handler = rescuer && rescuer[:handler]
+        if handler = config[:rescuers][classes.sort.first]
           handler = method handler if handler.is_a? Symbol
           instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
