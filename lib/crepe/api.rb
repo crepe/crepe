@@ -14,6 +14,8 @@ module Crepe
     METHODS = %w[GET POST PUT PATCH DELETE]
 
     @config = Util::HashStack.new(
+      conditions: {},
+      defaults: {},
       endpoint: Endpoint.default_config,
       helper: Helper.new,
       middleware: [
@@ -146,7 +148,8 @@ module Crepe
         block ||= proc { head :ok }
         options = config[:endpoint].merge(handler: block).merge options
         endpoint = Endpoint.new(options).extend config[:helper]
-        mount endpoint, (options[:conditions] || {}).merge(
+        conditions = config[:conditions].merge options.fetch :conditions, {}
+        mount endpoint, conditions.merge(
           at: path, method: method, anchor: true
         )
       end
@@ -171,7 +174,9 @@ module Crepe
         path_info = mount_path path, options
         conditions = { path_info: path_info, request_method: method }
 
-        defaults = { format: config[:endpoint][:formats].first }
+        defaults = config[:defaults].merge(
+          format: config[:endpoint][:formats].first
+        )
         defaults[:version] = config[:version].to_s if config[:version]
 
         config[:routes] << [app, conditions, defaults]
