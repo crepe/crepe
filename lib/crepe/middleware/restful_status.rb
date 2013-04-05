@@ -18,10 +18,9 @@ module Crepe
         if status == 200
           case env['REQUEST_METHOD']
           when 'POST'
-            status = 201
-          when 'DELETE'
-            status = 204
-            body = []
+            status = body.empty? ? 204 : 201
+          when 'PUT', 'PATCH', 'DELETE'
+            status = 204 if body.empty?
           end
         end
 
