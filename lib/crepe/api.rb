@@ -60,6 +60,9 @@ module Crepe
       end
 
       def version version, &block
+        if config[:version] || config[:namespace]
+          raise ArgumentError, "can't nest versions"
+        end
         scope version, version: version, &block
       end
 
