@@ -13,6 +13,8 @@ module Crepe
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
+    SEPARATORS = %w[/ . ?]
+
     @config = Util::HashStack.new(
       conditions: {},
       defaults: {},
@@ -27,6 +29,7 @@ module Crepe
       ],
       namespace: nil,
       routes: [],
+      separators: SEPARATORS,
       version: nil
     )
 
@@ -153,7 +156,9 @@ module Crepe
         endpoint = Endpoint.new config[:endpoint].merge handler: block
         endpoint.extend config[:helper]
         mount endpoint, config[:conditions].merge(options[:conditions]).merge(
-          at: path, method: method, anchor: true, defaults: options[:defaults]
+          options.slice(:defaults, :separators).merge(
+            at: path, method: method, anchor: true
+          )
         )
       end
 
@@ -239,7 +244,7 @@ module Crepe
           return path if path.is_a? Regexp
 
           namespaces = config.all(:namespace).compact
-          separators = options.delete(:separators) { %w[ / . ? ] }
+          separators = options.delete(:separators) { config[:separators] }
           anchor = options.delete(:anchor) { false }
 
           path = Util.normalize_path ['/', namespaces, path].join '/'
