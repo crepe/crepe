@@ -5,6 +5,9 @@ module Crepe
   # A single API endpoint.
   class Endpoint
 
+    class RenderError < StandardError
+    end
+
     class << self
 
       def default_config
@@ -95,7 +98,8 @@ module Crepe
 
     def render object, options = {}
       headers['Content-Type'] ||= content_type
-      response.body ||= catch(:head) { renderer.render object, options }
+      raise RenderError, 'body already rendered' if response.body
+      response.body = catch(:head) { renderer.render object, options }
     end
 
     def head code = nil, **options
@@ -133,16 +137,15 @@ module Crepe
       def call! env
         @env = env
 
-        halt = catch :halt do
+        payload = catch :halt do
           begin
             run_callbacks :before
-            render instance_eval(&config[:handler])
-            break
+            instance_eval(&config[:handler])
           rescue => e
             handle_exception e
           end
         end
-        render halt if halt
+        render payload if payload && response.body.nil?
         run_callbacks :after
 
         response.finish
