@@ -17,6 +17,9 @@ module Crepe
       delegate :[]=, :update, :delete,
         to: :top
 
+      delegate :keys,
+        to: :to_h
+
       def key? key
         stack.any? { |frame| frame.key? key }
       end
@@ -37,7 +40,7 @@ module Crepe
       end
 
       def to_hash
-        stack.inject({}, &:merge)
+        stack.inject :merge
       end
       alias to_h to_hash
 

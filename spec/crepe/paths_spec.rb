@@ -19,6 +19,14 @@ describe Crepe::API, 'paths' do
     version :v1 do
       namespace 'users' do
         get '/all'
+
+        param id: /\d+/ do
+          get
+
+          get :posts, filter: 'active' do
+            params[:filter]
+          end
+        end
       end
     end
   end
@@ -28,10 +36,13 @@ describe Crepe::API, 'paths' do
     get('/v2/users/1').should be_successful
     get('/v2/users/1/posts').should be_successful
     get('/v1/users/all').should be_successful
+    get('/v1/users/1').should be_successful
+    get('/v1/users/1/posts').body.should include 'active'
   end
 
   it "doesn't route unknown paths" do
     get('/').should be_not_found
     get('/v2/users/all').should be_not_found
+    get('/v1/users/none').should be_not_found
   end
 end

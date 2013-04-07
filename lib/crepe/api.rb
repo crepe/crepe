@@ -41,6 +41,7 @@ module Crepe
       def scope namespace = nil, **options, &block
         return config.update options.merge(namespace: namespace) unless block
 
+        extract_conditions_and_defaults! options
         outer_helper = config[:helper]
         config.with options.merge(
           namespace: namespace,
@@ -51,7 +52,8 @@ module Crepe
       alias namespace scope
       alias resource scope
 
-      def param name, options = {}, &block
+      def param name = nil, **options, &block
+        name ||= options.keys.first
         namespace "/:#{name}", options, &block
       end
 
@@ -146,12 +148,12 @@ module Crepe
       end
 
       def route method, path = '/', **options, &block
+        extract_conditions_and_defaults! options
         block ||= proc { head :ok }
-        options = config[:endpoint].merge(handler: block).merge options
-        endpoint = Endpoint.new(options).extend config[:helper]
-        conditions = config[:conditions].merge options.fetch :conditions, {}
-        mount endpoint, conditions.merge(
-          at: path, method: method, anchor: true
+        endpoint = Endpoint.new config[:endpoint].merge handler: block
+        endpoint.extend config[:helper]
+        mount endpoint, config[:conditions].merge(options[:conditions]).merge(
+          at: path, method: method, anchor: true, defaults: options[:defaults]
         )
       end
 
@@ -172,12 +174,11 @@ module Crepe
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
 
+        defaults = config[:defaults].merge options.delete(:defaults) { {} }
         path_info = mount_path path, options
         conditions = { path_info: path_info, request_method: method }
 
-        defaults = config[:defaults].merge(
-          format: config[:endpoint][:formats].first
-        )
+        defaults[:format] = config[:endpoint][:formats].first
         defaults[:version] = config[:version].to_s if config[:version]
 
         config[:routes] << [app, conditions, defaults]
@@ -223,17 +224,28 @@ module Crepe
           @app ||= to_app
         end
 
-        def mount_path path, conditions
+        def extract_conditions_and_defaults! options
+          options[:conditions] ||= {}
+          options[:defaults] ||= {}
+
+          options.except(*config.keys).each_key do |key|
+            value = options.delete key
+            option = value.is_a?(Regexp) ? :conditions : :defaults
+            options[option][key] = value
+          end
+        end
+
+        def mount_path path, options
           return path if path.is_a? Regexp
 
           namespaces = config.all(:namespace).compact
-          separator = conditions.delete(:separator) { %w[ / . ? ] }
-          anchor = conditions.delete(:anchor) { false }
+          separators = options.delete(:separators) { %w[ / . ? ] }
+          anchor = options.delete(:anchor) { false }
 
           path = Util.normalize_path ['/', namespaces, path].join '/'
           path << '(.:format)' if anchor
 
-          Rack::Mount::Strexp.compile path, conditions, separator, anchor
+          Rack::Mount::Strexp.compile path, options, separators, anchor
         end
 
         def generate_options_routes!
