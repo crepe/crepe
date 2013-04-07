@@ -24,7 +24,7 @@ module Crepe
     # See `deeper_merge!`: returns a copy of the original hash, rather
     # than merging it in place.
     def deeper_merge hash, other_hash
-      deeper_merge! hash.dup, other_hash
+      deeper_merge! hash.deep_dup, other_hash
     end
 
     # Deeply merges the first hash with the second hash, concatenating

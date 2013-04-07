@@ -16,8 +16,6 @@ module Crepe
     SEPARATORS = %w[/ . ?]
 
     @config = Util::HashStack.new(
-      conditions: {},
-      defaults: {},
       endpoint: Endpoint.default_config,
       helper: Helper.new,
       middleware: [
@@ -28,7 +26,12 @@ module Crepe
         Rack::ETag
       ],
       namespace: nil,
-      separators: SEPARATORS,
+      route_options: {
+        constraints: {},
+        defaults: {},
+        anchor: false,
+        separators: SEPARATORS
+      },
       version: nil
     )
 
@@ -47,10 +50,10 @@ module Crepe
       def scope namespace = nil, **options, &block
         return config.update options.merge(namespace: namespace) unless block
 
-        extract_conditions_and_defaults! options
         outer_helper = config[:helper]
         config.with options.merge(
           namespace: namespace,
+          route_options: normalize_route_options(options),
           endpoint: Util.deep_dup(config[:endpoint]),
           helper: Helper.new { include outer_helper }
         ), &block
@@ -154,15 +157,10 @@ module Crepe
       end
 
       def route method, path = '/', **options, &block
-        extract_conditions_and_defaults! options
         block ||= proc { head :ok }
         endpoint = Endpoint.new config[:endpoint].merge handler: block
         endpoint.extend config[:helper]
-        mount endpoint, config[:conditions].merge(options[:conditions]).merge(
-          options.slice(:defaults, :separators).merge(
-            at: path, method: method, anchor: true
-          )
-        )
+        mount endpoint, options.merge(at: path, method: method, anchor: true)
       end
 
       def mount app = nil, **options
@@ -182,12 +180,15 @@ module Crepe
         method = options.delete :method
         method = %r{#{method.join '|'}}i if method.respond_to? :join
 
-        defaults = config[:defaults].merge options.delete(:defaults) { {} }
-        path_info = mount_path path, options
-        conditions = { path_info: path_info, request_method: method }
+        options = normalize_route_options options
 
+        conditions = {
+          path_info: mount_path(path, options), request_method: method
+        }
+
+        defaults = options[:defaults]
         defaults[:format] = config[:endpoint][:formats].first
-        defaults[:version] = config[:version].to_s if config[:version]
+        defaults[:version] = config[:version] if config[:version]
 
         routes << [app, conditions, defaults]
       end
@@ -232,28 +233,25 @@ module Crepe
           @app ||= to_app
         end
 
-        def extract_conditions_and_defaults! options
-          options[:conditions] ||= {}
-          options[:defaults] ||= {}
-
-          options.except(*config.keys).each_key do |key|
+        def normalize_route_options options
+          options = Util.deeper_merge config[:route_options], options
+          options.except(*config[:route_options].keys).each_key do |key|
             value = options.delete key
-            option = value.is_a?(Regexp) ? :conditions : :defaults
+            option = value.is_a?(Regexp) ? :constraints : :defaults
             options[option][key] = value
           end
+          options
         end
 
         def mount_path path, options
           return path if path.is_a? Regexp
 
           namespaces = config.all(:namespace).compact
-          separators = options.delete(:separators) { config[:separators] }
-          anchor = options.delete(:anchor) { false }
-
           path = Util.normalize_path ['/', namespaces, path].join '/'
-          path << '(.:format)' if anchor
-
-          Rack::Mount::Strexp.compile path, options, separators, anchor
+          path << '(.:format)' if options[:anchor]
+          Rack::Mount::Strexp.compile(
+            path, *options.values_at(:constraints, :separators, :anchor)
+          )
         end
 
         def generate_options_routes!

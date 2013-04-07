@@ -6,7 +6,7 @@ describe Crepe::API, 'paths' do
       scope '/users' do
         get
 
-        param :id, conditions: { id: /\d+/ } do
+        param :id, constraints: { id: /\d+/ } do
           get
 
           resource :posts do

@@ -14,20 +14,8 @@ module Crepe
         stack.last
       end
 
-      delegate :[]=, :update, :delete,
+      delegate :[], :[]=, :delete, :update,
         to: :top
-
-      delegate :keys,
-        to: :to_h
-
-      def key? key
-        stack.any? { |frame| frame.key? key }
-      end
-
-      def [] key
-        found_at = stack.reverse.find { |frame| frame.key? key }
-        found_at && found_at[key]
-      end
 
       def all key
         stack.map { |frame| frame[key] }.flatten 1
