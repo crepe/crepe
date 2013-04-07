@@ -28,7 +28,6 @@ module Crepe
         Rack::ETag
       ],
       namespace: nil,
-      routes: [],
       separators: SEPARATORS,
       version: nil
     )
@@ -36,6 +35,10 @@ module Crepe
     class << self
 
       attr_reader :config
+
+      def routes
+        @routes ||= []
+      end
 
       def inherited subclass
         subclass.config = config.dup
@@ -186,7 +189,7 @@ module Crepe
         defaults[:format] = config[:endpoint][:formats].first
         defaults[:version] = config[:version].to_s if config[:version]
 
-        config[:routes] << [app, conditions, defaults]
+        routes << [app, conditions, defaults]
       end
 
       def to_app(exclude: [])
@@ -195,7 +198,7 @@ module Crepe
         generate_options_routes!
 
         route_set = Rack::Mount::RouteSet.new
-        config[:routes].each do |app, conditions, defaults|
+        routes.each do |app, conditions, defaults|
           if app.is_a?(Class) && app.ancestors.include?(API)
             app = app.to_app exclude: exclude | middleware
           end
@@ -210,7 +213,7 @@ module Crepe
       end
 
       def endpoints
-        config[:routes].map(&:first).select { |app| app.is_a? Endpoint }
+        routes.map(&:first).select { |app| app.is_a? Endpoint }
       end
 
       def extend_endpoints! config
@@ -254,9 +257,9 @@ module Crepe
         end
 
         def generate_options_routes!
-          paths = config[:routes].group_by { |_, cond| cond[:path_info] }
-          paths.each do |path, routes|
-            allowed = routes.map { |_, cond| cond[:request_method] }
+          paths = routes.group_by { |_, cond| cond[:path_info] }
+          paths.each do |path, options|
+            allowed = options.map { |_, cond| cond[:request_method] }
             next if allowed.include?('OPTIONS') || allowed.none?
 
             allowed << 'HEAD' if allowed.include? 'GET'
