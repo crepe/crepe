@@ -34,13 +34,13 @@ module Crepe
       end
 
       def with frame = {}
-        self << frame
+        self << to_hash.deep_merge(frame)
         yield
         pop
       end
 
       def to_hash
-        stack.inject :merge
+        stack.inject :deep_merge
       end
       alias to_h to_hash
 
