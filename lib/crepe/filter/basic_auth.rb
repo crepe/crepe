@@ -1,5 +1,7 @@
 module Crepe
   module Filter
+    # A before-callback to handle HTTP basic authentication before an endpoint
+    # is called.
     class BasicAuth
 
       def initialize *args, &block

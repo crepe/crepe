@@ -5,6 +5,7 @@ module Crepe
   # A single API endpoint.
   class Endpoint
 
+    # Raised when render is called and a response body is already present.
     class RenderError < StandardError
     end
 

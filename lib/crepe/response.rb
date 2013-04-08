@@ -1,6 +1,7 @@
 require 'rack/response'
 
 module Crepe
+  # A lightweight endpoint response object used to generate a Rack response.
   class Response
 
     include Rack::Response::Helpers
