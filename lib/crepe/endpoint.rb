@@ -148,9 +148,8 @@ module Crepe
     private
 
       def run_callbacks type
-        config[:callbacks][type].each do |callback|
-          next callback.filter self if callback.respond_to? :filter
-          instance_eval(&callback)
+        config[:callbacks][type].each do |c|
+          c.respond_to?(:filter) ? c.filter(self) : instance_eval(&c)
         end
       end
 
