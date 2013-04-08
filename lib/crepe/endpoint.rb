@@ -20,7 +20,6 @@ module Crepe
             ]
           },
           formats: [:json],
-          handler: nil,
           renderers: Hash.new(Renderer::Tilt),
           rescuers: {}
         }
@@ -32,17 +31,12 @@ module Crepe
 
     attr_reader :env
 
-    def initialize config = {}, &block
+    def initialize config = {}, &handler
       @config = self.class.default_config.deep_merge config
-
-      if block
-        warn 'block takes precedence over handler option' if @config[:handler]
-        @config[:handler] = block
-      end
-
       if @config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
+      define_singleton_method :run_handler, &handler
     end
 
     def call env
@@ -140,7 +134,7 @@ module Crepe
         payload = catch :halt do
           begin
             run_callbacks :before
-            instance_eval(&config[:handler])
+            run_handler
           rescue => e
             handle_exception e
           end

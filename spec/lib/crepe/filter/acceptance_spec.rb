@@ -9,7 +9,7 @@ describe Crepe::Filter::Acceptance do
     Rack::MockRequest.env_for
   }
   let(:endpoint) {
-    endpoint = Crepe::Endpoint.new formats: %w[json]
+    endpoint = Crepe::Endpoint.new(formats: %w[json]) {}
     endpoint.instance_variable_set :@env, env
     endpoint
   }

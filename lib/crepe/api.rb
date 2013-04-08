@@ -158,7 +158,7 @@ module Crepe
 
       def route method, path = '/', **options, &block
         block ||= proc { head :ok }
-        endpoint = Endpoint.new config[:endpoint].merge handler: block
+        endpoint = Endpoint.new config[:endpoint], &block
         endpoint.extend config[:helper]
         mount endpoint, options.merge(at: path, method: method, anchor: true)
       end

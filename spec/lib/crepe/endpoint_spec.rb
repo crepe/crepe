@@ -4,8 +4,8 @@ require 'rack/mock'
 require_relative '../../../lib/crepe/endpoint'
 
 describe Crepe::Endpoint do
-  let(:endpoint) { described_class.new config }
-  let(:config) { { handler: handler } }
+  let(:endpoint) { described_class.new config, &handler }
+  let(:config) { {} }
   let(:handler) { proc { 'Hello, world!' } }
   let(:response) {
     status, headers, body = endpoint.call env
