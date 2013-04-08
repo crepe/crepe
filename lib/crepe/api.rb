@@ -157,7 +157,7 @@ module Crepe
       end
 
       def route method, path = '/', **options, &block
-        block ||= proc { head :ok }
+        block ||= proc { head }
         endpoint = Endpoint.new config[:endpoint], &block
         endpoint.extend config[:helper]
         mount endpoint, options.merge(at: path, method: method, anchor: true)
@@ -208,7 +208,7 @@ module Crepe
         route_set.freeze
 
         Rack::Builder.app do
-          middleware.each { |ware, args, block| use ware, *args, &block }
+          middleware.each { |m, args, block| use m, *args, &block }
           run route_set
         end
       end
