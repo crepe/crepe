@@ -13,7 +13,7 @@ module Crepe
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
-    SEPARATORS = %w[/ . ?]
+    SEPARATORS = %w[ / . ? ]
 
     @config = Util::HashStack.new(
       endpoint: Endpoint.default_config,
