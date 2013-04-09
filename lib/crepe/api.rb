@@ -84,19 +84,9 @@ module Crepe
         config[:middleware] << [middleware, args, block]
       end
 
-      def respond_to *formats
-        config[:endpoint][:formats] = []
-
-        formats.each do |format|
-          if format.respond_to? :each_pair
-            format.each_pair do |f, renderer|
-              config[:endpoint][:formats] << f.to_sym
-              config[:endpoint][:renderers][f.to_sym] = renderer
-            end
-          else
-            config[:endpoint][:formats] << format.to_sym
-          end
-        end
+      def respond_to *formats, **renderers
+        config[:endpoint][:formats] = formats | renderers.keys
+        config[:endpoint][:renderers].update renderers
       end
 
       def rescue_from *exceptions, with: nil, &block
