@@ -51,8 +51,16 @@ module Crepe
 
         def include mod
           super
-          extending.each { |object| object.extend mod }
+          extending.each { |o| o.singleton_class.__send__ :include, mod }
           included_by.each { |base| base.__send__ :include, mod }
+          prepending.each { |base| base.__send__ :include, mod }
+        end
+
+        def prepend mod
+          super
+          extending.each { |o| o.singleton_class.__send__ :prepend, mod }
+          included_by.each { |base| base.__send__ :prepend, mod }
+          prepending.each { |base| base.__send__ :prepend, mod }
         end
 
         def extended object
@@ -65,12 +73,21 @@ module Crepe
           included_by << base
         end
 
+        def prepended base
+          super
+          prepending << base
+        end
+
         def extending
           @_extending ||= []
         end
 
         def included_by
           @_included_by ||= []
+        end
+
+        def prepending
+          @_prepending ||= []
         end
 
     end
