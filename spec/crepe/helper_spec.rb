@@ -42,6 +42,10 @@ describe Crepe::API, '.helper' do
         end
       end
     end
+
+    get do
+      { name: name }
+    end
   end
 
   it 'extends endpoints with block methods' do
@@ -55,5 +59,9 @@ describe Crepe::API, '.helper' do
   it 'extends nested endpoints with outer and inner helpers' do
     get('/module/nest').body.should include 'module and block'
     get('/module/nest').body.should include 'body'
+  end
+
+  it 'does not extend outer endpoints with inner helpers' do
+    get('/').body.should include "undefined local variable or method `name'"
   end
 end
