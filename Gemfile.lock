@@ -1,13 +1,13 @@
 GIT
   remote: git://github.com/puma/puma.git
-  revision: 2e2440024623e91bc4f3eb9052b27164627a60f3
+  revision: cc91b6cd511787b3a6d37df7c89d45facadef75f
   specs:
-    puma (2.0.0.b6)
+    puma (2.0.0.b7)
       rack (>= 1.1, < 2.0)
 
 GIT
   remote: git://github.com/rack/rack.git
-  revision: 7b535cd7ce78eaaaec99cd2677ad8dd5962019a4
+  revision: 232ed1ee3a2620e717a603319e52aa82d687554b
   specs:
     rack (1.6.0.alpha)
 
