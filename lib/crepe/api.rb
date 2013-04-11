@@ -136,9 +136,9 @@ module Crepe
 
       METHODS.each do |method|
         class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{method.downcase} *args, &block
-            route '#{method}', *args, &block
-          end
+          def #{method.downcase} *args, &block # def get *args, &block
+            route '#{method}', *args, &block   #   route 'GET', *args, &block
+          end                                  # end
         RUBY
       end
 
