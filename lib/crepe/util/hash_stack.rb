@@ -10,12 +10,12 @@ module Crepe
       delegate :pop, :push, :<<,
         to: :stack
 
-      def top
+      def now
         stack.last
       end
 
-      delegate :[], :[]=, :delete, :update,
-        to: :top
+      delegate :[], :[]=, :delete, :merge, :update,
+        to: :now
 
       def all key
         stack.map { |frame| frame[key] }.flatten 1

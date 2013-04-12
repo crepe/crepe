@@ -32,12 +32,19 @@ module Crepe
 
     attr_reader :env
 
+    alias dup clone
+
     def initialize config = {}, &handler
-      @config = self.class.default_config.deep_merge config
-      if @config[:formats].empty?
+      configure! config
+      define_singleton_method :run_handler, &handler
+    end
+
+    def configure! new_config
+      @config ||= self.class.default_config
+      @config = config.deep_merge new_config
+      if config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end
-      define_singleton_method :run_handler, &handler
     end
 
     def call env
@@ -174,10 +181,6 @@ module Crepe
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
         { error: data.merge(message: message) }
-      end
-
-      def initialize_dup other
-        @config = Util.deep_dup other.config
       end
 
   end

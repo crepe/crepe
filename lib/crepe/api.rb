@@ -8,7 +8,13 @@ module Crepe
     # Supports dynamic extensibility via {Util::ChainedInclude}, ensuring that
     # helpers defined after endpoints are still accessible to those endpoints.
     class Helper < Module
+
       include Util::ChainedInclude
+
+      def duplicable?
+        true
+      end
+
     end
 
     METHODS = %w[GET POST PUT PATCH DELETE]
@@ -35,16 +41,17 @@ module Crepe
       version: nil
     )
 
+    @routes = []
+
     class << self
 
       attr_reader :config
 
-      def routes
-        @routes ||= []
-      end
+      attr_reader :routes
 
       def inherited subclass
-        subclass.config = config.dup
+        subclass.config = Util.deep_dup config
+        subclass.routes = Util.deep_dup routes
       end
 
       def scope namespace = nil, **options, &block
@@ -147,9 +154,9 @@ module Crepe
 
       def route method, path = '/', **options, &block
         block ||= proc { head }
-        endpoint = Endpoint.new config[:endpoint], &block
-        endpoint.extend config[:helper]
-        mount endpoint, options.merge(at: path, method: method, anchor: true)
+        mount Endpoint.new(config[:endpoint], &block), options.merge(
+          at: path, method: method, anchor: true
+        )
       end
 
       def mount app = nil, **options
@@ -160,10 +167,6 @@ module Crepe
         elsif app.nil?
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
-        end
-
-        if app.respond_to? :extend_endpoints!
-          app.extend_endpoints! config[:endpoint]
         end
 
         method = options.delete :method
@@ -179,18 +182,19 @@ module Crepe
         defaults[:format] = config[:endpoint][:formats].first
         defaults[:version] = config[:version] if config[:version]
 
-        routes << [app, conditions, defaults]
+        routes << [app, conditions, defaults, config.now]
       end
 
-      def to_app(exclude: [])
-        middleware = config[:middleware] - exclude
+      def to_app(outer_config: config.merge(middleware: []))
+        middleware = config[:middleware] - outer_config[:middleware]
 
         generate_options_routes!
+        configure_endpoints! outer_config
 
         route_set = Rack::Mount::RouteSet.new
-        routes.each do |app, conditions, defaults|
+        routes.each do |app, conditions, defaults, conf|
           if app.is_a?(Class) && app.ancestors.include?(API)
-            app = app.to_app exclude: exclude | middleware
+            app = Class.new(app).to_app outer_config: conf
           end
           route_set.add_route app, conditions, defaults
         end
@@ -202,19 +206,9 @@ module Crepe
         end
       end
 
-      def endpoints
-        routes.map(&:first).select { |app| app.is_a? Endpoint }
-      end
-
-      def extend_endpoints! config
-        endpoints.each do |e|
-          e.config.update Util.deeper_merge config, e.config
-        end
-      end
-
       protected
 
-        attr_writer :config
+        attr_writer :config, :routes
 
       private
 
@@ -261,6 +255,17 @@ module Crepe
               headers['Allow'] = allowed.join ', '
               error! :method_not_allowed, allow: allowed
             end
+          end
+        end
+
+        def configure_endpoints! outer_config
+          endpoint_routes = routes.select { |route| route.first.is_a? Endpoint }
+          endpoint_routes.each do |endpoint, _, _, conf|
+            endpoint.extend outer_config[:helper]
+            endpoint.extend conf[:helper]
+            endpoint.configure!(
+              outer_config[:endpoint].deep_merge conf[:endpoint]
+            )
           end
         end
 

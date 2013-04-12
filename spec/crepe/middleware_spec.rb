@@ -50,41 +50,86 @@ describe Crepe::API, "middleware" do
       end
 
       context "with duplicate middleware" do
-        app do
-          middleware = Struct.new :app, :header do
+        let(:app)    { Class.new(base, &routes) }
+        let(:base)   { Class.new(Crepe::API, &routes) }
+        let(:routes) { Proc.new { get { head } } }
+
+        let(:middleware) do
+          Class.new do
+            def initialize app, *args, &block
+              @app, @args, @block = app, args, block || ->(){}
+            end
+
             def call env
-              status, headers, body = app.call env
-              name = header || 'X-Count'
-              headers[name] = (headers[name] || '0').next
-              [status, headers, body]
+              [200, {}, [*@args, *@block.call, *@app.call(env)[2]]]
             end
           end
-
-          use middleware
-          scope :first do
-            inner = Class.new Crepe::API do
-              use middleware
-              get
-            end
-            mount inner
-          end
-
-          scope :second do
-            inner = Class.new Crepe::API do
-              use middleware, 'X-Count-2'
-              get
-            end
-            mount inner
-          end
-
-          get
         end
 
-        it "only mounts one copy" do
-          get('/').headers['X-Count'].should eq '1'
-          get('/first').headers['X-Count'].should eq '1'
-          get('/second').headers['X-Count'].should eq '1'
-          last_response.headers['X-Count-2'].should eq '1'
+        before do
+          app.use(middleware, 1, 2) { 3 }
+        end
+
+        it 'accepts middleware, args, and block' do
+          get('/').body.should eq '123'
+        end
+
+        context 'in an inherited app' do
+          let(:base) { super().tap {|b| b.use middleware, 0 } }
+
+          it 'is used in endpoints in the inheriting API' do
+            get('/').body.should eq '0123'
+          end
+        end
+
+        context 'in a mounted app' do
+          let(:app2) { Class.new(base, &routes) }
+
+          before do
+            app2.use middleware, 4
+            app.mount app2, at: '/mounted'
+          end
+
+          it 'is used in mounted endpoints' do
+            get('/mounted').body.should eq '1234'
+          end
+
+          it 'is not used in the outer API endpoints' do
+            get('/').body.should eq '123'
+          end
+
+          context 'that mounts another app that mounts another, etc' do
+            let(:app3) { Class.new(base, &routes) }
+
+            before do
+              app2.mount app3, at: '/again'
+              app3.mount base, at: '/andagain'
+            end
+
+            context 'with the same middleware and args' do
+              before do
+                app3.use middleware, 4
+                base.use middleware, 4
+              end
+
+              it 'is not used again' do
+                get('/mounted/again').body.should eq '1234'
+                get('/mounted/again/andagain').body.should eq '1234'
+              end
+            end
+
+            context 'with different middleware or args' do
+              before do
+                app3.use middleware, 5
+                base.use middleware, 5
+              end
+
+              it 'is used in mounted endpoints' do
+                get('/mounted/again').body.should eq '12345'
+                get('/mounted/again/andagain').body.should eq '12345'
+              end
+            end
+          end
         end
       end
     end
