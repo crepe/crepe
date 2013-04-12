@@ -45,6 +45,7 @@ module Crepe
 
       def inherited subclass
         subclass.config = config.deep_dup
+        subclass.config[:middleware] = config[:middleware].dup
         subclass.routes = routes.deep_dup
       end
 
@@ -148,9 +149,8 @@ module Crepe
 
       def route method, path = '/', **options, &block
         block ||= proc { head }
-        mount Endpoint.new(config[:endpoint], &block), options.merge(
-          at: path, method: method, anchor: true
-        )
+        endpoint = Endpoint.new config[:endpoint], &block
+        mount endpoint, options.merge(at: path, method: method, anchor: true)
       end
 
       def mount app = nil, **options
@@ -180,18 +180,14 @@ module Crepe
       end
 
       def to_app(outer_config: config.merge(middleware: []))
-        middleware = config[:middleware] - outer_config[:middleware]
+        exclude = outer_config[:middleware]
+        middleware = config[:middleware] - exclude
 
         generate_options_routes!
-        configure_endpoints! outer_config
+        configure_routes! outer_config.merge middleware: exclude | middleware
 
         route_set = Rack::Mount::RouteSet.new
-        routes.each do |app, conditions, defaults, conf|
-          if app.is_a?(Class) && app.ancestors.include?(API)
-            app = Class.new(app).to_app outer_config: conf
-          end
-          route_set.add_route app, conditions, defaults
-        end
+        routes.each { |*route, _| route_set.add_route(*route) }
         route_set.freeze
 
         Rack::Builder.app do
@@ -252,14 +248,20 @@ module Crepe
           end
         end
 
-        def configure_endpoints! outer_config
-          endpoint_routes = routes.select { |route| route.first.is_a? Endpoint }
-          endpoint_routes.each do |endpoint, _, _, conf|
-            endpoint.extend outer_config[:helper]
-            endpoint.extend conf[:helper]
-            endpoint.configure!(
-              outer_config[:endpoint].deep_merge conf[:endpoint]
-            )
+        def configure_routes! outer_config
+          routes.map! do |app, conditions, defaults, config|
+            if app.is_a?(Class) && app.ancestors.include?(API)
+              config = config.merge middleware: outer_config[:middleware]
+              app = Class.new(app).to_app outer_config: config
+            elsif app.is_a?(Endpoint)
+              app.extend outer_config[:helper]
+              app.extend config[:helper]
+              app.configure!(
+                outer_config[:endpoint].deep_merge config[:endpoint]
+              )
+            end
+
+            [app, conditions, defaults, config]
           end
         end
 
