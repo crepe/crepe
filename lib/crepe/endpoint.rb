@@ -87,7 +87,7 @@ module Crepe
           content_type << "+#{subtype}"
         end
 
-        content_type
+        "#{content_type}; charset=utf-8"
       end
     end
 

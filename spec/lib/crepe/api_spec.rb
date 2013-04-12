@@ -13,7 +13,7 @@ describe Crepe::API do
   describe '.vendor' do
     app { vendor :pancake and get { 'OK' } }
     it 'sets vendor' do
-      get('/').content_type.should eq 'application/vnd.pancake+json'
+      get('/').content_type.should include 'application/vnd.pancake+json'
     end
 
     context 'embedded in another API' do
@@ -42,17 +42,17 @@ describe Crepe::API do
     end
 
     it 'adds the version to content-type' do
-      get('/v1').content_type.should eq 'application/vnd.crepe.v1+json'
+      get('/v1').content_type.should include 'application/vnd.crepe.v1+json'
     end
 
     context 'with a block' do
       app { version(:v1) { get { 'OK' } } and get { 'OK' } }
       it 'sets the version for endpoints inside the block' do
-        get('/v1').content_type.should eq 'application/vnd.crepe.v1+json'
+        get('/v1').content_type.should include 'application/vnd.crepe.v1+json'
       end
 
       it 'does not set the version outside the block' do
-        get('/').content_type.should eq 'application/json'
+        get('/').content_type.should include 'application/json'
       end
     end
   end

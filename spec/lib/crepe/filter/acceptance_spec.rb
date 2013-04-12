@@ -18,7 +18,7 @@ describe Crepe::Filter::Acceptance do
     it 'renders Not Acceptable' do
       env['rack.routing_args'] = { format: 'xml' }
       endpoint.should_receive(:error!).with(
-        :not_acceptable, accepts: %w[application/json]
+        :not_acceptable, accepts: ['application/json; charset=utf-8']
       )
       subject.filter endpoint
     end

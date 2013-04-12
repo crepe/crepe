@@ -1,6 +1,19 @@
 module Crepe
   module Streaming
 
+    # Simple wrapper to handle chunked streaming responses.
+    class ChunkedIO < SimpleDelegator
+
+      def write data
+        super "#{data.size.to_s 16}\r\n#{data}\r\n"
+      end
+
+      def puts data
+        write "#{data.chomp}\n"
+      end
+
+    end
+
     class << self
 
       def extended api
@@ -22,9 +35,11 @@ module Crepe
 
       def stream
         if block_given?
+          headers['Content-Type'] ||= content_type
+          headers['Transfer-Encoding'] = 'chunked'
           headers['rack.hijack'] = -> io do
             begin
-              @stream = io
+              @stream = ChunkedIO.new io
               run_callbacks :before_stream
               yield
             ensure
