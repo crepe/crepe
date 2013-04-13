@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.email       = %w[stephen@stephencelis.com kainosnoema@gmail.com]
   s.homepage    = 'https://github.com/stephencelis/crepe'
 
-  s.add_dependency 'activesupport', '~> 3.2.x'
+  s.add_dependency 'activesupport', '>= 3.2', '4.0.0.beta1'
   s.add_dependency 'rack',          '~> 1.5.x'
   s.add_dependency 'rack-mount',    '~> 0.8.x'
 
