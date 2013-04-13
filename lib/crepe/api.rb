@@ -50,14 +50,10 @@ module Crepe
       end
 
       def scope namespace = nil, **options, &block
-        return config.update options.merge(namespace: namespace) unless block
-
-        config.with options.merge(
-          namespace: namespace,
-          route_options: normalize_route_options(options),
-          endpoint: config[:endpoint].deep_dup,
-          helper: config[:helper].dup
-        ), &block
+        options = options.merge(
+          namespace: namespace, route_options: normalize_route_options(options)
+        )
+        config.scope :endpoint, :helper, options, &block
       end
       alias namespace scope
       alias resource scope
