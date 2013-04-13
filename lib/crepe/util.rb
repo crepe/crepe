@@ -46,8 +46,8 @@ module Crepe
 
     def normalize_path! path
       path.squeeze! '/'
-      path.sub! %r{/+\Z}, ''        # remove trailing slash
-      path.sub! %r{\A/?(.*)}, '/\1' # normalize leading slash
+      path.chomp! '/'
+      path.start_with?('/') ? path : '/' + path
     end
 
   end
