@@ -7,8 +7,12 @@ require 'crepe'
 RSpec.configure do |config|
   config.include Rack::Test::Methods
 
+  def api base = Crepe::API, &block
+    Class.new base, &block
+  end
+
   def app &block
-    let(:app) { Class.new Crepe::API, &block }
+    let(:app) { api &block }
   end
 
   def describes_middleware middleware = described_class, except: []
