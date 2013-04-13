@@ -32,8 +32,8 @@ module Crepe
       end
       alias to_h to_hash
 
-      def dup
-        self.class.new Util.deep_dup stack
+      def deep_dup
+        self.class.new stack.deep_dup
       end
 
       attr_reader :stack

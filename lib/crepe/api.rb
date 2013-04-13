@@ -8,13 +8,7 @@ module Crepe
     # Supports dynamic extensibility via {Util::ChainedInclude}, ensuring that
     # helpers defined after endpoints are still accessible to those endpoints.
     class Helper < Module
-
       include Util::ChainedInclude
-
-      def duplicable?
-        true
-      end
-
     end
 
     METHODS = %w[GET POST PUT PATCH DELETE]
@@ -50,8 +44,8 @@ module Crepe
       attr_reader :routes
 
       def inherited subclass
-        subclass.config = Util.deep_dup config
-        subclass.routes = Util.deep_dup routes
+        subclass.config = config.deep_dup
+        subclass.routes = routes.deep_dup
       end
 
       def scope namespace = nil, **options, &block
@@ -60,7 +54,7 @@ module Crepe
         config.with options.merge(
           namespace: namespace,
           route_options: normalize_route_options(options),
-          endpoint: Util.deep_dup(config[:endpoint]),
+          endpoint: config[:endpoint].deep_dup,
           helper: config[:helper].dup
         ), &block
       end
