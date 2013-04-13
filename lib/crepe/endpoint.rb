@@ -59,14 +59,6 @@ module Crepe
       @params ||= Params.new request.params
     end
 
-    def vendor
-      config[:vendor]
-    end
-
-    def version
-      params[:version]
-    end
-
     def format
       @format ||= params.fetch(:format, config[:formats].first).to_sym
     end
@@ -86,14 +78,6 @@ module Crepe
       @content_type ||= begin
         extension = format == :json && params[:callback] ? :js : format
         content_type = Rack::Mime.mime_type ".#{extension}"
-
-        if vendor || version
-          type, subtype = content_type.split '/'
-          content_type  = "#{type}/vnd.#{vendor || 'crepe'}"
-          content_type << ".#{version}" if version
-          content_type << "+#{subtype}"
-        end
-
         "#{content_type}; charset=utf-8"
       end
     end
