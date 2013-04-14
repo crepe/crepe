@@ -14,15 +14,16 @@ module Crepe
         stack.last
       end
 
-      delegate :[], :[]=, :delete, :merge, :update,
+      delegate :[], :[]=, :delete, :merge, :slice, :update,
         to: :now
 
       def all key
-        stack.map { |frame| frame[key] }.flatten 1
+        stack.map { |layer| layer[key] }.flatten 1
       end
 
-      def with frame = {}
-        self << to_hash.deep_merge(frame)
+      def scope *scoped, **updates
+        return update updates unless block_given?
+        push to_hash.deep_merge updates.merge slice(*scoped).deep_dup
         yield
         pop
       end
