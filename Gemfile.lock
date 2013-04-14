@@ -15,7 +15,7 @@ PATH
   remote: .
   specs:
     crepe (0.0.1.pre)
-      activesupport (>= 3.2, = 4.0.0.beta1)
+      activesupport (>= 4.0.0.beta1)
       rack (~> 1.5.x)
       rack-mount (~> 0.8.x)
 
