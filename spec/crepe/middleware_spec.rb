@@ -1,27 +1,50 @@
 require 'spec_helper'
 
 describe Crepe::API, "middleware" do
-  app do
-    use Rack::Runtime
-    get
+  middleware = Class.new do
+    def initialize app, *args, &block
+      @app, @args, @block = app, args, block || ->{}
+    end
 
-    scope :api do
-      get
+    def call env
+      _, hdr, _ = *@app.call(env)
+      hdr['X-Count'] = (hdr['X-Count'] || 0) + 1
+      [200, hdr, [*@args, *@block.call]]
     end
   end
 
+  app do
+    use middleware; get
+    scope(:api) { get }
+  end
+
   it "runs in the stack" do
-    get('/').headers.should include 'X-Runtime'
-    get('/api').headers.should include 'X-Runtime'
+    get('/').headers.should include 'X-Count'
+    get('/api').headers.should include 'X-Count'
+  end
+
+  describe "arguments" do
+    app do
+      use(middleware, 1, 2) { 3 }; get
+    end
+
+    it "accepts arguments and block" do
+      get('/').body.should eq '123'
+    end
+  end
+
+  describe "inheritance" do
+    base = api { use middleware }
+    let(:app) { api(base) { get } }
+
+    it "uses middleware from the superclass" do
+      get('/').headers.should include 'X-Count'
+    end
   end
 
   describe "nesting" do
     context "with a namespace" do
-      app do
-        scope :api do
-          use Rack::Runtime
-        end
-      end
+      app { scope(:api) { use middleware } }
 
       it "raises an exception" do
         expect { app }.to raise_error ArgumentError
@@ -30,62 +53,44 @@ describe Crepe::API, "middleware" do
 
     context "with a mount" do
       app do
-        scope :api do
-          runtime = Class.new Crepe::API do
-            use Rack::Runtime
-            get
-          end
-          mount runtime
-        end
-
+        api1 = api { use middleware; get }
+        scope(:api1) { mount api1 }
         get
       end
 
       it "uses middleware within mount namespace" do
-        get('/api').headers.should include 'X-Runtime'
+        get('/api1').headers.should include 'X-Count'
       end
 
       it "doesn't use middleware outside mount namespace" do
-        get('/').headers.should_not include 'X-Runtime'
+        get('/').headers.should_not include 'X-Count'
       end
 
       context "with duplicate middleware" do
-        app do
-          middleware = Struct.new :app, :header do
-            def call env
-              status, headers, body = app.call env
-              name = header || 'X-Count'
-              headers[name] = (headers[name] || '0').next
-              [status, headers, body]
-            end
+        context "with the same arguments" do
+          app do
+            api3 = api { use middleware; scope(:api3) { get } }
+            api2 = api { use middleware; scope(:api2) { get; mount api3 } }
+            mount  api { use middleware; scope(:api1) { get; mount api2 } }
           end
 
-          use middleware
-          scope :first do
-            inner = Class.new Crepe::API do
-              use middleware
-              get
-            end
-            mount inner
+          it "is not used again" do
+            get('/api1/api2/api3').headers['X-Count'].should eq 1
           end
-
-          scope :second do
-            inner = Class.new Crepe::API do
-              use middleware, 'X-Count-2'
-              get
-            end
-            mount inner
-          end
-
-          get
         end
 
-        it "only mounts one copy" do
-          get('/').headers['X-Count'].should eq '1'
-          get('/first').headers['X-Count'].should eq '1'
-          get('/second').headers['X-Count'].should eq '1'
-          last_response.headers['X-Count-2'].should eq '1'
+        context "with different arguments" do
+          app do
+            api3 = api { use middleware, 3; scope(:api3) { get } }
+            api2 = api { use middleware, 2; scope(:api2) { get; mount api3 } }
+            mount  api { use middleware, 1; scope(:api1) { get; mount api2 } }
+          end
+
+          it "is used in mounted endpoints" do
+            get('/api1/api2/api3').headers['X-Count'].should eq 3
+          end
         end
+
       end
     end
   end
