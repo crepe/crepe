@@ -216,7 +216,7 @@ module Crepe
           return path if path.is_a? Regexp
 
           namespaces = config.all(:namespace).compact
-          path = Util.normalize_path ['/', namespaces, path].join '/'
+          path = Util.normalize_path [*namespaces, path].join '/'
           path << '(.:format)' if options[:anchor]
           Rack::Mount::Strexp.compile(
             path, *options.values_at(:constraints, :separators, :anchor)

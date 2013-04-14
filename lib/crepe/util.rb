@@ -46,10 +46,8 @@ module Crepe
 
     def normalize_path! path
       path.squeeze! '/'
-      path.sub! %r{/+\z}, ''
-      path.sub! %r{/([.?])}, '\1'
-      path.replace '/' if path.empty?
-      path
+      path.chomp! '/'
+      path.start_with?('/') ? path : '/' + path
     end
 
   end
