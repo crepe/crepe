@@ -34,8 +34,7 @@ module Crepe
     end
 
     def initialize params = {}, permitted = false
-      @params = ::HashWithIndifferentAccess.new params
-      ::Crepe::Util.deep_freeze @params
+      @params = ::Crepe::Util.deep_freeze params.with_indifferent_access
       @permitted = permitted
     end
 
