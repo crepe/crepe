@@ -29,15 +29,13 @@ module Crepe
     end
 
     # Recursively freezes all keys and values.
-    def deep_freeze hash
-      hash.each do |key, value|
-        case value
-          when Hash  then deep_freeze value
-          when Array then value.each { |v| deep_freeze v }
-          else            value.freeze
-        end
+    def deep_freeze value
+      case value
+        when Hash   then value.freeze.each_value { |v| deep_freeze v }
+        when Array  then value.freeze.each { |v| deep_freeze v }
+        when String then value.freeze
       end
-      hash.freeze
+      value
     end
 
     def normalize_path path
