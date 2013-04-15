@@ -33,10 +33,10 @@ module Crepe
 
     end
 
-    def initialize params = {}
+    def initialize params = {}, permitted = false
       @params = ::HashWithIndifferentAccess.new params
       ::Crepe::Util.deep_freeze @params
-      @permitted = false
+      @permitted = permitted
     end
 
     def require required_key
@@ -55,7 +55,7 @@ module Crepe
     end
 
     def dup
-      @params.dup
+      ::Crepe::Params.new @params.dup, @permitted
     end
 
     def respond_to? method_name, include_private = false
@@ -66,7 +66,7 @@ module Crepe
 
       def method_missing method_name, *args, &block
         value = @params.send method_name, *args, &block
-        value.is_a?(::Hash) ? ::Crepe::Params.new(value) : value
+        value.is_a?(::Hash) ? ::Crepe::Params.new(value, @permitted) : value
       end
 
   end
