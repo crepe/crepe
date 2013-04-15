@@ -53,10 +53,6 @@ module Crepe
       @permitted
     end
 
-    def dup
-      ::Crepe::Params.new @params.dup, @permitted
-    end
-
     def respond_to? method_name, include_private = false
       [:require, :permit, :permitted?].include? method_name or super
     end
@@ -65,7 +61,7 @@ module Crepe
 
       def method_missing method_name, *args, &block
         value = @params.send method_name, *args, &block
-        value.is_a?(::Hash) ? ::Crepe::Params.new(value, @permitted) : value
+        value.is_a?(::Hash) ? ::Crepe::Params.new(value, permitted?) : value
       end
 
   end

@@ -27,8 +27,11 @@ describe Crepe::Params do
       let(:permitted) { params.permit :secure_key }
 
       it { expect(permitted).to be_permitted }
+      it 'permits post-dup' do
+        expect(permitted.dup).to be_permitted
+      end
       it 'returns itself' do
-        permitted.should eq(params)
+        permitted.should eq params
       end
     end
 
