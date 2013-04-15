@@ -19,13 +19,6 @@ describe Crepe::API, '.helper' do
         { name: name }
       end
 
-      mod = Module.new do
-        def name
-          'module'
-        end
-      end
-      helper mod
-
       scope :nest do
         get do
           { name: name, body: body }
@@ -41,6 +34,14 @@ describe Crepe::API, '.helper' do
           end
         end
       end
+
+      mod = Module.new do
+        def name
+          'module'
+        end
+      end
+      helper mod
+
     end
 
     get do
