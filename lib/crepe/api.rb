@@ -4,9 +4,8 @@ module Crepe
   # The API class provides a DSL to build a collection of endpoints.
   class API
 
-    # scope-able Hash-like configuration
-    class Config < Util::HashStack
-    end
+    # scope-able {Hash}-like configuration stack
+    Config = Util::HashStack
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
