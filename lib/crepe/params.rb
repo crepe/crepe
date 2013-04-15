@@ -39,7 +39,7 @@ module Crepe
     end
 
     def require required_key
-      fetch(required_key) { raise Missing, required_key }
+      self[required_key].presence or raise Missing, required_key
     end
 
     def permit *secure_keys

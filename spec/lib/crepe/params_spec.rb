@@ -1,4 +1,4 @@
-require_relative '../../../lib/crepe/params'
+require 'spec_helper'
 
 describe Crepe::Params do
   subject(:params) { Crepe::Params.new input }
@@ -7,7 +7,7 @@ describe Crepe::Params do
   describe '#require' do
     context 'with a present key' do
       it 'returns its value' do
-        input[:key] = {}
+        input[:key] = {'hello'=>'world'}
         params.require(:key).should eq(input[:key])
       end
     end
