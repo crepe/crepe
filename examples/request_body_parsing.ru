@@ -4,6 +4,8 @@ require 'multi_xml'
 
 # Parses input and echoes back the Ruby interpretation.
 #
+#   $ curl -d 'hello=world' 0.0.0.0:9292/parse
+#   {"hello"=>"world"}
 #   $ curl -H 'Content-Type: application/json' \
 #          -d '{"hello":"world"}' 0.0.0.0:9292/parse
 #   {"hello"=>"world"}

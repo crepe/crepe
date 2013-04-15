@@ -11,6 +11,12 @@ module Crepe
             return if body.blank?
 
             input = env['crepe.input'] = case request.content_type
+            when %r{application/x-www-form-urlencoded}
+              begin
+                Rack::Utils.parse_nested_query body
+              rescue
+                error! :bad_request, "Invalid form data"
+              end
             when %r{application/json}
               begin
                 MultiJson.load body
