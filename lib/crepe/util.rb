@@ -1,8 +1,7 @@
 module Crepe
   module Util
 
-    autoload :HashStack,      'crepe/util/hash_stack'
-    autoload :ChainedInclude, 'crepe/util/chained_include'
+    autoload :HashStack, 'crepe/util/hash_stack'
 
     module_function
 
