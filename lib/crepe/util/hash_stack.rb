@@ -7,23 +7,19 @@ module Crepe
         @stack = Array.wrap first
       end
 
-      delegate :pop, :push, :<<,
+      delegate :pop, :push, :<<, :last,
         to: :stack
 
-      def now
-        stack.last
-      end
-
-      delegate :[], :[]=, :delete, :merge, :slice, :update,
-        to: :now
+      delegate :[], :[]=, :delete, :slice, :update,
+        to: :last
 
       def all key
-        stack.map { |layer| layer[key] }.flatten 1
+        stack.select { |l| l.key? key }.map { |l| l[key] }.flatten 1
       end
 
       def scope *scoped, **updates
         return update updates unless block_given?
-        push to_hash.deep_merge updates.merge slice(*scoped).deep_dup
+        push updates.merge slice(*scoped).deep_dup
         yield
         pop
       end
@@ -32,6 +28,14 @@ module Crepe
         stack.inject :deep_merge
       end
       alias to_h to_hash
+
+      def + other
+        self.class.new stack + other.send(:stack)
+      end
+
+      def dup
+        self.class.new stack.dup
+      end
 
       def deep_dup
         self.class.new stack.deep_dup

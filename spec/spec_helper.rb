@@ -1,6 +1,6 @@
 require 'rspec'
 require 'rack/test'
-$: << File.expand_path('../../config', __FILE__)
+$: << File.expand_path('../config', __dir__)
 
 require 'crepe'
 
@@ -12,7 +12,7 @@ RSpec.configure do |config|
   end
 
   def app &block
-    let(:app) { api &block }
+    let(:app) { api(&block) }
   end
 
   def describes_middleware middleware = described_class, except: []

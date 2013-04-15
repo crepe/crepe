@@ -4,20 +4,16 @@ module Crepe
   # The API class provides a DSL to build a collection of endpoints.
   class API
 
-    # Module class that is instantiated and stores an API's helper methods.
-    # Supports dynamic extensibility via {Util::ChainedInclude}, ensuring that
-    # helpers defined after endpoints are still accessible to those endpoints.
-    class Helper < Module
-      include Util::ChainedInclude
-    end
+    # scope-able {Hash}-like configuration stack
+    Config = Util::HashStack
 
     METHODS = %w[GET POST PUT PATCH DELETE]
 
     SEPARATORS = %w[ / . ? ]
 
-    @config = Util::HashStack.new(
+    @config = Config.new(
       endpoint: Endpoint.default_config,
-      helper: Helper.new,
+      helper: Module.new,
       middleware: [
         Middleware::ContentNegotiation,
         Middleware::RestfulStatus,
@@ -145,7 +141,7 @@ module Crepe
 
       def route method, path = '/', **options, &block
         block ||= proc { head }
-        endpoint = Endpoint.new config[:endpoint], &block
+        endpoint = Endpoint.new(&block)
         mount endpoint, options.merge(at: path, method: method, anchor: true)
       end
 
@@ -172,18 +168,19 @@ module Crepe
         defaults[:format] = config[:endpoint][:formats].first
         defaults[:version] = config[:version] if config[:version]
 
-        routes << [app, conditions, defaults, config.now]
+        routes << [app, conditions, defaults, config.dup]
       end
 
-      def to_app(outer_config: config.merge(middleware: []))
-        exclude = outer_config[:middleware]
-        middleware = config[:middleware] - exclude
+      def to_app mount_config = Config.new
+        exclude = mount_config.all(:middleware)
+        middleware = config.all(:middleware) - exclude
 
-        generate_options_routes!
-        configure_routes! outer_config.merge middleware: exclude | middleware
+        mount_config[:middleware] = exclude | middleware
 
         route_set = Rack::Mount::RouteSet.new
-        routes.each { |*route, _| route_set.add_route(*route) }
+        configured_routes(mount_config).each do |route|
+          route_set.add_route(*route)
+        end
         route_set.freeze
 
         Rack::Builder.app do
@@ -215,8 +212,7 @@ module Crepe
         def mount_path path, options
           return path if path.is_a? Regexp
 
-          namespaces = config.all(:namespace).compact
-          path = Util.normalize_path [*namespaces, path].join '/'
+          path = Util.normalize_path [*config.all(:namespace), path].join '/'
           path << '(.:format)' if options[:anchor]
           Rack::Mount::Strexp.compile(
             path, *options.values_at(:constraints, :separators, :anchor)
@@ -244,20 +240,22 @@ module Crepe
           end
         end
 
-        def configure_routes! outer_config
-          routes.map! do |app, conditions, defaults, config|
+        def configured_routes mount_config
+          generate_options_routes!
+
+          routes.map do |app, conditions, defaults, config|
+            nested_config = mount_config + config
+
             if app.is_a?(Class) && app.ancestors.include?(API)
-              config = config.merge middleware: outer_config[:middleware]
-              app = Class.new(app).to_app outer_config: config
+              app = Class.new(app)
+              app = app.to_app nested_config
             elsif app.is_a?(Endpoint)
-              app.extend outer_config[:helper]
-              app.extend config[:helper]
-              app.configure!(
-                outer_config[:endpoint].deep_merge config[:endpoint]
-              )
+              app = app.dup
+              app.configure! nested_config.to_h[:endpoint]
+              nested_config.all(:helper).each { |helper| app.extend helper }
             end
 
-            [app, conditions, defaults, config]
+            [app, conditions, defaults]
           end
         end
 
