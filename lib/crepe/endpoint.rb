@@ -41,7 +41,7 @@ module Crepe
 
     def configure! new_config
       @config ||= self.class.default_config
-      @config = config.deep_merge new_config
+      @config = Util.deep_merge config, new_config
       if config[:formats].empty?
         raise ArgumentError, 'wrong number of formats (at least 1)'
       end

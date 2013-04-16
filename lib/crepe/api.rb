@@ -4,9 +4,6 @@ module Crepe
   # The API class provides a DSL to build a collection of endpoints.
   class API
 
-    # scope-able {Hash}-like configuration stack
-    Config = Util::HashStack
-
     METHODS = %w[GET POST PUT PATCH DELETE]
 
     SEPARATORS = %w[ / . ? ]
@@ -41,15 +38,17 @@ module Crepe
 
       def inherited subclass
         subclass.config = config.deep_dup
-        subclass.config[:middleware] = config[:middleware].dup
-        subclass.routes = routes.deep_dup
+        subclass.config[:helper] = config[:helper].dup
+        subclass.routes = routes.dup
       end
 
-      def scope namespace = nil, **options, &block
-        options = options.merge(
-          namespace: namespace, route_options: normalize_route_options(options)
+      def scope namespace = nil, **scoped, &block
+        scoped = scoped.merge(
+          helper: Module.new,
+          namespace: namespace,
+          route_options: normalize_route_options(scoped)
         )
-        config.scope :endpoint, :helper, options, &block
+        config.scope scoped, &block
       end
       alias namespace scope
       alias resource scope
@@ -132,7 +131,7 @@ module Crepe
           module_eval <<-RUBY, __FILE__, __LINE__ + 1
             def #{name} *args
               return @_memo_#{name}[args] if (@_memo_#{name} ||= {}).key? args
-              @_memo_#{name}[args] = _eval_#{name} *args
+              @_memo_#{name}[args] = _eval_#{name}(*args)
             end
           RUBY
         end
@@ -215,7 +214,7 @@ module Crepe
         end
 
         def normalize_route_options options
-          options = Util.deeper_merge config[:route_options], options
+          options = Util.deep_merge config[:route_options], options
           options.except(*config[:route_options].keys).each_key do |key|
             value = options.delete key
             option = value.is_a?(Regexp) ? :constraints : :defaults
