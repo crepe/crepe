@@ -36,7 +36,7 @@ module Crepe
 
     def initialize config = {}, &handler
       configure! config
-      define_singleton_method :run_handler, &handler
+      define_singleton_method :_run_handler, &handler
     end
 
     def configure! new_config
@@ -142,7 +142,7 @@ module Crepe
         payload = catch :halt do
           begin
             run_callbacks :before
-            run_handler
+            _run_handler
           rescue => e
             handle_exception e
           end
