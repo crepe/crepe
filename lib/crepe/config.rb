@@ -16,9 +16,9 @@ module Crepe
       stack.select { |l| l.key? key }.map { |l| l[key] }.flatten 1
     end
 
-    def scope *scoped, **updates
-      return update updates unless block_given?
-      push updates.merge Util.deep_dup slice(*scoped)
+    def scope **scoped
+      return update scoped unless block_given?
+      push Util.deep_merge to_h, scoped
       yield
       pop
     end
