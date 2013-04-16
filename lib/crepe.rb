@@ -3,6 +3,7 @@ require 'active_support/all'
 module Crepe
 
   autoload :API,        'crepe/api'
+  autoload :Config,     'crepe/config'
   autoload :Endpoint,   'crepe/endpoint'
   autoload :Filter,     'crepe/filter'
   autoload :Helper,     'crepe/helper'
