@@ -123,6 +123,21 @@ module Crepe
         config[:helper].send method, mod
       end
 
+      def let name, &block
+        if Endpoint.instance_methods.include? name.to_sym
+          raise ArgumentError, "can't redefine Crepe::Endpoint##{name}"
+        end
+        helper do
+          module_eval { define_method :"__eval_#{name}", &block }
+          module_eval <<-RUBY, __FILE__, __LINE__ + 1
+            def #{name} *args
+              return @__memoized_#{name} if defined? @__memoized_#{name}
+              @__memoized_#{name} = __eval_#{name} *args
+            end
+          RUBY
+        end
+      end
+
       def call env
         app.call env
       end
