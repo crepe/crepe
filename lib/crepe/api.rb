@@ -124,15 +124,15 @@ module Crepe
       end
 
       def let name, &block
-        if Endpoint.instance_methods.include? name.to_sym
+        if Endpoint.method_defined? name
           raise ArgumentError, "can't redefine Crepe::Endpoint##{name}"
         end
         helper do
-          module_eval { define_method :"__eval_#{name}", &block }
+          module_eval { define_method "_eval_#{name}", &block }
           module_eval <<-RUBY, __FILE__, __LINE__ + 1
             def #{name} *args
-              return @__memoized_#{name} if defined? @__memoized_#{name}
-              @__memoized_#{name} = __eval_#{name} *args
+              return @_memo_#{name}[args] if (@_memo_#{name} ||= {}).key? args
+              @_memo_#{name}[args] = _eval_#{name} *args
             end
           RUBY
         end
