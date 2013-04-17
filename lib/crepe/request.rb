@@ -5,7 +5,34 @@ module Crepe
   # better access request attributes.
   class Request < Rack::Request
 
+    # A custom matcher for Rack::MountSet routing.
+    class Versions < Array
+      def match condition
+        grep(condition).first
+      end
+    end
+
+    ACCEPT_HEADER = %r{
+      (?<type>[^/;,\s]+)
+        /
+      (?:
+        (?:
+          (?:vnd\.)(?<vendor>[^/;,\s\.+-]+)
+          (?:-(?<version>[^/;,\s\.+-]+))?
+          (?:\+(?<format>[^/;,\s\.+-]+))?
+        )
+      |
+        (?<format>[^/;,\s\.+]+)
+      )
+    }ix
+
     @@env_keys = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }
+
+    @config = API.config
+
+    class << self
+      attr_accessor :config
+    end
 
     def method
       @method ||= env['crepe.original_request_method'] || request_method
@@ -51,6 +78,18 @@ module Crepe
         request = Rack::Auth::Basic::Request.new env
         request.provided? ? request.credentials : []
       end
+    end
+
+    def query_version
+      query_parameters[self.class.config[:version][:name]].to_s
+    end
+
+    def header_versions
+      versions = Versions.new
+      headers['Accept'].scan ACCEPT_HEADER do
+        versions << Regexp.last_match[:version]
+      end
+      versions
     end
 
   end

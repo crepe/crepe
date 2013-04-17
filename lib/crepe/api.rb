@@ -12,7 +12,6 @@ module Crepe
       endpoint: Endpoint.default_config,
       helper: Module.new,
       middleware: [
-        Middleware::ContentNegotiation,
         Middleware::RestfulStatus,
         Middleware::Head,
         Rack::ConditionalGet,
@@ -25,7 +24,10 @@ module Crepe
         anchor: false,
         separators: SEPARATORS
       },
-      version: nil
+      version: {
+        name: 'v',
+        with: :path
+      }
     )
 
     @routes = []
@@ -58,15 +60,10 @@ module Crepe
         namespace "/:#{name}", options, &block
       end
 
-      def vendor vendor
-        config[:endpoint][:vendor] = vendor
-      end
-
-      def version version, &block
-        if config[:version] || config[:namespace]
-          raise ArgumentError, "can't nest versions"
-        end
-        scope version, version: version, &block
+      def version level = nil, **options, &block
+        with = options.fetch :with, config[:version][:with]
+        path = level if with == :path
+        scope path, version: options.merge(level: level, with: with), &block
       end
 
       def use middleware, *args, &block
@@ -177,10 +174,15 @@ module Crepe
         conditions = {
           path_info: mount_path(path, options), request_method: method
         }
+        if level = config[:version][:level]
+          case config[:version][:with]
+            when :query  then conditions[:query_version] = /\A#{level}\Z/
+            when :header then conditions[:header_versions] = /\A#{level}\Z/
+          end
+        end
 
         defaults = options[:defaults]
         defaults[:format] = config[:endpoint][:formats].first
-        defaults[:version] = config[:version] if config[:version]
 
         routes << [app, conditions, defaults, config.dup]
       end
@@ -191,7 +193,7 @@ module Crepe
 
         mount_config[:middleware] = exclude | middleware
 
-        route_set = Rack::Mount::RouteSet.new
+        route_set = Rack::Mount::RouteSet.new request_class: request_class
         configured_routes(mount_config).each do |route|
           route_set.add_route(*route)
         end
@@ -214,6 +216,7 @@ module Crepe
         end
 
         def normalize_route_options options
+          options = options.except(*config.keys)
           options = Util.deep_merge config[:route_options], options
           options.except(*config[:route_options].keys).each_key do |key|
             value = options.delete key
@@ -231,6 +234,10 @@ module Crepe
           Rack::Mount::Strexp.compile(
             path, *options.values_at(:constraints, :separators, :anchor)
           )
+        end
+
+        def request_class
+          Request.dup.tap { |r| r.config = config }
         end
 
         def generate_options_routes!
