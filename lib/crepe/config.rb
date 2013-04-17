@@ -28,10 +28,6 @@ module Crepe
     end
     alias to_h to_hash
 
-    def + other
-      self.class.new stack + other.stack
-    end
-
     def dup
       self.class.new stack.dup
     end

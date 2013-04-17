@@ -187,14 +187,11 @@ module Crepe
         routes << [app, conditions, defaults, config.dup]
       end
 
-      def to_app mount_config = Config.new
-        exclude = mount_config.all(:middleware)
+      def to_app(exclude: [])
         middleware = config.all(:middleware) - exclude
 
-        mount_config[:middleware] = exclude | middleware
-
         route_set = Rack::Mount::RouteSet.new request_class: request_class
-        configured_routes(mount_config).each do |route|
+        configured_routes(exclude: exclude | middleware).each do |route|
           route_set.add_route(*route)
         end
         route_set.freeze
@@ -261,19 +258,16 @@ module Crepe
           end
         end
 
-        def configured_routes mount_config
+        def configured_routes(exclude: [])
           generate_options_routes!
 
           routes.map do |app, conditions, defaults, config|
-            nested_config = mount_config + config
-
             if app.is_a?(Class) && app.ancestors.include?(API)
-              app = Class.new(app)
-              app = app.to_app nested_config
+              app = Class.new(app).to_app exclude: exclude
             elsif app.is_a?(Endpoint)
               app = app.dup
-              app.configure! nested_config.to_h[:endpoint]
-              nested_config.all(:helper).each { |helper| app.extend helper }
+              app.configure! config.to_h[:endpoint]
+              config.all(:helper).each { |helper| app.extend helper }
             end
 
             [app, conditions, defaults]
