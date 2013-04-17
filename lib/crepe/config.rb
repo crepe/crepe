@@ -9,7 +9,7 @@ module Crepe
     delegate :pop, :push, :<<, :last,
       to: :stack
 
-    delegate :[], :[]=, :delete, :keys, :slice, :update,
+    delegate :[], :[]=, :keys, :update,
       to: :last
 
     def all key
@@ -41,4 +41,3 @@ module Crepe
 
   end
 end
-
