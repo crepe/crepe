@@ -16,7 +16,7 @@ module Crepe
 
       def parse body
         case request.media_type
-        when %r{application/x-www-form-urlencoded}
+        when %r{application/x-www-form-urlencoded}, %r{multipart/form-data}
           request.POST
         when %r{application/json}
           begin
