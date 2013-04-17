@@ -51,7 +51,8 @@ module Crepe
     def normalize_path! path
       path.squeeze! '/'
       path.chomp! '/'
-      path.start_with?('/') ? path : '/' + path
+      path.prepend '/' unless path.start_with? '/'
+      path
     end
 
   end
