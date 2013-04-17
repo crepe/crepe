@@ -46,7 +46,7 @@ module Crepe
 
       def scope namespace = nil, **scoped, &block
         scoped = scoped.merge(
-          helper: Module.new,
+          helper: config[:helper].dup,
           namespace: namespace,
           route_options: normalize_route_options(scoped)
         )
