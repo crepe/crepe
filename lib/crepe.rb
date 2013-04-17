@@ -9,6 +9,7 @@ module Crepe
   autoload :Helper,     'crepe/helper'
   autoload :Middleware, 'crepe/middleware'
   autoload :Params,     'crepe/params'
+  autoload :Parser,     'crepe/parser'
   autoload :Renderer,   'crepe/renderer'
   autoload :Request,    'crepe/request'
   autoload :Response,   'crepe/response'

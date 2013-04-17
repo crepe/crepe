@@ -6,7 +6,7 @@ module Crepe
   class Endpoint
 
     # Raised when render is called and a response body is already present.
-    class RenderError < StandardError
+    class DoubleRenderError < StandardError
     end
 
     class << self
@@ -16,11 +16,11 @@ module Crepe
           callbacks: {
             after: [],
             before: [
-              Filter::Acceptance,
-              Filter::Parser
+              Filter::Acceptance
             ]
           },
           formats: [:json],
+          parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Tilt),
           rescuers: {}
         }
@@ -82,9 +82,14 @@ module Crepe
       end
     end
 
+    def parse body, options = {}
+      request.body = parser.parse body
+      @params = params.merge request.body if request.body.is_a? Hash
+    end
+
     def render object, options = {}
       headers['Content-Type'] ||= content_type
-      raise RenderError, 'body already rendered' if response.body
+      raise DoubleRenderError, 'body already rendered' if response.body
       response.body = catch(:head) { renderer.render object, options }
     end
 
@@ -125,6 +130,7 @@ module Crepe
 
         payload = catch :halt do
           begin
+            parse request.body unless request.body.blank?
             run_callbacks :before
             _run_handler
           rescue => e
@@ -155,6 +161,10 @@ module Crepe
           code = :internal_server_error
           error! code, exception.message, backtrace: exception.backtrace
         end
+      end
+
+      def parser
+        config[:parsers][request.content_type].new self
       end
 
       def renderer

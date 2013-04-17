@@ -75,7 +75,18 @@ module Crepe
 
       def respond_to *formats, **renderers
         config[:endpoint][:formats] = formats | renderers.keys
-        config[:endpoint][:renderers].update renderers
+        renderers.each { |format, renderer| render format, with: renderer }
+      end
+
+      def render *formats, with: renderer
+        formats.each { |f| config[:endpoint][:renderers][f] = renderer }
+      end
+
+      def parse *content_types, with: parser
+        content_types.each do |type|
+          type = Rack::Mime.mime_type ".#{type}" if type.is_a? Symbol
+          config[:endpoint][:parsers][type] = parser
+        end
       end
 
       def rescue_from *exceptions, with: nil, &block

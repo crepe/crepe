@@ -34,6 +34,8 @@ module Crepe
       attr_accessor :config
     end
 
+    attr_writer :body
+
     def method
       @method ||= env['crepe.original_request_method'] || request_method
     end
@@ -50,27 +52,12 @@ module Crepe
       @headers ||= Hash.new { |h, k| h.fetch @@env_keys[k], nil }.update env
     end
 
-    alias query_parameters GET
-
-    def POST
-      env['crepe.input'] || super
+    def params
+      @params ||= (env['rack.routing_args'] || {}).merge super
     end
-    alias request_parameters POST
-
-    def path_parameters
-      @path_parameters ||= env['rack.routing_args'] || {}
-    end
-
-    def parameters
-      @parameters ||= path_parameters.merge self.GET.merge self.POST
-    end
-    alias params parameters
 
     def body
-      env['crepe.input'] || begin
-        body = super
-        body.respond_to?(:read) ? body.read : body
-      end
+      @body ||= (b = super).respond_to?(:read) ? b.read.tap { b.rewind } : b
     end
 
     def credentials
@@ -81,7 +68,7 @@ module Crepe
     end
 
     def query_version
-      query_parameters[self.class.config[:version][:name]].to_s
+      self.GET[self.class.config[:version][:name]].to_s
     end
 
     def header_versions

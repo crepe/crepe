@@ -29,7 +29,7 @@ describe Crepe::Request do
     it 'merges GET, POST, and path parameters' do
       request.stub GET: {'get'=>'true'}
       request.stub POST: {'post'=>'true'}
-      request.stub path_parameters: {'path'=>'true'}
+      request.env['rack.routing_args'] = {'path'=>'true'}
       request.params.should eq('get'=>'true', 'post'=>'true', 'path'=>'true')
     end
   end
