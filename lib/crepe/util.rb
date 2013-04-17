@@ -7,21 +7,17 @@ module Crepe
       case value
         when Hash
           value.each_with_object value.dup do |(k, v), h|
-            h[deep_dup(k)] = deep_dup v
+            h[deep_dup k] = deep_dup v
           end
         when Array then value.map { |v| deep_dup v }
         else            value
       end
     end
 
-    # See `deeper_merge!`: returns a copy of the original hash, rather
-    # than merging it in place.
     def deep_merge hash, other_hash
       deep_merge! deep_dup(hash), other_hash
     end
 
-    # Deeply merges the first hash with the second hash, concatenating
-    # any array values that are shared across keys.
     def deep_merge! hash, other_hash
       other_hash.each do |key, value|
         if hash[key].is_a?(Hash) && value.is_a?(Hash)
