@@ -1,3 +1,5 @@
+require 'tilt'
+
 module Crepe
   module Renderer
     # Sends a resource and template to [Tilt][] for rendering, falling back
