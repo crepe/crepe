@@ -78,7 +78,8 @@ module Crepe
         renderers.each { |format, renderer| render format, with: renderer }
       end
 
-      def render *formats, with: renderer
+      def render *formats, **options
+        renderer = options.fetch :with
         formats.each { |f| config[:endpoint][:renderers][f] = renderer }
       end
 

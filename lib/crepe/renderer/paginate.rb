@@ -10,7 +10,7 @@ module Crepe
 
         def render request
           uri = URI request.url
-          params = request.query_parameters.except 'page'
+          params = request.GET.except 'page'
 
           links = {
             first: first, prev: prev, next: self.next, last: last
