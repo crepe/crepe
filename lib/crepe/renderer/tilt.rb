@@ -8,12 +8,14 @@ module Crepe
     # return a {.model_name}.
     #
     # [Tilt]: https://github.com/rtomayko/tilt
-    class Tilt < Paginate
+    class Tilt < Base
 
       # Raised when a template name is derived but cannot be found in the
       # template path.
       class MissingTemplate < RenderError
       end
+
+      include Pagination
 
       class << self
 
