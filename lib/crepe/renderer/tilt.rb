@@ -27,35 +27,37 @@ module Crepe
           @template_path ||= 'app/views'
         end
 
-        attr_writer :template_path
+        def layout_path
+          @layout_path ||= template_path
+        end
+
+        attr_writer :template_path, :layout_path
 
       end
 
       def render resource, options = {}
         resource      = super
 
-        format        = options.fetch :format,   endpoint.format
-        handlers      = options.fetch :handlers, [:rabl, :erb, :*]
-        template_name = options.fetch :template, model_name(resource)
+        formats       = options.fetch :formats,  [endpoint.format]
+        handlers      = options.fetch :handlers, [:*]
+        path_options  = { formats: formats, handlers: handlers }
 
+        template_name = options.fetch :template, model_name(resource)
         unless template_name
           return Simple.new(endpoint).render resource, options
         end
 
-        path_options = { format: format, handlers: handlers }
         unless template = find_template(template_name, path_options)
           raise MissingTemplate,
             "Missing template #{template_name} with #{path_options}"
         end
 
-        # FIXME: this is only needed for Rabl, which doesn't support Tilt
-        # locals properly. Can probably move into a Renderer::Rabl.
-        endpoint.instance_variable_set :"@#{template_name}", resource
-        endpoint.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          attr_reader :#{template_name}
-        RUBY
-
-        template.render endpoint
+        if layout_name = options[:layout]
+          layout = find_template layout_name, path_options.merge(layout: true)
+          layout.render { template.render endpoint }
+        else
+          template.render endpoint
+        end
       end
 
       private
@@ -69,11 +71,15 @@ module Crepe
         end
 
         def find_template relative_path, path_options
-          path_query = File.join self.class.template_path, relative_path
+          path_query = if path_options.delete(:layout)
+            File.join self.class.layout_path, relative_path
+          else
+            File.join self.class.template_path, relative_path
+          end
 
-          format, handlers = path_options.values
-          path_query << '.{%{format}.{%{handlers}},{%{handlers}}}' % {
-            format: format, handlers: handlers.join(',')
+          formats, handlers = path_options.values
+          path_query << '{.{%{formats}},}.{%{handlers}}' % {
+            formats: formats.join(','), handlers: handlers.join(',')
           }
 
           template_path = Dir[path_query].reject { |path|
