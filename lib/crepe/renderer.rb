@@ -8,9 +8,10 @@ module Crepe
     class RenderError < StandardError
     end
 
-    autoload :Paginate, 'crepe/renderer/paginate'
-    autoload :Simple,   'crepe/renderer/simple'
-    autoload :Tilt,     'crepe/renderer/tilt'
+    autoload :Base,       'crepe/renderer/base'
+    autoload :Pagination, 'crepe/renderer/pagination'
+    autoload :Simple,     'crepe/renderer/simple'
+    autoload :Tilt,       'crepe/renderer/tilt'
 
   end
 end

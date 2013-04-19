@@ -1,11 +1,12 @@
 module Crepe
   module Renderer
     # The simplest renderer delegates rendering to the resource itself.
-    class Simple < Paginate
+    class Simple < Base
 
-      def render resource, options = {}
+      include Pagination
+
+      def render resource, format: endpoint.format
         resource = super
-        format = options.fetch :format, endpoint.format
 
         if resource.respond_to? "to_#{format}"
           resource.__send__("to_#{format}")
