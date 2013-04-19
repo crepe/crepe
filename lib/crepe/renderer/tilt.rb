@@ -47,11 +47,7 @@ module Crepe
           return Simple.new(endpoint).render resource, options
         end
 
-        unless template = find_template(template_name, path_options)
-          raise MissingTemplate,
-            "Missing template #{template_name} with #{path_options}"
-        end
-
+        template = find_template template_name, path_options
         if layout_name = options[:layout]
           layout = find_template layout_name, path_options.merge(layout: true)
           layout.render { template.render endpoint }
@@ -70,24 +66,30 @@ module Crepe
           end
         end
 
-        def find_template relative_path, path_options
-          path_query = if path_options.delete(:layout)
-            File.join self.class.layout_path, relative_path
-          else
-            File.join self.class.template_path, relative_path
-          end
+        def find_template name, options
+          query = template_path name, options.delete(:layout)
 
-          formats, handlers = path_options.values
-          path_query << '{.{%{formats}},}.{%{handlers}}' % {
+          formats, handlers = options.values
+          query << '{.{%{formats}},}.{%{handlers}}' % {
             formats: formats.join(','), handlers: handlers.join(',')
           }
 
-          template_path = Dir[path_query].reject { |path|
+          template_path = Dir[query].reject { |path|
             ext = File.basename(path).split('.').last
             File.directory?(path) || ::Tilt.mappings[ext].nil?
           }.first
 
-          template_path && ::Tilt.new(template_path)
+          unless template_path
+            raise MissingTemplate,
+              "Missing template #{name.inspect} with #{options}"
+          end
+
+          ::Tilt.new template_path
+        end
+
+        def template_path name, layout = false
+          base = layout ? self.class.layout_path : self.class.template_path
+          File.join base, name
         end
 
     end
