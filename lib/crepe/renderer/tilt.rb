@@ -48,7 +48,9 @@ module Crepe
         end
 
         template = find_template template_name, path_options
-        locals = { template_name => resource, resource: resource }
+        locals = {
+          template_name => resource, resource: resource, links: links.to_h
+        }
         if layout_name = options[:layout]
           layout = find_template layout_name, path_options.merge(layout: true)
           layout.render { template.render endpoint, locals }

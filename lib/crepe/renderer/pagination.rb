@@ -5,21 +5,10 @@ module Crepe
     module Pagination
 
       # Generates pagination links based on provided page, limit, and total.
-      class Links < Struct.new :page, :per_page, :count
+      class Links < Struct.new :request, :page, :per_page, :count
 
-        def render request
-          uri = URI request.url
-          params = request.GET.except 'page'
-
-          links = {
-            first: first, prev: prev, next: self.next, last: last
-          }
-          links = links.map do |rel, query|
-            next unless query
-            %(<#{uri + "?#{params.merge(query).to_query}"}>; rel="#{rel}")
-          end
-
-          links.compact.join ', '
+        def render
+          to_h.map { |rel, uri| %(<#{uri}"}>; rel="#{rel}") }.join ', '
         end
 
         def first
@@ -44,9 +33,25 @@ module Crepe
           { page: last } unless page == last
         end
 
+        def to_h
+          uri = URI request.url
+          params = request.GET.except 'page'
+
+          links = {
+            first: first, prev: prev, next: self.next, last: last
+          }
+          links.each_key do |rel|
+            query = links[rel]
+            next links.delete rel unless query
+            links[rel] = (uri + "?#{params.merge(query).to_query}").to_s
+          end
+        end
+
       end
 
       PER_PAGE = 20
+
+      attr_accessor :links
 
       def render resource, options = {}
         if resource.respond_to? :paginate
@@ -57,8 +62,8 @@ module Crepe
           page = validate_param params, :page, 1
           per_page = resource.per_page if resource.respond_to? :per_page
           per_page = validate_param params, :per_page, per_page || PER_PAGE
-          links = Links.new page, per_page, count
-          endpoint.headers['Link'] = links.render endpoint.request
+          self.links = Links.new endpoint.request, page, per_page, count
+          endpoint.headers['Link'] = links.render
 
           resource = resource.paginate params
         end
@@ -75,7 +80,9 @@ module Crepe
           raise ArgumentError if value < 1
           value
         rescue ArgumentError
-          endpoint.error! 400, "Invalid value #{params[name]} for #{name}"
+          endpoint.error!(
+            :bad_request, "Invalid value #{params[name]} for #{name}"
+          )
         end
 
     end
