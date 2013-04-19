@@ -57,6 +57,11 @@ module Crepe
       [:require, :permit, :permitted?].include? method_name or super
     end
 
+    def to_h
+      @params.to_h
+    end
+    alias to_hash to_h
+
     private
 
       def method_missing method_name, *args, &block
