@@ -12,7 +12,7 @@ module Crepe
     class << self
 
       def default_config
-        {
+        @default_config ||= {
           callbacks: {
             after: [],
             before: [
