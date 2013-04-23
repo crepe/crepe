@@ -19,7 +19,7 @@ module Crepe
 
             if not_acceptable
               error! :not_acceptable, accepts: config[:formats].map { |f|
-                content_type.sub(/#{format}$/, f.to_s)
+                content_type.sub(/#{format}/, f.to_s)
               }
             end
           end
