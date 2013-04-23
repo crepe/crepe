@@ -37,13 +37,12 @@ module Crepe
           uri = URI request.url
           params = request.GET.except 'page'
 
-          links = {
-            first: first, prev: prev, next: self.next, last: last
-          }
+          links = { first: first, prev: prev, next: self.next, last: last }
           links.each_key do |rel|
             query = links[rel]
             next links.delete rel unless query
-            links[rel] = (uri + "?#{params.merge(query).to_query}").to_s
+            uri += "?#{params.merge(query).to_query}" unless query.empty?
+            links[rel] = uri.to_s
           end
         end
 
