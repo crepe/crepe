@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Crepe::Filter::Acceptance do
+describe Crepe::Endpoint, 'acceptance' do
   app do
     respond_to :json
 

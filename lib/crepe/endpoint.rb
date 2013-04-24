@@ -13,12 +13,7 @@ module Crepe
 
       def default_config
         @default_config ||= {
-          callbacks: {
-            after: [],
-            before: [
-              Filter::Acceptance
-            ]
-          },
+          callbacks: {},
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Tilt),
@@ -116,6 +111,12 @@ module Crepe
       error! :unauthorized, message || data.delete(:message), data
     end
 
+    def not_acceptable! message = nil, **data
+      @format ||= config[:formats].first
+      media_types = Util.media_types config[:formats]
+      error! :not_acceptable, message, data.merge(accepts: media_types)
+    end
+
     def expires_in seconds, options = {}
       response.cache_control.update options.merge max_age: seconds
     end
@@ -131,6 +132,7 @@ module Crepe
 
         payload = catch :halt do
           begin
+            not_acceptable! unless format
             parse request.body unless request.body.blank?
             run_callbacks :before
             _run_handler
