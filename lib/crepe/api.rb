@@ -192,10 +192,7 @@ module Crepe
           end
         end
 
-        defaults = options[:defaults]
-        defaults[:format] = config[:endpoint][:formats].first
-
-        routes << [app, conditions, defaults, config.dup]
+        routes << [app, conditions, options[:defaults], config.dup]
       end
 
       def to_app(exclude: [])
