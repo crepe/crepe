@@ -1,4 +1,4 @@
-ENV['CREPE_ENV']  ||= ENV['RACK_ENV'] || 'development'
+ENV['CREPE_ENV']  ||= ENV['RACK_ENV'] ||= 'development'
 ENV['CREPE_ROOT'] ||= Dir.pwd
 
 require 'active_support/all'
