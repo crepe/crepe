@@ -63,7 +63,7 @@ module Crepe
 
     def accepts
       @accepts ||= Accept.new(
-        headers['Accept'] || Util.media_type(params[:format]) || '*/*'
+        Util.media_type(params[:format]) || headers['Accept'] || '*/*'
       )
     end
 
