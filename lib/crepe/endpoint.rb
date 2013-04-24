@@ -130,17 +130,19 @@ module Crepe
       def call! env
         @env = env
 
-        payload = catch :halt do
+        halt = catch :halt do
           begin
             not_acceptable! unless format
-            parse request.body unless request.body.blank?
+            parse request.body if request.body.present?
             run_callbacks :before
-            _run_handler
+            payload = _run_handler
+            render payload if payload && response.body.nil?
+            nil
           rescue => e
             handle_exception e
           end
         end
-        render payload if payload && response.body.nil?
+        render halt if halt
         run_callbacks :after
 
         response.finish
