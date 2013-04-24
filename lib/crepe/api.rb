@@ -83,11 +83,10 @@ module Crepe
         formats.each { |f| config[:endpoint][:renderers][f] = renderer }
       end
 
-      def parse *content_types, with: parser
-        content_types.each do |type|
-          type = Rack::Mime.mime_type ".#{type}" if type.is_a? Symbol
-          config[:endpoint][:parsers][type] = parser
-        end
+      def parse *media_types, **options
+        parser = options.fetch :with
+        media_types = Util.media_types media_types
+        media_types.each { |t| config[:endpoint][:parsers][t] = parser }
       end
 
       def rescue_from *exceptions, with: nil, &block

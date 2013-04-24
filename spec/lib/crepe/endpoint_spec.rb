@@ -18,7 +18,7 @@ describe Crepe::Endpoint do
     before { endpoint.instance_variable_set :@env, env }
 
     context 'with formats configured' do
-      let(:config) { { formats: %w[xml json] } }
+      let(:config) { { formats: [:xml, :json] } }
       it { should eq :xml }
     end
 

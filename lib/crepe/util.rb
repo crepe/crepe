@@ -1,3 +1,5 @@
+require 'rack/mime'
+
 module Crepe
   module Util
 
@@ -49,6 +51,14 @@ module Crepe
       path.chomp! '/'
       path.prepend '/' unless path.start_with? '/'
       path
+    end
+
+    def media_types formats
+      formats.map(&method(:media_type))
+    end
+
+    def media_type format
+      Rack::Mime.mime_type ".#{format}", format
     end
 
   end

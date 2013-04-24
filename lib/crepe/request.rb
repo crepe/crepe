@@ -5,26 +5,12 @@ module Crepe
   # better access request attributes.
   class Request < Rack::Request
 
-    # A custom matcher for Rack::MountSet routing.
+    # Responds to {#match} so that {Rack::Mount} can route versions.
     class Versions < Array
       def match condition
         grep(condition).first
       end
     end
-
-    ACCEPT_HEADER = %r{
-      (?<type>[^/;,\s]+)
-        /
-      (?:
-        (?:
-          (?:vnd\.)(?<vendor>[^/;,\s\.+-]+)
-          (?:-(?<version>[^/;,\s\.+-]+))?
-          (?:\+(?<format>[^/;,\s\.+-]+))?
-        )
-      |
-        (?<format>[^/;,\s\.+]+)
-      )
-    }ix
 
     @@env_keys = Hash.new { |h, k| h[k] = "HTTP_#{k.upcase.tr '-', '_'}" }
 
@@ -72,11 +58,13 @@ module Crepe
     end
 
     def header_versions
-      versions = Versions.new
-      headers['Accept'].scan ACCEPT_HEADER do
-        versions << Regexp.last_match[:version]
-      end
-      versions
+      Versions.new accepts.media_types.map(&:version).compact
+    end
+
+    def accepts
+      @accepts ||= Accept.new(
+        headers['Accept'] || Util.media_type(params[:format]) || '*/*'
+      )
     end
 
   end

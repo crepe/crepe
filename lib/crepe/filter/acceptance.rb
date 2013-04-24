@@ -8,19 +8,10 @@ module Crepe
 
         def filter endpoint
           endpoint.instance_eval do
-            unless config[:formats].include? format
+            unless format
               @format = config[:formats].first
-              not_acceptable = true
-            end
-
-            if [config[:vendor], env['crepe.vendor']].compact.uniq.length > 1
-              not_acceptable = true
-            end
-
-            if not_acceptable
-              error! :not_acceptable, accepts: config[:formats].map { |f|
-                content_type.sub(/#{format}/, f.to_s)
-              }
+              media_types = Util.media_types config[:formats]
+              error! :not_acceptable, accepts: media_types
             end
           end
         end

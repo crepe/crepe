@@ -60,7 +60,9 @@ module Crepe
     end
 
     def format
-      @format ||= params.fetch(:format, config[:formats].first).to_sym
+      return @format if defined? @format
+      media_type = request.accepts.best_of Util.media_types config[:formats]
+      @format = config[:formats].find { |f| Util.media_type(f) == media_type }
     end
 
     def response
@@ -77,8 +79,7 @@ module Crepe
     def content_type
       @content_type ||= begin
         extension = format == :json && params[:callback] ? :js : format
-        content_type = Rack::Mime.mime_type ".#{extension}"
-        "#{content_type}; charset=utf-8"
+        "#{Util.media_type extension}; charset=utf-8"
       end
     end
 

@@ -1,26 +1,20 @@
-require 'ostruct'
-require 'rack/mock'
-require_relative '../../../../lib/crepe/endpoint'
+require 'spec_helper'
 
 describe Crepe::Filter::Acceptance do
-  subject { described_class }
+  app do
+    respond_to :json
 
-  let(:env) {
-    Rack::MockRequest.env_for
-  }
-  let(:endpoint) {
-    endpoint = Crepe::Endpoint.new(formats: %w[json]) {}
-    endpoint.instance_variable_set :@env, env
-    endpoint
-  }
+    get do
+      { hello: 'world' }
+    end
+  end
 
   context 'unacceptable content' do
     it 'renders Not Acceptable' do
-      env['rack.routing_args'] = { format: 'xml' }
-      endpoint.should_receive(:error!).with(
-        :not_acceptable, accepts: ['application/json; charset=utf-8']
-      )
-      subject.filter endpoint
+      get '/.xml'
+      last_response.body.should eq(JSON.dump(
+        error: { accepts: ['application/json'], message: 'Not Acceptable' }
+      ))
     end
   end
 end
