@@ -30,7 +30,7 @@ module Crepe
 
         def last
           last = (count.to_f / per_page).ceil
-          { page: last } unless page == last
+          { page: last } if last > page
         end
 
         def to_h
