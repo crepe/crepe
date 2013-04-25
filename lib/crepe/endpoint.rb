@@ -13,7 +13,10 @@ module Crepe
 
       def default_config
         @default_config ||= {
-          callbacks: {},
+          callbacks: {
+            before: [],
+            after: [Filter::JSONP.new]
+          },
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Tilt),
@@ -72,10 +75,7 @@ module Crepe
     delegate :headers, to: :response
 
     def content_type
-      @content_type ||= begin
-        extension = format == :json && params[:callback] ? :js : format
-        "#{Util.media_type extension}; charset=utf-8"
-      end
+      @content_type ||= "#{Util.media_type format}; charset=utf-8"
     end
 
     def parse body, options = {}
