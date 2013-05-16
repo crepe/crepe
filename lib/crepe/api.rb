@@ -167,12 +167,13 @@ module Crepe
         mount endpoint, options.merge(at: path, method: method, anchor: true)
       end
 
-      def mount app = nil, **options
+      def mount app, options = {}
         path = '/'
 
-        if app && options.key?(:at)
+        if options.key? :at
           path = options.delete :at
-        elsif app.nil?
+        elsif app.is_a? Hash
+          options = app
           app, path = options.find { |k, v| k.respond_to? :call }
           options.delete app if app
         end
