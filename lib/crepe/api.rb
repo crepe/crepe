@@ -145,6 +145,11 @@ module Crepe
         end
       end
 
+      def let! name, &block
+        let name, &block
+        before { send name }
+      end
+
       def call env
         app.call env
       end
