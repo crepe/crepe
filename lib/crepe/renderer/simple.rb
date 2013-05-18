@@ -1,3 +1,5 @@
+require 'multi_json'
+
 module Crepe
   module Renderer
     # The simplest renderer delegates rendering to the resource itself.
@@ -8,8 +10,10 @@ module Crepe
       def render resource, format: endpoint.format
         resource = super
 
-        if resource.respond_to? "to_#{format}"
-          resource.__send__("to_#{format}")
+        if format == :json
+          MultiJson.dump resource, pretty: endpoint.params[:pretty]
+        elsif resource.respond_to? "to_#{format}"
+          resource.__send__ "to_#{format}"
         else
           resource.to_s
         end
