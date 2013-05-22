@@ -15,7 +15,7 @@ module Crepe
         @default_config ||= {
           callbacks: {
             before: [],
-            after: [Filter::JSONP.new]
+            after: [Filter::JSCallback.new]
           },
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
