@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Crepe::Filter::JSCallback do
+describe Crepe::Middleware::JSCallback do
 
   app do
     get '*catch' do
@@ -12,10 +12,13 @@ describe Crepe::Filter::JSCallback do
 
   it 'renders JavaScript callback' do
     last_response.body.should eq(
-      '%{function}(%{body},%{headers},%{status});' % {
+      '%{function}(%{body},%{headers},%{status})' % {
         function: 'say',
         body: { error: { message: 'Not Found' } }.to_json,
-        headers: { contentType: 'application/json; charset=utf-8' }.to_json,
+        headers: {
+          contentType: 'application/json; charset=utf-8',
+          cacheControl: 'max-age=0, private, must-revalidate'
+        }.to_json,
         status: 404
       }
     )
@@ -32,8 +35,8 @@ describe Crepe::Filter::JSCallback do
 
   context 'with a custom callback param' do
     app do
-      skip_after Crepe::Filter::JSCallback
-      after Crepe::Filter::JSCallback.new 'jsonp'
+      config[:middleware].delete Crepe::Middleware::JSCallback
+      use Crepe::Middleware::JSCallback, :jsonp
 
       get do
         { hello: 'world' }
@@ -42,10 +45,13 @@ describe Crepe::Filter::JSCallback do
 
     it 'renders the callback param' do
       get('/', jsonp: 'say').body.should eq(
-        '%{function}(%{body},%{headers},%{status});' % {
+        '%{function}(%{body},%{headers},%{status})' % {
           function: 'say',
           body: { hello: 'world' }.to_json,
-          headers: { contentType: 'application/json; charset=utf-8' }.to_json,
+          headers: {
+            contentType: 'application/json; charset=utf-8',
+            cacheControl: 'max-age=0, private, must-revalidate'
+          }.to_json,
           status: 200
         }
       )
