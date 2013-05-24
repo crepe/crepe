@@ -12,6 +12,7 @@ module Crepe
       endpoint: Endpoint.default_config,
       helper: Module.new,
       middleware: [
+        Middleware::JSCallback,
         Middleware::RestfulStatus,
         Middleware::Head,
         Rack::ConditionalGet,

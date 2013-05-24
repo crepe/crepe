@@ -13,10 +13,7 @@ module Crepe
 
       def default_config
         @default_config ||= {
-          callbacks: {
-            before: [],
-            after: [Filter::JSCallback.new]
-          },
+          callbacks: {},
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Tilt),
