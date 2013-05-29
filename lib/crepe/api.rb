@@ -267,16 +267,20 @@ module Crepe
             end
             formats.uniq!
 
-            scope do
-              respond_to(*formats)
-              route 'OPTIONS', path do
-                headers['Allow'] = allowed.join ', '
-                { allow: allowed }
-              end
-              route METHODS - allowed, path do
-                headers['Allow'] = allowed.join ', '
-                error! :method_not_allowed, allow: allowed
-              end
+            generate_options_route! path, allowed, formats
+          end
+        end
+
+        def generate_options_route! path, allowed, formats
+          scope do
+            respond_to(*formats)
+            route 'OPTIONS', path do
+              headers['Allow'] = allowed.join ', '
+              { allow: allowed }
+            end
+            route METHODS - allowed, path do
+              headers['Allow'] = allowed.join ', '
+              error! :method_not_allowed, allow: allowed
             end
           end
         end
