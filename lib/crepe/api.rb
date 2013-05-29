@@ -262,13 +262,21 @@ module Crepe
             allowed << 'OPTIONS'
             allowed.sort!
 
-            route 'OPTIONS', path do
-              headers['Allow'] = allowed.join ', '
-              { allow: allowed }
+            formats = options.inject([]) do |f, (_, _, _, config)|
+              f + config[:endpoint][:formats]
             end
-            route METHODS - allowed, path do
-              headers['Allow'] = allowed.join ', '
-              error! :method_not_allowed, allow: allowed
+            formats.uniq!
+
+            scope do
+              respond_to(*formats)
+              route 'OPTIONS', path do
+                headers['Allow'] = allowed.join ', '
+                { allow: allowed }
+              end
+              route METHODS - allowed, path do
+                headers['Allow'] = allowed.join ', '
+                error! :method_not_allowed, allow: allowed
+              end
             end
           end
         end
