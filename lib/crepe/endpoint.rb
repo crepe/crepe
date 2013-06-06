@@ -34,6 +34,8 @@ module Crepe
       define_singleton_method :_run_handler, &handler
     end
 
+    delegate :logger, to: :Crepe
+
     def configure! new_config
       @config ||= self.class.default_config
       @config = Util.deep_merge config, new_config
