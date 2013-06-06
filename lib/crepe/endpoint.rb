@@ -161,7 +161,8 @@ module Crepe
           instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
           code = :internal_server_error
-          error! code, exception.message, backtrace: exception.backtrace
+          data = { backtrace: exception.backtrace } if Crepe.env.development?
+          error! code, exception.message, data || {}
         end
       end
 
