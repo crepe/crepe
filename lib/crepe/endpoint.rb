@@ -162,10 +162,18 @@ module Crepe
           handler = method handler if handler.is_a? Symbol
           instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
+          log_exception exception
           code = :internal_server_error
           data = { backtrace: exception.backtrace } if Crepe.env.development?
           error! code, exception.message, data || {}
         end
+      end
+
+      def log_exception exception
+        logger.error "%{message}\n%{backtrace}" % {
+          message: exception.message,
+          backtrace: exception.backtrace.map { |l| "\t#{l}" }.join("\n")
+        }
       end
 
       def parser
