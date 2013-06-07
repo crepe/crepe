@@ -1,3 +1,5 @@
+ENV['RACK_ENV'] = 'test'
+
 require 'rspec'
 require 'rack/test'
 $: << File.expand_path('../config', __dir__)

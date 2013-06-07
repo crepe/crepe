@@ -34,6 +34,8 @@ module Crepe
       define_singleton_method :_run_handler, &handler
     end
 
+    delegate :logger, to: :Crepe
+
     def configure! new_config
       @config ||= self.class.default_config
       @config = Util.deep_merge config, new_config
@@ -160,9 +162,18 @@ module Crepe
           handler = method handler if handler.is_a? Symbol
           instance_exec(*(exception unless handler.arity.zero?), &handler)
         else
+          log_exception exception
           code = :internal_server_error
-          error! code, exception.message, backtrace: exception.backtrace
+          data = { backtrace: exception.backtrace } if Crepe.env.development?
+          error! code, exception.message, data || {}
         end
+      end
+
+      def log_exception exception
+        logger.error "%{message}\n%{backtrace}" % {
+          message: exception.message,
+          backtrace: exception.backtrace.map { |l| "\t#{l}" }.join("\n")
+        }
       end
 
       def parser
