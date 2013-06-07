@@ -23,6 +23,12 @@ module Crepe
 
   class << self
 
+    attr_writer :logger
+
+    def logger
+      @logger ||= Logger.new((STDOUT if Crepe.env.development?))
+    end
+
     def env
       @env ||= ActiveSupport::StringInquirer.new ENV['CREPE_ENV']
     end
