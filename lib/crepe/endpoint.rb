@@ -187,7 +187,7 @@ module Crepe
       def error code, message = nil, **data
         status code
         message ||= Rack::Utils::HTTP_STATUS_CODES[status]
-        { error: data.merge(message: message) }
+        { error: { message: message }.merge(data) }
       end
 
   end
