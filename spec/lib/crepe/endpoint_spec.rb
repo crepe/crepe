@@ -72,7 +72,7 @@ describe Crepe::Endpoint do
       let(:handler) { proc { unauthorized! extra: 'data' } }
 
       it 'returns the data' do
-        json = '{"error":{"extra":"data","message":"Unauthorized"}}'
+        json = '{"error":{"message":"Unauthorized","extra":"data"}}'
         response.body.should eq json
       end
     end

@@ -54,11 +54,15 @@ module Crepe
     end
 
     def query_version
-      self.GET[self.class.config[:version][:name]].to_s
+      version = self.GET[self.class.config[:version][:name]].to_s
+      version = default_version.to_s if version.empty? && default_version
+      version
     end
 
     def header_versions
-      Versions.new accepts.media_types.map(&:version).compact
+      versions = accepts.media_types.map(&:version).compact
+      versions << default_version.to_s if versions.empty? && default_version
+      Versions.new(versions)
     end
 
     def accepts
@@ -66,6 +70,12 @@ module Crepe
         Util.media_type(params[:format]) || headers['Accept'] || '*/*'
       )
     end
+
+    private
+
+      def default_version
+        self.class.config[:version][:default]
+      end
 
   end
 end
