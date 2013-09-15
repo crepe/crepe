@@ -1,0 +1,6 @@
+# bundler
+bin
+
+# yard
+.yardoc
+doc

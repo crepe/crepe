@@ -27,3 +27,13 @@ task :loc do
   print '  spec  '
   puts `zsh -c "grep -vE '^ *#|^$' spec/**/*.rb | wc -l"`.strip
 end
+
+begin
+  require 'yard'
+  YARD::Rake::YardocTask.new :doc do |t|
+    # t.options = ['--hide-void-return']
+    t.files = %w[lib/**/*.rb]
+  end
+rescue LoadError
+  warn 'YARD not available, doc task not provided.'
+end

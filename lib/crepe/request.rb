@@ -1,11 +1,11 @@
 require 'rack/request'
 
 module Crepe
-  # A thin wrapper over {Rack::Request} that provides helper methods to
-  # better access request attributes.
+  # A thin wrapper over Rack::Request that provides helper methods to better
+  # access request attributes.
   class Request < Rack::Request
 
-    # Responds to {#match} so that {Rack::Mount} can route versions.
+    # Responds to #match so that Rack::Mount can route versions.
     class Versions < Array
       def match condition
         grep(condition).first

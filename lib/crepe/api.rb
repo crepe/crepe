@@ -22,8 +22,8 @@ module Crepe
       route_options: {
         constraints: {},
         defaults: {},
-        anchor: false,
-        separators: SEPARATORS
+        separators: SEPARATORS,
+        anchor: false
       },
       version: {
         name: 'v',
@@ -35,16 +35,158 @@ module Crepe
 
     class << self
 
+      # @return [Config] API configuration
       attr_reader :config
 
+      # @return [Array] uncompiled routes
       attr_reader :routes
 
-      def inherited subclass
-        subclass.config = config.deep_dup
-        subclass.config[:helper] = config[:helper].dup
-        subclass.routes = routes.dup
+      # The base DSL method of a Crepe API, +route+ defines an API route by
+      # method(s), path, options, and a block that is evaluated at runtime.
+      #
+      #     route 'GET', '/' do
+      #       { message: 'Hello, world!' }
+      #     end
+      #     # renders {"message":"Hello, world!"}
+      #
+      # Common HTTP verbs (GET, POST, PUT, PATCH, DELETE) are aliased to their
+      # own methods, and the path defaults to a forward slash, so the above can
+      # be simplified:
+      #
+      #     get do
+      #       { message: 'Hello, world!' }
+      #     end
+      #
+      # Crepe routing should be familiar to anyone who has used Rails or
+      # Sinatra. Named path parameters are prefixed with +:+, and are
+      # accessible via the +params+ hash.
+      #
+      #     get '/hello/:name' do
+      #       { message: "Hello, #{params[:name]}" }
+      #     end
+      #
+      # Routes take the following options:
+      #
+      # - <tt>:constraints</tt>: a hash of parameter names and their
+      #   constraints (that is, requirements for the route to resolve, usually
+      #   in the form of regular expressions)
+      #
+      # - <tt>:defaults</tt>: a hash of parameter names and their default
+      #   values
+      #
+      # - <tt>:separators</tt>: where URIs should be split (defaults to
+      #   {SEPARATORS})
+      #
+      # - <tt>:anchor</tt>: whether or not to anchor the URI pattern (defaults
+      #   to +false+ for scopes, +true+ for routes)
+      #
+      # Any additional option specified will be assigned as a constraint if the
+      # value is a regular expression, and will be assigned as a default
+      # otherwise. Take the following constraint:
+      #
+      #   get '/users/:id', constraints: { id: /^\d+/ } do
+      #     # ...
+      #   end
+      #
+      # This can be simplified by merely extracting the constraint to the root
+      # of a route's options:
+      #
+      #   get '/users/:id', id: /^\d+/ do
+      #     # ...
+      #   end
+      #
+      # @return [void]
+      # @todo
+      #   Examples of the other options.
+      def route method, path = '/', **options, &block
+        block ||= proc { head }
+        endpoint = Endpoint.new(&block)
+        mount endpoint, options.merge(at: path, method: method, anchor: true)
       end
 
+      # Defines a GET-based route.
+      #
+      # @return [void]
+      # @see .route
+      def get *args, &block
+        route 'GET', *args, &block
+      end
+
+      # Defines a POST-based route.
+      #
+      # @return [void]
+      # @see .route
+      def post *args, &block
+        route 'POST', *args, &block
+      end
+
+      # Defines a PUT-based route.
+      #
+      # @return [void]
+      # @see .route
+      def put *args, &block
+        route 'PUT', *args, &block
+      end
+
+      # Defines a PATCH-based route.
+      #
+      # @return [void]
+      # @see .route
+      def patch *args, &block
+        route 'PATCH', *args, &block
+      end
+
+      # Defines a DELETE-based route.
+      #
+      # @return [void]
+      # @see .route
+      def delete *args, &block
+        route 'DELETE', *args, &block
+      end
+
+      # Defines a route that will match any HTTP verb.
+      #
+      # @return [void]
+      # @see .route
+      def any *args, &block
+        route nil, *args, &block
+      end
+
+      # Specifies a scope for routes to inherit options (and base paths) in
+      # order to simplify repetitive routing.
+      #
+      #   get    '/users' # do ... end
+      #   post   '/users' # do ... end
+      #   get    '/users/:id', id: /^\d+$/ # do ... end
+      #   patch  '/users/:id', id: /^\d+$/ # do ... end
+      #   delete '/users/:id', id: /^\d+$/ # do ... end
+      #
+      # Using +scope+, you only have to specify the "users" component once and
+      # the ":id" parameter (and constraint) once:
+      #
+      #   scope :users do
+      #     get  # { ... }
+      #     post # { ... }
+      #
+      #     scope ':id', id: /^\d+$/ do
+      #       get    # { ... }
+      #       patch  # { ... }
+      #       delete # { ... }
+      #     end
+      #   end
+      #
+      # Scopes accept the same options routes accept and pass them to the
+      # routes defined within the scope.
+      #
+      # The {.param} method can simplify the ":id" scope further:
+      #
+      #   param id: /^\d+$/ do
+      #     # ...
+      #   end
+      #
+      # @return [void]
+      # @todo
+      #   Example of an options-based scope (one without a base path).
       def scope namespace = nil, **scoped, &block
         scoped = scoped.merge(
           helper: config[:helper].dup,
@@ -56,11 +198,28 @@ module Crepe
       alias namespace scope
       alias resource scope
 
+      # Specifies a named parameter at the current scope. For example:
+      #
+      #   param :id do   # scope '/:id' do
+      #     # ...        #   # ...
+      #   end            # end
+      #
+      # It accepts all the same options as {.scope}, but allows the named
+      # parameter as the first key as a shorthand when a contraint or default
+      # is needed:
+      #
+      #   param id: /^\d+$/ do
+      #     # ...
+      #   end
+      #
+      # @return [void]
+      # @see .scope
       def param name = nil, **options, &block
         name ||= options.keys.first
         namespace "/:#{name}", options, &block
       end
 
+      # @return [void]
       def version level = nil, **options, &block
         config[:version][:default] ||= level
         with = options.fetch :with, config[:version][:with]
@@ -68,29 +227,34 @@ module Crepe
         scope path, version: options.merge(level: level, with: with), &block
       end
 
+      # @return [void]
       def use middleware, *args, &block
         if config[:namespace]
-          raise ArgumentError, "can't nest middleware in a namespace"
+          raise ArgumentError, "can't nest middleware in a scope"
         end
         config[:middleware] << [middleware, args, block]
       end
 
+      # @return [void]
       def respond_to *formats, **renderers
         config[:endpoint][:formats] = formats | renderers.keys
         renderers.each { |format, renderer| render format, with: renderer }
       end
 
+      # @return [void]
       def render *formats, **options
         renderer = options.fetch :with
         formats.each { |f| config[:endpoint][:renderers][f] = renderer }
       end
 
+      # @return [void]
       def parse *media_types, **options
         parser = options.fetch :with
         media_types = Util.media_types media_types
         media_types.each { |t| config[:endpoint][:parsers][t] = parser }
       end
 
+      # @return [void]
       def rescue_from *exceptions, with: nil, &block
         warn 'block takes precedence over handler' if block && with
         handler = block || with
@@ -98,6 +262,7 @@ module Crepe
         exceptions.each { |e| config[:endpoint][:rescuers][e] = handler }
       end
 
+      # @return [void]
       def define_callback type
         config[:endpoint][:callbacks][type] ||= []
 
@@ -118,11 +283,13 @@ module Crepe
         RUBY
       end
 
+      # @return [void]
       def basic_auth *args, &block
         skip_before Filter::BasicAuth
         before Filter::BasicAuth.new(*args, &block)
       end
 
+      # @return [void]
       def helper mod = nil, prepend: false, &block
         if block
           warn 'block takes precedence over module' if mod
@@ -132,6 +299,7 @@ module Crepe
         config[:helper].send method, mod
       end
 
+      # @return [void]
       def let name, &block
         if Endpoint.method_defined? name
           raise ArgumentError, "can't redefine Crepe::Endpoint##{name}"
@@ -147,33 +315,18 @@ module Crepe
         end
       end
 
+      # @return [void]
       def let! name, &block
         let name, &block
         before { send name }
       end
 
+      # @return [[Numeric, Hash, #each]]
       def call env
         app.call env
       end
 
-      METHODS.each do |method|
-        class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{method.downcase} *args, &block # def get *args, &block
-            route '#{method}', *args, &block   #   route 'GET', *args, &block
-          end                                  # end
-        RUBY
-      end
-
-      def any *args, &block
-        route nil, *args, &block
-      end
-
-      def route method, path = '/', **options, &block
-        block ||= proc { head }
-        endpoint = Endpoint.new(&block)
-        mount endpoint, options.merge(at: path, method: method, anchor: true)
-      end
-
+      # @return [void]
       def mount app, options = {}
         path = '/'
 
@@ -195,7 +348,7 @@ module Crepe
         }
         if level = config[:version][:level]
           case config[:version][:with]
-            when :query  then conditions[:query_version] = /\A#{level}\Z/
+            when :query  then conditions[:query_version]   = /\A#{level}\Z/
             when :header then conditions[:header_versions] = /\A#{level}\Z/
           end
         end
@@ -203,6 +356,7 @@ module Crepe
         routes << [app, conditions, options[:defaults], config.dup]
       end
 
+      # @return [Rack::Builder]
       def to_app(exclude: [])
         middleware = config.all(:middleware) - exclude
 
@@ -224,12 +378,17 @@ module Crepe
 
       private
 
+        def inherited subclass
+          subclass.config = config.deep_dup
+          subclass.config[:helper] = config[:helper].dup
+          subclass.routes = routes.dup
+        end
+
         def app
           @app ||= to_app
         end
 
         def normalize_route_options options
-          options = options.except(*config.keys)
           options = Util.deep_merge config[:route_options], options
           options.except(*config[:route_options].keys).each_key do |key|
             value = options.delete key
@@ -292,7 +451,7 @@ module Crepe
           routes.map do |app, conditions, defaults, config|
             if app.is_a?(Class) && app.ancestors.include?(API)
               app = Class.new(app).to_app exclude: exclude
-            elsif app.is_a?(Endpoint)
+            elsif app.is_a? Endpoint
               app = app.dup
               app.configure! config.to_h[:endpoint]
               config.all(:helper).each { |helper| app.extend helper }
@@ -304,7 +463,20 @@ module Crepe
 
     end
 
+    # Runs a given block or calls #filter on a given object (passing the
+    # {Endpoint} instance) _before_ a request runs through a route's handler.
+    #
+    # @method (filter = nil, &block)
+    # @scope class
+    # @return [void]
     define_callback :before
+
+    # Runs a given block or calls #filter on a given object (passing the
+    # {Endpoint} instance) _after_ a request runs through a route's handler.
+    #
+    # @method (filter = nil, &block)
+    # @scope class
+    # @return [void]
     define_callback :after
 
   end

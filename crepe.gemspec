@@ -28,4 +28,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake',       '~> 10.0.x'
   s.add_development_dependency 'rspec',      '~> 2.13.x'
   s.add_development_dependency 'rack-test',  '~> 0.6.x'
+  s.add_development_dependency 'yard',       '~> 0.8.x'
 end

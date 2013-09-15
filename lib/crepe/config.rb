@@ -1,5 +1,5 @@
 module Crepe
-  # A {Hash}-like object that scopes state changes using an underlying stack.
+  # A Hash-like object that scopes state changes using an underlying stack.
   class Config
 
     def initialize first = {}

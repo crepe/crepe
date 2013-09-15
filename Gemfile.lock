@@ -57,6 +57,7 @@ GEM
       atomic
     tilt (1.4.1)
     tzinfo (0.3.37)
+    yard (0.8.7.1)
 
 PLATFORMS
   ruby
@@ -69,3 +70,4 @@ DEPENDENCIES
   rack-test (~> 0.6.x)
   rake (~> 10.0.x)
   rspec (~> 2.13.x)
+  yard (~> 0.8.x)
