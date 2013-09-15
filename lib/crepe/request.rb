@@ -54,15 +54,13 @@ module Crepe
     end
 
     def query_version
-      version = self.GET[self.class.config[:version][:name]].to_s
-      version = default_version.to_s if version.empty? && default_version
-      version
+      (self.GET[self.class.config[:version][:name]] || default_version).to_s
     end
 
     def header_versions
       versions = accepts.media_types.map(&:version).compact
       versions << default_version.to_s if versions.empty? && default_version
-      Versions.new(versions)
+      Versions.new versions
     end
 
     def accepts

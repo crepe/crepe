@@ -34,7 +34,7 @@ describe Crepe::API, 'versioning' do
       last_response.body.should include 'v1'
     end
 
-    it 'defaults to a specified version' do
+    it 'defaults to the specified version' do
       get '/'
       last_response.body.should include 'v2'
     end
@@ -58,7 +58,7 @@ describe Crepe::API, 'versioning' do
       get('/', ver: 'v1').body.should include 'v1'
     end
 
-    it 'routes to the first version defined if no default is set and no version is requested' do
+    it 'defaults to the first specified version' do
       get('/').body.should include 'v1'
     end
   end
