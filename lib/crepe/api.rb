@@ -62,6 +62,7 @@ module Crepe
       end
 
       def version level = nil, **options, &block
+        config[:version][:default] ||= level
         with = options.fetch :with, config[:version][:with]
         path = level if with == :path
         scope path, version: options.merge(level: level, with: with), &block
