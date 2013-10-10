@@ -8,7 +8,7 @@ module Crepe
       class Links < Struct.new :request, :page, :per_page, :total
 
         def render
-          to_h.map { |rel, uri| %(<#{uri}"}>; rel="#{rel}") }.join ', '
+          to_h.map { |rel, uri| %(<#{uri}>; rel="#{rel}") }.join ', '
         end
 
         def first
