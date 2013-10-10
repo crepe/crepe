@@ -5,7 +5,7 @@ module Crepe
     module Pagination
 
       # Generates pagination links based on provided page, limit, and total.
-      class Links < Struct.new :request, :page, :per_page, :count
+      class Links < Struct.new :request, :page, :per_page, :total
 
         def render
           to_h.map { |rel, uri| %(<#{uri}"}>; rel="#{rel}") }.join ', '
@@ -23,13 +23,13 @@ module Crepe
         end
 
         def next
-          if count.nil? || page * per_page < count
+          if total.nil? || page * per_page < total
             { page: page.next } unless page == last[:page]
           end
         end
 
         def last
-          last = (count.to_f / per_page).ceil
+          last = (total.to_f / per_page).ceil
           { page: last } if last > page
         end
 
@@ -54,17 +54,18 @@ module Crepe
 
       def render resource, options = {}
         if resource.respond_to? :paginate
-          count = resource.count if resource.respond_to? :count
-          endpoint.headers['Count'] = count.to_s if count
-
           params = endpoint.params.slice :page, :per_page
           page = validate_param params, :page, 1
           per_page = resource.per_page if resource.respond_to? :per_page
           per_page = validate_param params, :per_page, per_page || PER_PAGE
-          self.links = Links.new endpoint.request, page, per_page, count
-          endpoint.headers['Link'] = links.render
 
           resource = resource.paginate params
+
+          total = resource.total if resource.respond_to? :total
+          endpoint.headers['Total'] = total.to_s if total
+
+          self.links = Links.new endpoint.request, page, per_page, total
+          endpoint.headers['Link'] = links.render
         end
 
         super if defined? super
