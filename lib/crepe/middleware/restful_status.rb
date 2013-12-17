@@ -15,7 +15,7 @@ module Crepe
       def call env
         status, headers, body = @app.call env
 
-        if status == 200
+        if status == 200 && !env['crepe.status']
           case env['REQUEST_METHOD']
           when 'POST'
             status = body.empty? ? 204 : 201

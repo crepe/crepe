@@ -67,7 +67,10 @@ module Crepe
     end
 
     def status value = nil
-      response.status = Rack::Utils.status_code value if value
+      if value
+        response.status = env['crepe.status'] = Rack::Utils.status_code value
+      end
+
       response.status
     end
 
