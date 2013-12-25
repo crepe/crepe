@@ -1,4 +1,4 @@
-require 'multi_json'
+require 'json'
 
 module Crepe
   module Parser
@@ -19,8 +19,8 @@ module Crepe
           request.POST
         when %r{application/json}
           begin
-            MultiJson.load body
-          rescue MultiJson::DecodeError
+            JSON.parse body
+          rescue JSON::ParserError
             error! :bad_request, "Invalid JSON"
           end
         else

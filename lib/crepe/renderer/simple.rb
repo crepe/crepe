@@ -1,4 +1,4 @@
-require 'multi_json'
+require 'json'
 
 module Crepe
   module Renderer
@@ -11,7 +11,11 @@ module Crepe
         resource = super
 
         if format == :json
-          MultiJson.dump resource, pretty: endpoint.params[:pretty]
+          if endpoint.request.GET.key? 'pretty'
+            JSON.pretty_generate resource
+          else
+            JSON.dump resource
+          end
         elsif resource.respond_to? "to_#{format}"
           resource.__send__ "to_#{format}"
         else

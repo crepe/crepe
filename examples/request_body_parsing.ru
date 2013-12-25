@@ -1,5 +1,4 @@
 require 'crepe'
-require 'multi_json'
 
 # Parses input and echoes back the Ruby interpretation.
 #
