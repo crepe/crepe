@@ -1,5 +1,4 @@
 require 'multi_json'
-require 'multi_xml'
 
 module Crepe
   module Parser
@@ -23,12 +22,6 @@ module Crepe
             MultiJson.load body
           rescue MultiJson::DecodeError
             error! :bad_request, "Invalid JSON"
-          end
-        when %r{application/xml}
-          begin
-            MultiXml.parse body
-          rescue MultiXml::ParseError
-            error! :bad_request, "Invalid XML"
           end
         else
           error! :unsupported_media_type,
