@@ -9,7 +9,7 @@ describe Crepe::API, "middleware" do
     def call env
       _, hdr, _ = *@app.call(env)
       hdr['X-Count'] = (hdr['X-Count'] || 0) + 1
-      [200, hdr, [*@args, *@block.call]]
+      [200, hdr, [*@args, *@block.call].map(&:to_s)]
     end
   end
 
