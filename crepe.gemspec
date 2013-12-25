@@ -17,9 +17,8 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.0.0'
 
-  s.add_dependency 'activesupport', '>= 4.0.0.rc1'
+  s.add_dependency 'activesupport', '>= 4.0.0'
   s.add_dependency 'multi_json',    '~> 1.6.x'
-  s.add_dependency 'multi_xml',     '~> 0.5.x'
   s.add_dependency 'rack',          '~> 1.5.x'
   s.add_dependency 'rack-mount',    '~> 0.8.x'
   s.add_dependency 'tilt',          '~> 1.3.x'
