@@ -219,7 +219,27 @@ module Crepe
         namespace "/:#{name}", options, &block
       end
 
+      # Specifies a version:
+      #
+      #   version :v1 do
+      #     # ...
+      #   end
+      #
+      # Crepe supports versioning by path prefix, header, or query string.
+      # Path-based versioning is the default (so the above behaves much like
+      # {.scope}, namespacing its endpoints with a '/v1' path component).
+      #
+      # To use header-based versioning (versioning by content negotiation),
+      # configure versioning before any specific versions are declared:
+      #
+      #   version with: :header, vendor: 'my-app'
+      #
+      # In case you want to version with a query parameter:
+      #
+      #   version with: :query, name: 'v'
+      #
       # @return [void]
+      # @see .scope
       def version level = nil, **options, &block
         config[:version][:default] ||= level
         with = options.fetch :with, config[:version][:with]
@@ -227,7 +247,15 @@ module Crepe
         scope path, version: options.merge(level: level, with: with), &block
       end
 
+      # Pushes the given Rack middleware and its arguments onto the API's
+      # middleware stack.
+      #
+      # Middleware cannot be nested within a scope. If you need middleware to
+      # apply to a specific section of your API, it should be mounted as a
+      # sub-API within your stack.
+      #
       # @return [void]
+      # @raise [ArgumentError] when called inside a scope
       def use middleware, *args, &block
         if config[:namespace]
           raise ArgumentError, "can't nest middleware in a scope"
@@ -235,18 +263,50 @@ module Crepe
         config[:middleware] << [middleware, args, block]
       end
 
+      # Defines supported formats (mime types) for a scope.
+      #
+      #   respond_to :json, :xml
+      #
+      # These formats will override any that are defined in parent scopes.
+      #
+      # Renderers can be defined at the same time:
+      #
+      #   respond_to csv: CSVRenderer.new
+      #   # class CSVRenderer < Crepe::Renderer::Base
+      #   #   def render resource, options = {}
+      #   #     super.to_csv
+      #   #   end
+      #   # end
+      #
       # @return [void]
+      # @see .render
       def respond_to *formats, **renderers
         config[:endpoint][:formats] = formats | renderers.keys
         renderers.each { |format, renderer| render format, with: renderer }
       end
 
+      # Defines a custom renderer for the specified formats (mime types).
+      #
+      #   render :json, with: MyCustomRenderer.new
+      #
+      # An endpoint must respond to the specified format for it to render.
+      #
       # @return [void]
+      # @see .respond_to
       def render *formats, **options
         renderer = options.fetch :with
         formats.each { |f| config[:endpoint][:renderers][f] = renderer }
       end
 
+      # Defines a custom request body parser for the specified content types.
+      #
+      #   parse :csv, with: CSVParser.new
+      #   # class CSVParser < Struct.new :endpoint
+      #   #   def parse body
+      #   #     CSV.parse body
+      #   #   end
+      #   # end
+      #
       # @return [void]
       def parse *media_types, **options
         parser = options.fetch :with
@@ -254,7 +314,25 @@ module Crepe
         media_types.each { |t| config[:endpoint][:parsers][t] = parser }
       end
 
+      # Rescues exceptions raised in endpoints.
+      #
+      #   rescue_from Crepe::Params::Missing do |e|
+      #     error! :bad_request, e.message, missing: e.key
+      #   end
+      #
+      # Helper methods can be used (instead of blocks).
+      #
+      #   rescue_from Crepe::Params::Invalid, with: :params_invalid
+      #   helper do
+      #     def params_invalid e
+      #       error! :unprocessable_entity, e.message, invalid: e.keys
+      #     end
+      #   end
+      #
       # @return [void]
+      # @raise [ArgumentError] if a block/method handler isn't set
+      # @see .helper
+      # @see Endpoint#error!
       def rescue_from *exceptions, with: nil, &block
         warn 'block takes precedence over handler' if block && with
         handler = block || with
@@ -263,6 +341,8 @@ module Crepe
       end
 
       # @return [void]
+      # @see .before
+      # @see .after
       def define_callback type
         config[:endpoint][:callbacks][type] ||= []
 
@@ -283,12 +363,40 @@ module Crepe
         RUBY
       end
 
+      # Configures a before filter for basic authorization.
+      #
+      #   basic_auth realm: 'My App' do |username, password|
+      #     return username == 'admin' && password == 'secret'
+      #   end
+      #
+      # Renders a 401 Unauthorized error if the block fails.
+      #
       # @return [void]
+      # @see .before
+      # @see Endpoint#unauthorized!
       def basic_auth *args, &block
         skip_before Filter::BasicAuth
         before Filter::BasicAuth.new(*args, &block)
       end
 
+      # Extends endpoints with helper methods.
+      #
+      # It accepts a block:
+      #
+      #   helper do
+      #     def present resource
+      #       UserPresenter.new(resource).present
+      #     end
+      #   end
+      #   get do
+      #     user = User.find params[:id]
+      #     present user
+      #   end
+      #
+      # Or a module:
+      #
+      #   helper AuthenticationHelper
+      #
       # @return [void]
       def helper mod = nil, prepend: false, &block
         if block
@@ -299,7 +407,17 @@ module Crepe
         config[:helper].send method, mod
       end
 
+      # Define a memoized helper method.
+      #
+      #   let(:user) { User.find params[:id] }
+      #   get { user }
+      #
+      # {.let} is not evaluated till the first time the method it defines is
+      # invoked. To force a method's invocation before the endpoint runs, use
+      # {.let!}.
+      #
       # @return [void]
+      # @see .let!
       def let name, &block
         if Endpoint.method_defined? name
           raise ArgumentError, "can't redefine Crepe::Endpoint##{name}"
@@ -315,17 +433,46 @@ module Crepe
         end
       end
 
+      # Define a memoized helper method that is invoked before an endpoint is
+      # called.
+      #
+      #   let! :current_user do
+      #     User.authenticate!(*request.credentials)
+      #   end
+      #
       # @return [void]
+      # @see .let
       def let! name, &block
         let name, &block
         before { send name }
       end
 
+      # Rack call interface.
+      #
       # @return [[Numeric, Hash, #each]]
       def call env
         app.call env
       end
 
+      # Mounts a Rack-based application (including other Crepe API subclasses)
+      # in an API.
+      #
+      #   mount MyRackApp
+      #
+      # Applications can be mounted within a scope:
+      #
+      #   scope :some_path do
+      #     mount MyRackApp
+      #   end
+      #
+      # Or explicitly mapped to a path inline:
+      #
+      #   mount MyRackApp, at: :some_path
+      #
+      # Alternatively:
+      #
+      #   mount MyRackApp => :some_path
+      #
       # @return [void]
       def mount app, options = {}
         path = '/'
@@ -356,6 +503,9 @@ module Crepe
         routes << [app, conditions, options[:defaults], config.dup]
       end
 
+      # Compiles the middleware, routes, and endpoints into a Rack application.
+      # (Called the first time {.call} is.)
+      #
       # @return [Rack::Builder]
       def to_app(exclude: [])
         middleware = config.all(:middleware) - exclude
@@ -469,6 +619,7 @@ module Crepe
     # @method (filter = nil, &block)
     # @scope class
     # @return [void]
+    # @raise [ArgumentError] if a block/filter isn't set
     define_callback :before
 
     # Runs a given block or calls #filter on a given object (passing the
@@ -477,6 +628,7 @@ module Crepe
     # @method (filter = nil, &block)
     # @scope class
     # @return [void]
+    # @raise [ArgumentError] if a block/filter isn't set
     define_callback :after
 
   end
