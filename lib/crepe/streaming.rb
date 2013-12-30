@@ -1,7 +1,19 @@
 module Crepe
+  # Add streaming to your API.
+  #
+  #   class Ticker < Crepe::API
+  #     extend Crepe::Streaming
+  #
+  #     stream do
+  #       loop do
+  #         render timestamp: Time.now.to_i
+  #         sleep 1
+  #       end
+  #     end
+  #   end
   module Streaming
 
-    # Simple wrapper to handle chunked streaming responses.
+    # A simple IO-like wrapper to handle chunked streaming responses.
     class ChunkedIO < SimpleDelegator
 
       def write data
@@ -27,12 +39,23 @@ module Crepe
 
     end
 
+    # Defines a (GET-based) route with a streaming response.
+    #
+    # @return [void]
+    # @see API.route
+    # @see Helper#stream
     def stream *args, &block
       get(*args) { stream { instance_eval(&block) } }
     end
 
+    # Streaming helper method module.
     module Helper
 
+      # Handles the streaming portion of a response given a block.
+      #
+      # @return [ChunkedIO] the stream itself
+      # @see Streaming#stream
+      # @see #render
       def stream
         if block_given?
           headers['Content-Type'] ||= content_type
@@ -55,6 +78,16 @@ module Crepe
         @stream if defined? @stream
       end
 
+      # Renders a resource and newline to the stream.
+      #
+      #   render timestamp: Time.now.to_i
+      #
+      # If you need more granular control over the stream's output, you can
+      # write to the {#stream} directly.
+      #
+      # @see #stream
+      # @see ChunkedIO.puts
+      # @see ChunkedIO.write
       def render object, options = {}
         stream ? stream.puts(renderer.render(object, options)) : super
       end

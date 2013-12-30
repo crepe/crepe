@@ -3,6 +3,7 @@ ENV['CREPE_ROOT'] ||= Dir.pwd
 
 require 'active_support/all'
 
+# Crepe: the thin API stack.
 module Crepe
 
   autoload :Accept,     'crepe/accept'

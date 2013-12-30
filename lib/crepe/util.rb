@@ -1,6 +1,7 @@
 require 'rack/mime'
 
 module Crepe
+  # A collection of helper methods Crepe uses internally.
   module Util
 
     module_function

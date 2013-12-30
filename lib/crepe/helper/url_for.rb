@@ -1,5 +1,14 @@
 module Crepe
   module Helper
+    # URL helper method module.
+    #
+    #   class MyAPI < Crepe::API
+    #     helper Crepe::Helper::URLFor
+    #
+    #     get do
+    #       { users: url_for(:users) }
+    #     end
+    #   end
     module URLFor
 
       #--

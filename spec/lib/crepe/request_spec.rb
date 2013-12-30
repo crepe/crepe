@@ -22,7 +22,11 @@ describe Crepe::Request do
 
     it { should be_head }
     it { should be_get }
-    its(:method) { should eq 'HEAD' }
+
+    context 'method' do
+      subject { request.method }
+      it { should eq 'HEAD' }
+    end
   end
 
   describe '#params' do
