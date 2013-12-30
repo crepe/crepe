@@ -1,7 +1,9 @@
-# Crêpe
+# Crêpe [![Build Status][1]][2]
 
 The thin API stack.
 
+[1]: https://travis-ci.org/stephencelis/crepe.png
+[2]: https://travis-ci.org/stephencelis/crepe
 
 ## License
 
