@@ -508,8 +508,6 @@ module Crepe
       #
       # @return [Rack::Builder]
       def to_app(exclude: [])
-        @@catch ||= any('*catch') { error! :not_found } # generate root 404
-
         middleware = config.all(:middleware) - exclude
 
         route_set = Rack::Mount::RouteSet.new request_class: request_class
@@ -599,6 +597,7 @@ module Crepe
 
         def configured_routes(exclude: [])
           generate_options_routes!
+          @@catch ||= any('*catch') { error! :not_found } # generate root 404
 
           routes.map do |app, conditions, defaults, config|
             if app.is_a?(Class) && app.ancestors.include?(API)
