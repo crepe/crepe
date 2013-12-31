@@ -16,7 +16,7 @@ module Crepe
           callbacks: {},
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
-          renderers: Hash.new(Renderer::Tilt),
+          renderers: Hash.new(Renderer::Simple),
           rescuers: {}
         }
       end

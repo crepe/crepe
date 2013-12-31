@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'activesupport', '>= 4.0.0'
   s.add_dependency 'rack',          '~> 1.5.x'
   s.add_dependency 'rack-mount',    '~> 0.8.x'
-  s.add_dependency 'tilt',          '~> 1.3.x'
 
   s.add_development_dependency 'cane',       '~> 2.3.x'
   s.add_development_dependency 'rake',       '~> 10.0.x'
