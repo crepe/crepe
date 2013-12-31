@@ -98,9 +98,10 @@ module Crepe
     #
     #   status 200
     #
-    # Without an argument, it will return the current status code.
+    # Without an argument, it will return the current status code as an
+    # integer.
     #
-    # @return [Numeric]
+    # @return [Numeric] status code
     def status value = nil
       if value
         response.status = env['crepe.status'] = Rack::Utils.status_code value

@@ -239,10 +239,9 @@ module Crepe
       #   end
       #
       # To explicitly match a route in the above scope, set your request's
-      # accept header as follows:
+      # accept header:
       #
       #   Accept: application/vnd.my-app-v1+json
-      #
       #
       # In case you want to version with a query parameter:
       #
