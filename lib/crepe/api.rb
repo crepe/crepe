@@ -597,6 +597,7 @@ module Crepe
 
         def configured_routes(exclude: [])
           generate_options_routes!
+          any('*catch') { error! :not_found }
 
           routes.map do |app, conditions, defaults, config|
             if app.is_a?(Class) && app.ancestors.include?(API)
