@@ -49,12 +49,6 @@ class TwitterAPI < Crepe::API
 
   mount TwitterAPI::V1
 
-  rescue_from Crepe::Params::Missing do |e|
-    error! :bad_request, e.message, missing: e.key
-  end
-  rescue_from Crepe::Params::Invalid do |e|
-    error! :bad_request, e.message, invalid: e.keys
-  end
   rescue_from ActiveRecord::RecordNotFound do |e|
     error! :not_found, e.message
   end

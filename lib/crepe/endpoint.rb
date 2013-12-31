@@ -17,7 +17,10 @@ module Crepe
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Simple),
-          rescuers: {}
+          rescuers: {
+            Params::Missing => -> e { error! :bad_request, e.message, e.data },
+            Params::Invalid => -> e { error! :bad_request, e.message, e.data }
+          }
         }
       end
 
