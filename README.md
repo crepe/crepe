@@ -9,8 +9,6 @@ The thin API stack.
 
 ## Example
 
-Given:
-
 ``` ruby
 # config.ru
 require 'crepe'
