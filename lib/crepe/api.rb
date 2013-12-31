@@ -234,9 +234,26 @@ module Crepe
       #
       #   version with: :header, vendor: 'my-app'
       #
+      #   version :v1 do
+      #     # ...
+      #   end
+      #
+      # To explicitly match a route in the above scope, set your request's
+      # accept header as follows:
+      #
+      #   Accept: application/vnd.my-app-v1+json
+      #
+      #
       # In case you want to version with a query parameter:
       #
       #   version with: :query, name: 'v'
+      #
+      # With header or query parameter versioning, the first version declared
+      # will be considered the default, and requests that are not explicitly
+      # versioned will be directed to it. Alternatively, you can specify a
+      # default version explicitly:
+      #
+      #   version with: :header, vendor: 'my-app', default: :v1
       #
       # @return [void]
       # @see .scope
