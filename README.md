@@ -47,7 +47,7 @@ class TwitterAPI < Crepe::API
     stream(:user)             { current_user.timeline.stream { |t| render t } }
   end
 
-  mount TwitterAPI::V1
+  mount TwitterAPI::V1 # legacy version 1
 
   rescue_from ActiveRecord::RecordNotFound do |e|
     error! :not_found, e.message
