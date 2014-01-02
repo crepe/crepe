@@ -9,7 +9,7 @@ module Crepe
     SEPARATORS = %w[ / . ? ]
 
     @config = Config.new(
-      endpoint: Endpoint.default_config,
+      endpoint: Endpoint.config,
       helper: Module.new,
       middleware: [
         Middleware::JSCallback,
@@ -95,13 +95,13 @@ module Crepe
       #     # ...
       #   end
       #
-      # @return [void]
+      # @return [Endpoint]
       # @todo
       #   Examples of the other options.
       def route method, path = '/', **options, &block
-        block ||= proc { head }
-        endpoint = Endpoint.new(&block)
+        endpoint = Class.new(Endpoint) { handle(block || proc { head }) }
         mount endpoint, options.merge(at: path, method: method, anchor: true)
+        endpoint
       end
 
       # Defines a GET-based route.
@@ -637,15 +637,27 @@ module Crepe
           @@catch ||= any('*catch') { error! :not_found } # generate root 404
 
           routes.map do |app, conditions, defaults, config|
-            if app.is_a?(Class) && app.ancestors.include?(API)
-              app = Class.new(app).to_app exclude: exclude
-            elsif app.is_a? Endpoint
-              app = app.clone
-              app.configure! config.to_h[:endpoint]
-              config.all(:helper).each { |helper| app.extend helper }
+            if app.is_a?(Class) && app < API
+              app = configure_api_subclass app, exclude: exclude
+            elsif app.is_a?(Class) && app < Endpoint
+              app = configure_endpoint_subclass app, config
             end
 
             [app, conditions, defaults]
+          end
+        end
+
+        def configure_api_subclass klass, options
+          api = Class.new(klass)
+          Crepe.const_set "#{klass.name || 'API'}_#{api.object_id}", api
+          api.to_app options
+        end
+
+        def configure_endpoint_subclass klass, config
+          Class.new(klass).tap do |ep|
+            Util.deep_merge! ep.config, config.to_h[:endpoint]
+            config.all(:helper).each { |helper| ep.send :include, helper }
+            Crepe.const_set "#{klass.name || 'Endpoint'}_#{ep.object_id}", ep
           end
         end
 
