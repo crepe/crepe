@@ -342,23 +342,26 @@ module Crepe
 
       # @return [void]
       # @see .before
+      # @see .around
       # @see .after
       def define_callback type
-        config[:endpoint][:callbacks][type] ||= []
+        config[:endpoint][:callbacks] ||= []
 
         instance_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{type} filter = nil, &block
+          def #{type} filter = nil, **options, &block
             warn 'block takes precedence over object' if block && filter
             callback = block || filter
             raise ArgumentError, 'block or filter required' unless callback
-            config[:endpoint][:callbacks][:#{type}] << callback
+            config[:endpoint][:callbacks] << [:#{type}, callback, options]
           end
 
           def skip_#{type} filter = nil, &block
             warn 'block takes precedence over object' if block && filter
-            callback = block || proc { |c| filter == c || filter === c }
+            callback = block || proc { |(t, c, _)|
+              t == :#{type} && (filter == c || filter === c)
+            }
             raise ArgumentError, 'block or filter required' unless callback
-            config[:endpoint][:callbacks][:#{type}].delete_if(&callback)
+            config[:endpoint][:callbacks].delete_if(&callback)
           end
         RUBY
       end
@@ -617,16 +620,26 @@ module Crepe
     # Runs a given block or calls #filter on a given object (passing the
     # {Endpoint} instance) _before_ a request runs through a route's handler.
     #
-    # @method (filter = nil, &block)
+    # @method (filter = nil, **options, &block)
     # @scope class
     # @return [void]
     # @raise [ArgumentError] if a block/filter isn't set
     define_callback :before
 
     # Runs a given block or calls #filter on a given object (passing the
+    # {Endpoint} instance and a block) _around_ a request running through a
+    # route's handler. The handler is passed as a block to the filter.
+    #
+    # @method (filter = nil, **options, &block)
+    # @scope class
+    # @return [void]
+    # @raise [ArgumentError] if a block/filter isn't set
+    define_callback :around
+
+    # Runs a given block or calls #filter on a given object (passing the
     # {Endpoint} instance) _after_ a request runs through a route's handler.
     #
-    # @method (filter = nil, &block)
+    # @method (filter = nil, **options, &block)
     # @scope class
     # @return [void]
     # @raise [ArgumentError] if a block/filter isn't set
