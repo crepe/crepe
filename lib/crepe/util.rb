@@ -6,7 +6,9 @@ module Crepe
 
     module_function
 
-    # recursively dups hashes and arrays of hashes
+    # Recursively dups a hash or array of hashes, leaving others unduped
+    #
+    # @return [Object]
     def hash_dup value
       case value
         when Hash
@@ -18,10 +20,21 @@ module Crepe
       end
     end
 
+    # Recursively calls Util.hash_dup and Util.deep_merge! on hashes and their
+    # values. This allows a deeply nested hash to be merged with another,
+    # without non-Hash or Array values getting duped in the process.
+    #
+    # @return [Object]
+    # @see hash_dup
+    # @see deep_merge!
     def deep_merge hash, other_hash
       deep_merge! hash_dup(hash), other_hash
     end
 
+    # Recursively merge a Hash into another hash.
+    #
+    # @return [Object]
+    # @see deep_merge
     def deep_merge! hash, other_hash
       other_hash.each do |key, value|
         if hash[key].is_a?(Hash) && value.is_a?(Hash)
@@ -35,6 +48,8 @@ module Crepe
     end
 
     # Recursively freezes all keys and values.
+    #
+    # @return [Object]
     def deep_freeze value
       case value
         when Hash   then value.freeze.each_value { |v| deep_freeze v }
