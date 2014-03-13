@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.authors     = ['Stephen Celis', 'Evan Owen']
   s.email       = %w[stephen@stephencelis.com kainosnoema@gmail.com]
-  s.homepage    = 'https://github.com/stephencelis/crepe'
+  s.homepage    = 'https://github.com/crepe/crepe'
 
   s.required_ruby_version = '>= 2.0.0'
 
