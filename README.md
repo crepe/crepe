@@ -2,9 +2,9 @@
 
 The thin API stack.
 
-[1]: https://travis-ci.org/crepe/crepe.png
+[1]: https://travis-ci.org/crepe/crepe.svg
 [2]: https://travis-ci.org/crepe/crepe
-[3]: https://codeclimate.com/github/crepe/crepe.png
+[3]: https://img.shields.io/codeclimate/github/crepe/crepe.svg
 [4]: https://codeclimate.com/github/crepe/crepe
 
 ## Example
