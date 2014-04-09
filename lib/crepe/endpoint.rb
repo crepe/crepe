@@ -13,7 +13,9 @@ module Crepe
 
       def default_config
         @default_config ||= {
-          callbacks: {},
+          callbacks: [
+            [:before, :ensure_acceptable]
+          ],
           formats: [:json],
           parsers: Hash.new(Parser::Simple),
           renderers: Hash.new(Renderer::Simple),
@@ -46,9 +48,10 @@ module Crepe
     def configure! new_config
       @config ||= self.class.default_config
       @config = Util.deep_merge config, new_config
-      if config[:formats].empty?
-        raise ArgumentError, 'wrong number of formats (at least 1)'
-      end
+
+      @handle_request_chain = Callbacks::Chain.new(
+        :handle_request, config[:callbacks]
+      )
     end
 
     # Rack call interface.
@@ -123,7 +126,7 @@ module Crepe
     # @note Called automatically before an endpoint executes.
     # @return [void]
     # @see API.parse
-    def parse body, options = {}
+    def parse body
       request.body = parser.parse body
       @params = params.merge request.body if request.body.is_a? Hash
     end
@@ -227,28 +230,30 @@ module Crepe
 
         halt = catch :halt do
           begin
-            not_acceptable! unless format
-            parse request.body if request.body.present?
-            run_callbacks :before
-            payload = _run_handler
-            render payload if payload && response.body.nil?
+            handle_request_chain.call self
             nil
           rescue => e
             handle_exception e
           end
         end
         render halt if halt
-        run_callbacks :after
 
         response.finish
       end
 
+      attr_reader :handle_request_chain
+
     private
 
-      def run_callbacks type
-        config[:callbacks][type].each do |c|
-          c.respond_to?(:filter) ? c.filter(self) : instance_eval(&c)
-        end
+      def ensure_acceptable
+        not_acceptable! unless format
+      end
+
+      def handle_request
+        parse request.body if request.body.present?
+        payload = _run_handler
+        render payload if payload && response.body.nil?
+        payload
       end
 
       def handle_exception exception

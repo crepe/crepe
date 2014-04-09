@@ -8,6 +8,7 @@ module Crepe
 
   autoload :Accept,     'crepe/accept'
   autoload :API,        'crepe/api'
+  autoload :Callbacks,  'crepe/callbacks'
   autoload :Config,     'crepe/config'
   autoload :Endpoint,   'crepe/endpoint'
   autoload :Filter,     'crepe/filter'
