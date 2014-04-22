@@ -44,26 +44,26 @@ module Crepe
       # The base DSL method of a Crepe API, +route+ defines an API route by
       # method(s), path, options, and a block that is evaluated at runtime.
       #
-      #     route 'GET', '/' do
-      #       { message: 'Hello, world!' }
-      #     end
-      #     # renders {"message":"Hello, world!"}
+      #   route 'GET', '/' do
+      #     { message: 'Hello, world!' }
+      #   end
+      #   # renders {"message":"Hello, world!"}
       #
       # Common HTTP verbs (GET, POST, PUT, PATCH, DELETE) are aliased to their
       # own methods, and the path defaults to a forward slash, so the above can
       # be simplified:
       #
-      #     get do
-      #       { message: 'Hello, world!' }
-      #     end
+      #   get do
+      #     { message: 'Hello, world!' }
+      #   end
       #
       # Crepe routing should be familiar to anyone who has used Rails or
       # Sinatra. Named path parameters are prefixed with +:+, and are
       # accessible via the +params+ hash.
       #
-      #     get '/hello/:name' do
-      #       { message: "Hello, #{params[:name]}" }
-      #     end
+      #   get '/hello/:name' do
+      #     { message: "Hello, #{params[:name]}" }
+      #   end
       #
       # Routes take the following options:
       #
