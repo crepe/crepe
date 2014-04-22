@@ -332,16 +332,16 @@ module Crepe
 
       # Rescues exceptions raised in endpoints.
       #
-      #   rescue_from Crepe::Params::Missing do |e|
-      #     error! :bad_request, e.message, missing: e.key
+      #   rescue_from ActiveRecord::RecordNotFound do |e|
+      #     error! :not_found, e.message
       #   end
       #
       # Helper methods can be used (instead of blocks).
       #
-      #   rescue_from Crepe::Params::Invalid, with: :params_invalid
+      #   rescue_from ActiveRecord::RecordNotFound, with: :not_found
       #   helper do
-      #     def params_invalid e
-      #       error! :unprocessable_entity, e.message, invalid: e.keys
+      #     def not_found e
+      #       error! :not_found, e.message
       #     end
       #   end
       #
