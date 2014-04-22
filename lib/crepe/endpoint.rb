@@ -141,9 +141,14 @@ module Crepe
       response.body = catch(:head) { renderer.render object, options }
     end
 
-    # Throws a response with an empty body.
+    # Throws a response with an empty body. Like {#status}, it accepts a symbol
+    # or numeric value to set the response's HTTP status.
     #
     #   head :accepted
+    #
+    # It also accepts a hash of HTTP headers.
+    #
+    #   head :found, location: 'https://www.example.org/'
     #
     # @return [void]
     def head code = nil, **options
