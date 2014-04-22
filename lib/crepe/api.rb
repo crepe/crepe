@@ -423,7 +423,7 @@ module Crepe
         config[:helper].send method, mod
       end
 
-      # Define a memoized helper method.
+      # Defines a memoized helper method.
       #
       #   let(:user) { User.find params[:id] }
       #   get { user }
@@ -449,7 +449,7 @@ module Crepe
         end
       end
 
-      # Define a memoized helper method that is invoked before an endpoint is
+      # Defines a memoized helper method that is invoked before an endpoint is
       # called.
       #
       #   let! :current_user do
@@ -463,7 +463,7 @@ module Crepe
         before { send name }
       end
 
-      # Rack call interface.
+      # Rack call interface. Runs each time a request enters the stack.
       #
       # @return [[Numeric, Hash, #each]]
       def call env
@@ -630,17 +630,45 @@ module Crepe
 
     end
 
-    # Runs a given block or calls #filter on a given object (passing the
-    # {Endpoint} instance) _before_ a request runs through a route's handler.
+    # Runs a given block _before_ a request runs through a route's handler.
+    #
+    #   before do
+    #     @current_user = User.authenticate!(*request.credentials)
+    #   end
+    #
+    # Alternatively, calls an object's #filter method, passing the {Endpoint}
+    # instance as an argument.
+    #
+    #   before UserAuthenticator.new
+    #   # class UserAuthenticator
+    #   #   def filter endpoint
+    #   #     User.authenticate!(*endpoint.request.credentials)
+    #   #   end
+    #   # end
     #
     # @method (filter = nil, &block)
     # @scope class
     # @return [void]
     # @raise [ArgumentError] if a block/filter isn't set
+    # @see .let!
+    # @see .basic_auth
     define_callback :before
 
-    # Runs a given block or calls #filter on a given object (passing the
-    # {Endpoint} instance) _after_ a request runs through a route's handler.
+    # Runs a given block _after_ a request runs through a route's handler.
+    #
+    #   after do
+    #     Jobs.schedule AnalyticsJob, request
+    #   end
+    #
+    # Alternatively, calls an object's #filter method, passing the {Endpoint}
+    # instance as an argument.
+    #
+    #   after JobScheduler.new
+    #   # class JobScheduler.new
+    #   #   def filter endpoint
+    #   #     Jobs.schedule AnalyticsJob, endpoint.request
+    #   #   end
+    #   # end
     #
     # @method (filter = nil, &block)
     # @scope class
