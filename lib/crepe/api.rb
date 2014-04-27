@@ -84,14 +84,14 @@ module Crepe
       # value is a regular expression, and will be assigned as a default
       # otherwise. Take the following constraint:
       #
-      #   get '/users/:id', constraints: { id: /^\d+/ } do
+      #   get '/users/:id', constraints: { id: /\d+/ } do
       #     # ...
       #   end
       #
       # This can be simplified by merely extracting the constraint to the root
       # of a route's options:
       #
-      #   get '/users/:id', id: /^\d+/ do
+      #   get '/users/:id', id: /\d+/ do
       #     # ...
       #   end
       #
@@ -157,9 +157,9 @@ module Crepe
       #
       #   get    '/users' # do ... end
       #   post   '/users' # do ... end
-      #   get    '/users/:id', id: /^\d+$/ # do ... end
-      #   patch  '/users/:id', id: /^\d+$/ # do ... end
-      #   delete '/users/:id', id: /^\d+$/ # do ... end
+      #   get    '/users/:id', id: /\d+/ # do ... end
+      #   patch  '/users/:id', id: /\d+/ # do ... end
+      #   delete '/users/:id', id: /\d+/ # do ... end
       #
       # Using +scope+, you only have to specify the "users" component once and
       # the ":id" parameter (and constraint) once:
@@ -168,7 +168,7 @@ module Crepe
       #     get  # { ... }
       #     post # { ... }
       #
-      #     scope ':id', id: /^\d+$/ do
+      #     scope ':id', id: /\d+/ do
       #       get    # { ... }
       #       patch  # { ... }
       #       delete # { ... }
@@ -180,7 +180,7 @@ module Crepe
       #
       # The {.param} method can simplify the ":id" scope further:
       #
-      #   param id: /^\d+$/ do
+      #   param id: /\d+/ do
       #     # ...
       #   end
       #
@@ -208,7 +208,7 @@ module Crepe
       # parameter as the first key as a shorthand when a contraint or default
       # is needed:
       #
-      #   param id: /^\d+$/ do
+      #   param id: /\d+/ do
       #     # ...
       #   end
       #
