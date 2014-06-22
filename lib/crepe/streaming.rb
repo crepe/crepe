@@ -24,6 +24,10 @@ module Crepe
         write "#{data.chomp}\n"
       end
 
+      def close
+        write ''
+        super
+      end
     end
 
     class << self
@@ -69,7 +73,7 @@ module Crepe
               begin
                 run_callbacks :after_stream
               ensure
-                io.close
+                @stream.close
               end
             end
           end
