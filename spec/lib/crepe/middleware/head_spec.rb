@@ -8,11 +8,11 @@ describe Crepe::Middleware::Head do
     before { head '/' }
 
     it 'sends as a GET request' do
-      last_request.should be_get
+      expect(last_request).to be_get
     end
 
     it 'returns no content' do
-      last_response.body.should be_empty
+      expect(last_response.body).to be_empty
     end
   end
 
@@ -21,11 +21,11 @@ describe Crepe::Middleware::Head do
       before { send method.downcase, '/' }
 
       it "sends as a #{method} request" do
-        last_request.request_method.should eq method
+        expect(last_request.request_method).to eq method
       end
 
       it 'returns content' do
-        last_response.body.should_not be_empty
+        expect(last_response.body).not_to be_empty
       end
     end
   end

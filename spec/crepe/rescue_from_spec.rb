@@ -41,25 +41,25 @@ describe Crepe::API, ".rescue_from" do
 
   it "rescues with a block" do
     get '/'
-    last_response.should be_bad_request
-    last_response.body.should include 'Time to run!'
+    expect(last_response).to be_bad_request
+    expect(last_response.body).to include 'Time to run!'
   end
 
   it "rescues with a handler without an argument" do
     get '/errors/argument'
-    last_response.status.should eq 422
-    last_response.body.should include 'Unprocessable Entity'
+    expect(last_response.status).to eq 422
+    expect(last_response.body).to include 'Unprocessable Entity'
   end
 
   it "rescues with a handler with an argument" do
     get '/errors/standard'
-    last_response.should be_forbidden
-    last_response.body.should include 'Nothing to see here, folks.'
+    expect(last_response).to be_forbidden
+    expect(last_response.body).to include 'Nothing to see here, folks.'
   end
 
   it "rescues with the most specific exception available" do
     get '/errors/runtime'
-    last_response.should be_bad_request
-    last_response.body.should include 'Run away! Run away!'
+    expect(last_response).to be_bad_request
+    expect(last_response.body).to include 'Run away! Run away!'
   end
 end

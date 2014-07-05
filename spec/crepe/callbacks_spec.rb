@@ -28,14 +28,14 @@ describe Crepe::Endpoint, 'callbacks' do
   end
 
   it 'runs before endpoint handlers' do
-    get('/before').body.should include 'before'
+    expect(get('/before').body).to include 'before'
   end
 
   it 'runs after endpoint handlers' do
-    get('/after').body.should include 'after'
+    expect(get('/after').body).to include 'after'
   end
 
   it 'runs series of callbacks' do
-    get('/many').body.should include '123'
+    expect(get('/many').body).to include '123'
   end
 end

@@ -18,30 +18,31 @@ describe Crepe::API, 'HTTP methods' do
   methods.each do |method|
     describe ".#{method}" do
       it "routes #{method.upcase} requests" do
-        send(method, "/method/#{method}").should be_successful
+        expect(send method, "/method/#{method}").to be_successful
       end
 
       if method == 'get'
         it "routes HEAD requests" do
-          head("/method/#{method}").should be_successful
+          expect(head "/method/#{method}").to be_successful
         end
       else
         it "does not route HEAD requests" do
-          head("/method/#{method}").should be_method_not_allowed
+          expect(head "/method/#{method}").to be_method_not_allowed
         end
       end
 
       it "routes OPTIONS requests" do
-        options("/method/#{method}").should be_successful
+        expect(options "/method/#{method}").to be_successful
       end
 
       it "routes OPTIONS requests other formats" do
-        options("/method/#{method}.html").should be_successful
+        expect(options "/method/#{method}.html").to be_successful
       end
 
       it "does not route anything else" do
         (methods - [method]).each do |other_method|
-          send(other_method, "/method/#{method}").should be_method_not_allowed
+          send(other_method, "/method/#{method}")
+          expect(last_response).to be_method_not_allowed
         end
       end
     end
@@ -50,7 +51,7 @@ describe Crepe::API, 'HTTP methods' do
   describe ".any" do
     it "routes anything" do
       (methods + %w[head options]).each do |method|
-        send(method, '/method/any').should be_successful
+        expect(send method, '/method/any').to be_successful
       end
     end
   end

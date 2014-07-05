@@ -19,8 +19,8 @@ describe Crepe::API, "middleware" do
   end
 
   it "runs in the stack" do
-    get('/').headers.should include 'X-Count'
-    get('/api').headers.should include 'X-Count'
+    expect(get('/').headers).to    include 'X-Count'
+    expect(get('/api').headers).to include 'X-Count'
   end
 
   describe "arguments" do
@@ -29,7 +29,7 @@ describe Crepe::API, "middleware" do
     end
 
     it "accepts arguments and block" do
-      get('/').body.should eq '123'
+      expect(get('/').body).to eq '123'
     end
   end
 
@@ -38,7 +38,7 @@ describe Crepe::API, "middleware" do
     let(:app) { api(base) { get } }
 
     it "uses middleware from the superclass" do
-      get('/').headers.should include 'X-Count'
+      expect(get('/').headers).to include 'X-Count'
     end
   end
 
@@ -47,7 +47,7 @@ describe Crepe::API, "middleware" do
       app { scope(:api) { use middleware } }
 
       it "raises an exception" do
-        expect { app }.to raise_error ArgumentError
+        expect { app }.to raise_error
       end
     end
 
@@ -59,11 +59,11 @@ describe Crepe::API, "middleware" do
       end
 
       it "uses middleware within mount namespace" do
-        get('/api1').headers.should include 'X-Count'
+        expect(get('/api1').headers).to include 'X-Count'
       end
 
       it "doesn't use middleware outside mount namespace" do
-        get('/').headers.should_not include 'X-Count'
+        expect(get('/').headers).not_to include 'X-Count'
       end
 
       context "with duplicate middleware" do
@@ -75,7 +75,7 @@ describe Crepe::API, "middleware" do
           end
 
           it "is not used again" do
-            get('/api1/api2/api3').headers['X-Count'].should eq 1
+            expect(get('/api1/api2/api3').headers['X-Count']).to eq 1
           end
         end
 
@@ -87,7 +87,7 @@ describe Crepe::API, "middleware" do
           end
 
           it "is used in mounted endpoints" do
-            get('/api1/api2/api3').headers['X-Count'].should eq 3
+            expect(get('/api1/api2/api3').headers['X-Count']).to eq 3
           end
         end
 

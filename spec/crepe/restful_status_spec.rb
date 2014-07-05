@@ -23,20 +23,20 @@ describe Crepe::API, 'RESTful status' do
   %w[post put patch delete].each do |method|
     if method == 'post'
       it "returns 201 Created for POST with content" do
-        post('/post').status.should eq 201
+        expect(post('/post').status).to eq 201
       end
     else
       it "returns 200 OK for #{method.upcase} with content" do
-        send(method, "/#{method}").status.should eq 200
+        expect(send(method, "/#{method}").status).to eq 200
       end
     end
 
     it "returns 204 No Content for #{method.upcase} without content" do
-      send(method, "/empty/#{method}").status.should eq 204
+      expect(send(method, "/empty/#{method}").status).to eq 204
     end
 
     it "returns the original status for #{method.upcase} if set explicitly" do
-      send(method, "/explicit/#{method}").status.should eq 202
+      expect(send(method, "/explicit/#{method}").status).to eq 202
     end
   end
 end

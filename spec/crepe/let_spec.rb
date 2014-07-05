@@ -21,7 +21,7 @@ describe Crepe::API do
     end
 
     it 'memoizes the return value' do
-      get('/').body.should eq '{"once":[1,1,1],"many":[1,2,3]}'
+      expect(get('/').body).to eq '{"once":[1,1,1],"many":[1,2,3]}'
     end
 
     context 'with block arguments' do
@@ -37,7 +37,7 @@ describe Crepe::API do
       end
 
       it 'memoizes depending on input' do
-        get('/1').body.should eq '{"n + 1":2,"n + 2":3,"n + 3":4}'
+        expect(get('/1').body).to eq '{"n + 1":2,"n + 2":3,"n + 3":4}'
       end
     end
   end
@@ -54,7 +54,7 @@ describe Crepe::API do
     end
 
     it 'invokes the helper before the handler' do
-      get('/').body.should eq '{"logged_in":true}'
+      expect(get('/').body).to eq '{"logged_in":true}'
     end
   end
 end

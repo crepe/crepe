@@ -6,7 +6,7 @@ describe Crepe::API do
   describe '.param' do
     app { param(:action) { get { params[:action] } } }
     it 'wraps endpoints with a param-based path component' do
-      get('/dig').body.should include 'dig'
+      expect(get('/dig').body).to include 'dig'
     end
   end
 

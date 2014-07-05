@@ -11,7 +11,7 @@ describe Crepe::Renderer::Pagination::Links do
               '<http://example.com/search?page=6>; rel="last"'].join(', ')
 
     links = described_class.new request, 1, 10, 55
-    links.render.should == header
+    expect(links.render).to eq header
   end
 
   it "renders the second of multiple pages" do
@@ -21,7 +21,7 @@ describe Crepe::Renderer::Pagination::Links do
               '<http://example.com/search?page=6>; rel="last"'].join(', ')
 
     links = described_class.new request, 2, 10, 55
-    links.render.should == header
+    expect(links.render).to eq header
   end
 
   it "renders the third of multiple pages" do
@@ -31,7 +31,7 @@ describe Crepe::Renderer::Pagination::Links do
               '<http://example.com/search?page=6>; rel="last"'].join(', ')
 
     links = described_class.new request, 3, 10, 55
-    links.render.should == header
+    expect(links.render).to eq header
   end
 
   it "renders the last page" do
@@ -39,6 +39,6 @@ describe Crepe::Renderer::Pagination::Links do
               '<http://example.com/search?page=5>; rel="prev"'].join(', ')
 
     links = described_class.new request, 6, 10, 55
-    links.render.should == header
+    expect(links.render).to eq header
   end
 end
