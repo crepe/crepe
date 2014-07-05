@@ -33,7 +33,7 @@ module Crepe
     end
 
     def deep_dup
-      self.class.new Util.deep_dup stack
+      self.class.new Util.hash_dup stack
     end
 
     attr_reader :stack
