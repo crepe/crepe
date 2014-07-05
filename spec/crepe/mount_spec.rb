@@ -16,14 +16,14 @@ describe Crepe::API, '.mount' do
   end
 
   it 'mounts Rack apps in place' do
-    get('/').body.should eq '"HI"'
+    expect(get('/').body).to eq '"HI"'
   end
 
   it 'mounts Rack apps at paths' do
-    get('/ping').body.should eq 'OK'
+    expect(get('/ping').body).to eq 'OK'
   end
 
   it 'mounts Rack apps within namespaces' do
-    get('/pong').body.should eq 'KO'
+    expect(get('/pong').body).to eq 'KO'
   end
 end

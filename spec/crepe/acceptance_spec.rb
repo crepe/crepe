@@ -11,10 +11,9 @@ describe Crepe::Endpoint, 'acceptance' do
 
   context 'unacceptable content' do
     it 'renders Not Acceptable' do
-      get '/.xml'
-      last_response.body.should eq(JSON.dump(
+      expect(get('/.xml').body).to eq JSON.dump(
         error: { message: 'Not Acceptable', accepts: ['application/json'] }
-      ))
+      )
     end
   end
 end

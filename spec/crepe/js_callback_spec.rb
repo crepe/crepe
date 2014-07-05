@@ -11,7 +11,7 @@ describe Crepe::Middleware::JSCallback do
   before { get '/anywhere', callback: 'say' }
 
   it 'renders JavaScript callback' do
-    last_response.body.should eq(
+    expect(last_response.body).to eq(
       '%{function}(%{body},%{headers},%{status})' % {
         function: 'say',
         body: { error: { message: 'Not Found' } }.to_json,
@@ -25,12 +25,12 @@ describe Crepe::Middleware::JSCallback do
   end
 
   it 'renders 200 OK' do
-    last_response.status.should eq 200
+    expect(last_response).to be_ok
   end
 
   it 'renders application/javascript' do
     content_type = last_response.headers['Content-Type']
-    content_type.should eq 'application/javascript; charset=utf-8'
+    expect(content_type).to eq 'application/javascript; charset=utf-8'
   end
 
   context 'with a custom callback param' do
@@ -44,7 +44,9 @@ describe Crepe::Middleware::JSCallback do
     end
 
     it 'renders the callback param' do
-      get('/', jsonp: 'say').body.should eq(
+      get '/', jsonp: 'say'
+
+      expect(last_response.body).to eq(
         '%{function}(%{body},%{headers},%{status})' % {
           function: 'say',
           body: { hello: 'world' }.to_json,

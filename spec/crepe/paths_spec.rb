@@ -32,17 +32,17 @@ describe Crepe::API, 'paths' do
   end
 
   it "routes known paths" do
-    get('/v2/users').should be_successful
-    get('/v2/users/1').should be_successful
-    get('/v2/users/1/posts').should be_successful
-    get('/v1/users/all').should be_successful
-    get('/v1/users/1').should be_successful
-    get('/v1/users/1/posts').body.should include 'active'
+    expect(get '/v2/users').to be_successful
+    expect(get '/v2/users/1').to be_successful
+    expect(get '/v2/users/1/posts').to be_successful
+    expect(get '/v1/users/all').to be_successful
+    expect(get '/v1/users/1').to be_successful
+    expect(get('/v1/users/1/posts').body).to include 'active'
   end
 
   it "doesn't route unknown paths" do
-    get('/').should be_not_found
-    get('/v2/users/all').should be_not_found
-    get('/v1/users/none').should be_not_found
+    expect(get '/').to be_not_found
+    expect(get '/v2/users/all').to be_not_found
+    expect(get '/v1/users/none').to be_not_found
   end
 end

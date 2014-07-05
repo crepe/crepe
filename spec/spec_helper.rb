@@ -9,6 +9,11 @@ require 'crepe'
 RSpec.configure do |config|
   config.include Rack::Test::Methods
 
+  config.expect_with :rspec do |expectations|
+    # Enable only the newer, non-monkey-patching expect syntax.
+    expectations.syntax = :expect
+  end
+
   def api base = Crepe::API, &block
     Class.new base, &block
   end

@@ -10,7 +10,7 @@ describe Crepe::API, 'versioning' do
     end
 
     it 'routes with the path' do
-      get('/v1').should be_ok
+      expect(get '/v1').to be_ok
     end
   end
 
@@ -29,14 +29,13 @@ describe Crepe::API, 'versioning' do
 
     it 'routes to several versions at the same path' do
       get '/', {}, 'HTTP_ACCEPT' => 'application/vnd.pancake-v2+json'
-      last_response.body.should include 'v2'
+      expect(last_response.body).to include 'v2'
       get '/', {}, 'HTTP_ACCEPT' => 'application/vnd.pancake-v1+json'
-      last_response.body.should include 'v1'
+      expect(last_response.body).to include 'v1'
     end
 
     it 'defaults to the specified version' do
-      get '/'
-      last_response.body.should include 'v2'
+      expect(get('/').body).to include 'v2'
     end
   end
 
@@ -54,12 +53,12 @@ describe Crepe::API, 'versioning' do
     end
 
     it 'routes to the version with a parameter' do
-      get('/', ver: 'v2').body.should include 'v2'
-      get('/', ver: 'v1').body.should include 'v1'
+      expect(get('/', ver: 'v2').body).to include 'v2'
+      expect(get('/', ver: 'v1').body).to include 'v1'
     end
 
     it 'defaults to the first specified version' do
-      get('/').body.should include 'v1'
+      expect(get('/').body).to include 'v1'
     end
   end
 

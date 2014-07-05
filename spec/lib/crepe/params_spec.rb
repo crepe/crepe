@@ -8,16 +8,12 @@ describe Crepe::Params do
     context 'with a present key' do
       it 'returns its value' do
         input[:key] = {'hello'=>'world'}
-        params.require(:key).should eq(input[:key])
+        expect(params.require :key).to eq(input[:key])
       end
     end
 
     context 'with a missing key' do
-      it {
-        expect { params.require :missing }.to raise_error(
-          Crepe::Params::Missing
-        )
-      }
+      it { expect { params.require :missing }.to raise_error }
     end
   end
 
@@ -27,26 +23,24 @@ describe Crepe::Params do
       let(:permitted) { params.permit :secure_key }
 
       it { expect(permitted).to be_permitted }
+
       it 'permits post-dup' do
         expect(permitted.dup).to be_permitted
       end
+
       it 'returns itself' do
-        permitted.should eq params
+        expect(permitted).to eq params
       end
     end
 
     context 'with an insecure key' do
       let(:input) { { permitted: 1 } }
 
-      it { expect(params).to_not be_permitted }
-      it {
-        expect { params.permit :invalid }.to raise_error(
-          Crepe::Params::Invalid
-        )
-      }
+      it { expect(params).not_to be_permitted }
+      it { expect { params.permit :invalid }.to raise_error }
     end
   end
 
-  it { should respond_to :permitted? }
-  it { should be_frozen }
+  it { is_expected.to respond_to :permitted? }
+  it { is_expected.to be_frozen }
 end

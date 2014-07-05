@@ -10,7 +10,7 @@ describe Crepe::Request do
   describe '#headers' do
     it 'indexes with human-readable header keys' do
       env['HTTP_IF_NONE_MATCH'] = '"ETag!"'
-      request.headers['If-None-Match'].should eq '"ETag!"'
+      expect(request.headers['If-None-Match']).to eq '"ETag!"'
     end
   end
 
@@ -20,27 +20,28 @@ describe Crepe::Request do
       env['crepe.original_request_method'] = 'HEAD'
     end
 
-    it { should be_head }
-    it { should be_get }
+    it { is_expected.to be_head }
+    it { is_expected.to be_get }
 
     context 'method' do
       subject { request.method }
-      it { should eq 'HEAD' }
+      it { is_expected.to eq 'HEAD' }
     end
   end
 
   describe '#params' do
     it 'merges GET, POST, and path parameters' do
-      request.stub GET: {'get'=>'true'}
-      request.stub POST: {'post'=>'true'}
-      request.env['rack.routing_args'] = {'path'=>'true'}
-      request.params.should eq('get'=>'true', 'post'=>'true', 'path'=>'true')
+      allow(request).to receive(:GET).and_return 'get' => 'true'
+      allow(request).to receive(:POST).and_return 'post'=> 'true'
+      request.env['rack.routing_args'] = { 'path' => 'true' }
+      params = { 'get' => 'true', 'post' => 'true', 'path' => 'true' }
+      expect(request.params).to eq(params)
     end
   end
 
   describe '#credentials' do
     it 'returns an array without credentials' do
-      request.credentials.should be_empty
+      expect(request.credentials).to be_empty
     end
   end
 end

@@ -22,20 +22,20 @@ describe Crepe::API, '.basic_auth' do
   end
 
   it "doesn't apply outside scopes" do
-    get('/').should be_ok
+    expect(get '/').to be_ok
   end
 
   it "denies access" do
-    get('/admin').status.should eq 401
+    expect(get('/admin').status).to eq 401
   end
 
   it "accepts valid credentials" do
     basic_authorize 'admin', 'secret'
-    get('/admin').should be_ok
+    expect(get '/admin').to be_ok
   end
 
   it "accepts nested credentials" do
     basic_authorize 'root', '53cr37'
-    get('/admin/sudo').should be_ok
+    expect(get '/admin/sudo').to be_ok
   end
 end
