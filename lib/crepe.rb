@@ -24,13 +24,19 @@ module Crepe
 
   class << self
 
+    # Sets a custom {Logger}.
+    #
+    #   Crepe.logger = Logger.new Crepe.root.join 'log', "#{Crepe.env}.log"
+    #
+    # @return [Logger] the assigned logger
     attr_writer :logger
 
     # Crepe's logging interface.
     #
     #   Crepe.logger.debug 'testing: one, two, three...'
     #
-    # @return [Logger]
+    # @return [Logger] a centralized logger
+    # @see .logger=
     def logger
       @logger ||= Logger.new((STDOUT if Crepe.env.development?))
     end
@@ -46,12 +52,14 @@ module Crepe
       @env ||= ActiveSupport::StringInquirer.new ENV['CREPE_ENV']
     end
 
-    # The app's root directory. Defaults to the working directory when the app
-    # was launched, but can be overridden with the +CREPE_ROOT+ environment
-    # variable.
+    # A {Pathname} pointing to the app's root directory. Defaults to the
+    # working directory when the app was launched, but can be overridden with
+    # the +CREPE_ROOT+ environment variable.
     #
-    #   database_yml = Crepe.root.join 'config', 'database.yml'
+    #   database_yml = Crepe.root 'config', 'database.yml'
+    #   # => "/path/to/your/app/config/database.yml"
     #
+    # @param [Array<String>] path a set of path components
     # @return [Pathname]
     def root *path
       (@root ||= Pathname.new(ENV['CREPE_ROOT'])).join(*path)
