@@ -545,7 +545,7 @@ module Crepe
       private
 
         def inherited subclass
-          subclass.config = config.deep_dup
+          subclass.config = config.deep_collection_dup
           subclass.config[:helper] = config[:helper].dup
           subclass.routes = routes.dup
         end

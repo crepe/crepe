@@ -6,19 +6,19 @@ module Crepe
 
     module_function
 
-    def deep_dup value
+    def deep_collection_dup value
       case value
         when Hash
           value.each_with_object value.dup do |(k, v), h|
-            h[deep_dup k] = deep_dup v
+            h[deep_collection_dup k] = deep_collection_dup v
           end
-        when Array then value.map { |v| deep_dup v }
+        when Array then value.map { |v| deep_collection_dup v }
         else            value
       end
     end
 
     def deep_merge hash, other_hash
-      deep_merge! deep_dup(hash), other_hash
+      deep_merge! deep_collection_dup(hash), other_hash
     end
 
     def deep_merge! hash, other_hash

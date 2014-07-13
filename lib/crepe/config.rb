@@ -32,8 +32,8 @@ module Crepe
       self.class.new stack.dup
     end
 
-    def deep_dup
-      self.class.new Util.deep_dup stack
+    def deep_collection_dup
+      self.class.new Util.deep_collection_dup stack
     end
 
     attr_reader :stack
