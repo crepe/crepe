@@ -6,6 +6,11 @@ module Crepe
 
     module_function
 
+    # Recursively dups hashes and arrays.
+    #
+    # @param [Hash, Array, Object] value the object to recursively dup
+    # @return [Hash, Array, Object] a duplicate hash or array (with any nested
+    #   hashes or arrays duplicated, as well), or the original object
     def deep_collection_dup value
       case value
         when Hash
@@ -17,10 +22,23 @@ module Crepe
       end
     end
 
+    # Recursively merges one hash with another, merging any nested hash value.
+    #
+    # @param [Hash] hash the hash whose values take less precedence
+    # @param [Hash] other_hash the hash whose values take greater precedence
+    # @return [Hash] a new, merged hash
+    # @see #deep_merge!
     def deep_merge hash, other_hash
       deep_merge! deep_collection_dup(hash), other_hash
     end
 
+    # Recursively merges one hash in place with another, merging any nested
+    # hash value.
+    #
+    # @param [Hash] hash the hash whose values take less precedence
+    # @param [Hash] other_hash the hash whose values take greater precedence
+    # @return [Hash] the original hash, merged
+    # @see #deep_merge
     def deep_merge! hash, other_hash
       other_hash.each do |key, value|
         if hash[key].is_a?(Hash) && value.is_a?(Hash)
@@ -33,20 +51,43 @@ module Crepe
       hash
     end
 
-    # Recursively freezes all keys and values.
+    # Recursively freezes an object or collection of objects.
+    #
+    # @param [Object] value the object to freeze
+    # @return [Object] the original object, frozen if possible
     def deep_freeze value
+      value.freeze if value.respond_to? :freeze
       case value
-        when Hash   then value.freeze.each_value { |v| deep_freeze v }
-        when Array  then value.freeze.each { |v| deep_freeze v }
-        when String then value.freeze
+        when Hash  then value.freeze.each_value { |v| deep_freeze v }
+        when Array then value.freeze.each { |v| deep_freeze v }
       end
       value
     end
 
+    # Normalizes a given path by inserting a leading slash if none exists, and
+    # deleting repeating and trailing slashes.
+    #
+    #   Util.normalize_path! 'the//road/less/traveled/by/'
+    #   # => "/the/road/less/traveled/by"
+    #
+    # @param [String] a path to be normalized
+    # @return [String] a normalized path
+    # @see #normalize_path!
     def normalize_path path
       normalize_path! path.dup
     end
 
+    # Normalizes a given path in place by inserting a leading slash if none
+    # exists, and deleting repeating and trailing slashes.
+    #
+    #   path = 'the//road/less/traveled/by/'
+    #   Util.normalize_path! path
+    #   path
+    #   # => "/the/road/less/traveled/by"
+    #
+    # @param [String] a path to be normalized
+    # @return [String] the original path, normalized
+    # @see #normalize_path
     def normalize_path! path
       path.squeeze! '/'
       path.chomp! '/'
@@ -54,10 +95,22 @@ module Crepe
       path
     end
 
+    # Returns an array of media types for a given array of formats.
+    #
+    # @param [Array<Symbol, String>] formats a list of formats
+    # @return [Array<String>] a list of media types
+    # @see #media_type
     def media_types formats
       formats.map(&method(:media_type))
     end
 
+    # Returns the media type for a given format.
+    #
+    #   Util.media_type :json # => "application/json"
+    #
+    # @param [Symbol, String] format a format
+    # @return [String] a media type
+    # @see #media_types
     def media_type format
       Rack::Mime.mime_type ".#{format}", format
     end
