@@ -36,10 +36,9 @@ module Crepe
 
     end
 
-    def initialize params = {}, permit = false, freeze = true
+    def initialize params = {}, permit = false
       @params = params.with_indifferent_access
       @permitted = permit
-      @frozen = freeze
     end
 
     # Ensures that a parameter is present by returning the parameter at a given
@@ -72,10 +71,6 @@ module Crepe
       @permitted
     end
 
-    def frozen?
-      @frozen
-    end
-
     # Sets +permitted+ to +true+.
     #
     # @return [self]
@@ -87,36 +82,16 @@ module Crepe
       INSTANCE_METHODS.include? method_name or super
     end
 
-    def to_h
-      (frozen? ? dup : @params).to_h
+    def to_hash
+      @params.to_h
     end
-    alias to_hash to_h
-
-    def dup
-      ::Crepe::Params.new @params, permitted?, false
-    end
+    alias to_h to_hash
 
     private
 
       def method_missing method_name, *args, &block
-        value = _params.send method_name, *args, &block
-        if value.is_a? ::Hash
-          return ::Crepe::Params.new value, permitted?, frozen?
-        end
-        frozen? ? _deep_freeze(value) : value
-      end
-
-      def _params
-        @_params ||= frozen? ? @params.dup.freeze : @params
-      end
-
-      def _deep_freeze value
-        case value
-          when ::Hash   then ::Crepe::Params.new value, permitted?, true
-          when ::Array  then value.map { |v| _deep_freeze v }.freeze
-          when ::String then value.dup.freeze
-          else               value
-        end
+        value = @params.send method_name, *args, &block
+        value.is_a?(::Hash) ? ::Crepe::Params.new(value, permitted?) : value
       end
 
   end
