@@ -528,8 +528,8 @@ module Crepe
       # Compiles the middleware, routes, and endpoints into a Rack application.
       # (Called the first time {.call} is.)
       #
-      # @param [Array<#call>] middleware to exclude (to prevent double-mounting
-      #   in nested APIs)
+      # @param [Array<#call>] exclude middleware to exclude (to prevent
+      #   double-mounting in nested APIs)
       # @return [Rack::Builder] a compiled app
       def to_app(exclude: [])
         middleware = config.all(:middleware) - exclude
