@@ -26,6 +26,19 @@ module Crepe
     # Pushes a hash onto the stack and pops it after executing a block of code
     # when given.
     #
+    #   config = Config.new
+    #   # config == {}
+    #   config.scope foo: 'bar' do
+    #     # config == {:foo=>"bar"}
+    #     config.scope bar: 'baz' do
+    #       # config == {:foo=>"bar", :bar=>"baz"}
+    #       config.scope foo: 'fizzbuzz'
+    #       # config == {:foo=>"fizzbuzz", :bar=>"baz"}
+    #     end
+    #     # config == {:foo=>"bar"}
+    #   end
+    #   # config == {}
+    #
     # @param [Hash] scoped a hash to push onto the stack
     # @return [void]
     def scope **scoped
