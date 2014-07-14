@@ -32,8 +32,6 @@ module Crepe
     # @return [Hash] The Rack env
     attr_reader :env
 
-    alias dup clone
-
     def initialize config = {}, &handler
       configure! config
       define_singleton_method :_run_handler, &handler

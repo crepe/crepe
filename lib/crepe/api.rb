@@ -619,7 +619,7 @@ module Crepe
             if app.is_a?(Class) && app.ancestors.include?(API)
               app = Class.new(app).to_app exclude: exclude
             elsif app.is_a? Endpoint
-              app = app.dup
+              app = app.clone
               app.configure! config.to_h[:endpoint]
               config.all(:helper).each { |helper| app.extend helper }
             end
