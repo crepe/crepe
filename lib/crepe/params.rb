@@ -79,7 +79,10 @@ module Crepe
     end
 
     def respond_to? method_name, include_private = false
-      INSTANCE_METHODS.include? method_name or super
+      this_responds = INSTANCE_METHODS.include? method_name
+      hash_responds = @params.respond_to? method_name, include_private
+
+      this_responds or hash_responds
     end
 
     def to_hash
