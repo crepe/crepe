@@ -11,6 +11,15 @@ module Crepe
     #   end
     module URLFor
 
+      # Generates a fully-qualified URL given path components and a parameter
+      # hash.
+      #
+      #   url_for :users, user, :followers, filter: 'following'
+      #   # => "http://localhost:9292/users/1/followers?filter=following"
+      #
+      # @param [Array<#to_param>] components a list of path components
+      # @param [Hash] query a hash of query parameters
+      # @return [String] a fully-qualified, compiled URL
       #--
       # FIXME: doesn't work with path/query versioning
       #++
