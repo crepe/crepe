@@ -11,6 +11,7 @@ module Crepe
 
     class << self
 
+      # A default configuration hash.
       def default_config
         @default_config ||= {
           callbacks: {},
@@ -32,15 +33,32 @@ module Crepe
     # @return [Hash] The Rack env
     attr_reader :env
 
+    # Initializes an {Endpoint} with a given configuration and request handler.
+    #
+    # @param [Hash] config configuration
+    # @param [Proc] handler a block executed against each request
+    # @see .default_config
     def initialize config = {}, &handler
       configure! config
       define_singleton_method :_run_handler, &handler
     end
 
+    # Convenience method accesses the {Logger} currently assigned to
+    # {Crepe.logger}.
+    #
+    #   get do
+    #     logger.info "..."
+    #     # ...
+    #   end
+    #
     # @return [Logger]
     # @see Crepe.logger
     delegate :logger, to: :Crepe
 
+    # Configures an endpoint.
+    #
+    # @param [Hash] new_config a hash of configuration options
+    # @return [void]
     def configure! new_config
       @config ||= self.class.default_config
       @config = Util.deep_merge config, new_config
@@ -51,7 +69,8 @@ module Crepe
 
     # Rack call interface.
     #
-    # @return [[Numeric, Hash, #each]]
+    # @param [Hash] env the Rack request environment
+    # @return [[Integer, Hash, #each]]
     def call env
       clone.call! env
     end
@@ -99,7 +118,7 @@ module Crepe
     # Without an argument, it will return the current status code as an
     # integer.
     #
-    # @return [Numeric] status code
+    # @return [Integer] status code
     def status value = nil
       if value
         response.status = env['crepe.status'] = Rack::Utils.status_code value
@@ -225,6 +244,11 @@ module Crepe
 
     protected
 
+      # Protected Rack call logic. Executed on a cloned instance of an
+      # endpoint.
+      #
+      # @param [Hash] env the Rack request environment
+      # @return [[Integer, Hash, #each]]
       def call! env
         @env = env
 

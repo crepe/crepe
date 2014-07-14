@@ -356,6 +356,11 @@ module Crepe
         exceptions.each { |e| config[:endpoint][:rescuers][e] = handler }
       end
 
+      # Defines a DSL method for creating callbacks.
+      #
+      # Used, for example, to define {.before} and {.after}.
+      #
+      # @param [Symbol] type the name of the DSL method
       # @return [void]
       # @see .before
       # @see .after
@@ -465,7 +470,8 @@ module Crepe
 
       # Rack call interface. Runs each time a request enters the stack.
       #
-      # @return [[Numeric, Hash, #each]]
+      # @param [Hash] env the Rack request environment
+      # @return [[Integer, Hash, #each]] status code, headers, body
       def call env
         app.call env
       end
@@ -522,7 +528,9 @@ module Crepe
       # Compiles the middleware, routes, and endpoints into a Rack application.
       # (Called the first time {.call} is.)
       #
-      # @return [Rack::Builder]
+      # @param [Array<#call>] middleware to exclude (to prevent double-mounting
+      #   in nested APIs)
+      # @return [Rack::Builder] a compiled app
       def to_app(exclude: [])
         middleware = config.all(:middleware) - exclude
 
@@ -578,6 +586,9 @@ module Crepe
           Request.dup.tap { |r| r.config = config }
         end
 
+        # Generates OPTIONS and "Method Not Allowed" routes against every path
+        # in the route set at compile time, making Crepe APIs easier to
+        # inspect.
         def generate_options_routes!
           paths = routes.group_by { |_, cond| cond[:path_info] }
           paths.each do |path, options|
@@ -597,6 +608,13 @@ module Crepe
           end
         end
 
+        # Generates an OPTIONS route and "Method Not Allowed" routes for a
+        # given path.
+        #
+        # @param [String] path a path to generate an OPTIONS route for
+        # @param [Array<String>] allowed a list of allowed methods
+        # @param [Array<Symbol>] formats a list of formats to respond to
+        # @see .generate_options_routes!
         def generate_options_route! path, allowed, formats
           scope do
             respond_to(*formats)
