@@ -51,19 +51,6 @@ module Crepe
       hash
     end
 
-    # Recursively freezes an object or collection of objects.
-    #
-    # @param [Object] value the object to freeze
-    # @return [Object] the original object, frozen if possible
-    def deep_freeze value
-      value.freeze if value.respond_to? :freeze
-      case value
-        when Hash  then value.freeze.each_value { |v| deep_freeze v }
-        when Array then value.freeze.each { |v| deep_freeze v }
-      end
-      value
-    end
-
     # Normalizes a given path by inserting a leading slash if none exists, and
     # deleting repeating and trailing slashes.
     #
