@@ -5,8 +5,6 @@ module Crepe
     # The simplest renderer delegates rendering to the resource itself.
     class Simple < Base
 
-      include Pagination
-
       def render resource, format: endpoint.format
         resource = super
 
