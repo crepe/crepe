@@ -95,13 +95,22 @@ module Crepe
       #     # ...
       #   end
       #
-      # @return [Endpoint]
+      # You can also route to arbitrary Rack applications:
+      #
+      #   get RackApp
+      #   get '/path', to: RackApp
+      #
+      # @return [Object#call]
       # @todo
       #   Examples of the other options.
       def route method, path = '/', **options, &block
-        endpoint = Class.new(Endpoint) { handle(block || proc { head }) }
-        mount endpoint, options.merge(at: path, method: method, anchor: true)
-        endpoint
+        app, path = path, '/' if path.respond_to?(:call)
+        app ||= options.delete(:to) do
+          Class.new(Endpoint) { handle block || -> { head } }
+        end
+
+        mount app, options.merge(at: path, method: method, anchor: true)
+        app
       end
 
       # Defines a GET-based route.
