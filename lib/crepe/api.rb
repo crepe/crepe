@@ -35,9 +35,6 @@ module Crepe
 
     class << self
 
-      # @return [Config] API configuration
-      attr_reader :config
-
       # @return [Array] uncompiled routes
       attr_reader :routes
 
@@ -161,8 +158,19 @@ module Crepe
         route nil, *args, &block
       end
 
-      # Specifies a scope for routes to inherit options (and base paths) in
-      # order to simplify repetitive routing.
+      # Specifies configuration for the current namespace. The options that are
+      # accepted by {.route} are the all valid configuration options.
+      #
+      #   class API < Crepe::API
+      #     config separators: %w[ / . ? # ]
+      #
+      #     get '/users' # do ... end
+      #   end
+      #
+      # +config+ can also take a namespace and a block, which is useful to avoid
+      # repetitive routing. Any configuration given will be scoped to the given
+      # block and passed to all of the routes defined therein. To make this more
+      # readable, +config+ is aliased as +namespace+. For example:
       #
       #   get    '/users' # do ... end
       #   post   '/users' # do ... end
@@ -170,22 +178,19 @@ module Crepe
       #   patch  '/users/:id', id: /\d+/ # do ... end
       #   delete '/users/:id', id: /\d+/ # do ... end
       #
-      # Using +scope+, you only have to specify the "users" component once and
-      # the ":id" parameter (and constraint) once:
+      # Using +namespace+, you only have to specify the "users" component once
+      # and the ":id" parameter (and constraint) once:
       #
-      #   scope :users do
+      #   namespace :users do
       #     get  # { ... }
       #     post # { ... }
       #
-      #     scope ':id', id: /\d+/ do
+      #     namespace ':id', id: /\d+/ do
       #       get    # { ... }
       #       patch  # { ... }
       #       delete # { ... }
       #     end
       #   end
-      #
-      # Scopes accept the same options routes accept and pass them to the
-      # routes defined within the scope.
       #
       # The {.param} method can simplify the ":id" scope further:
       #
@@ -193,20 +198,23 @@ module Crepe
       #     # ...
       #   end
       #
-      # @return [void]
+      # @return [Config]
       # @see .route
       # @todo
       #   Example of an options-based scope (one without a base path).
-      def scope namespace = nil, **scoped, &block
+      def config namespace = nil, **scoped, &block
+        return @config unless namespace || scoped.any? || block_given?
+
         scoped = scoped.merge(
-          helper: config[:helper].dup,
+          helper: @config[:helper].dup,
           namespace: namespace,
           route_options: normalize_route_options(scoped)
         )
-        config.scope scoped, &block
+        @config.scope scoped, &block
       end
-      alias namespace scope
-      alias resource scope
+      alias namespace config
+      alias resource config
+      alias scope config
 
       # Specifies a named parameter at the current scope. For example:
       #
