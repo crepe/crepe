@@ -9,6 +9,7 @@ module Crepe
     SEPARATORS = %w[ / . ? ]
 
     @config = Config.new(
+      handler: Endpoint,
       endpoint: Endpoint.config,
       helper: Module.new,
       middleware: [
@@ -101,9 +102,9 @@ module Crepe
       # @todo
       #   Examples of the other options.
       def route method, path = '/', **options, &block
-        app, path = path, '/' if path.respond_to?(:call)
-        app ||= options.delete(:to) do
-          Class.new(Endpoint) { handle block || -> { head } }
+        app, path = path, '/' if path.respond_to? :call
+        app ||= options.delete :to do
+          Class.new(config[:handler]) { handle block || ->{ head } }
         end
 
         mount app, options.merge(at: path, method: method, anchor: true)
@@ -391,7 +392,7 @@ module Crepe
 
           def skip_#{type} filter = nil, &block
             warn 'block takes precedence over object' if block && filter
-            callback = block || proc { |c| filter == c || filter === c }
+            callback = block || -> c { filter == c || filter === c }
             raise ArgumentError, 'block or filter required' unless callback
             config[:endpoint][:callbacks][:#{type}].delete_if(&callback)
           end
