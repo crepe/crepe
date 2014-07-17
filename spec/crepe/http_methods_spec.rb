@@ -1,5 +1,12 @@
 require 'spec_helper'
 
+class HelloWorld
+  def self.call(env)
+    body = ["Hello, #{env['REQUEST_METHOD']}!"]
+    [200, { 'Content-Type' => 'text/plain' }, body]
+  end
+end
+
 describe Crepe::API, 'HTTP methods' do
   app do
     scope :method do
@@ -11,6 +18,18 @@ describe Crepe::API, 'HTTP methods' do
       patch  '/patch'
       delete '/delete'
       any    '/any'
+    end
+
+    scope :hello do
+      get    HelloWorld
+      post   HelloWorld
+      put    HelloWorld
+      delete HelloWorld
+
+      get    :world, to: HelloWorld
+      post   :world, to: HelloWorld
+      put    :world, to: HelloWorld
+      delete :world, to: HelloWorld
     end
   end
 
@@ -43,6 +62,25 @@ describe Crepe::API, 'HTTP methods' do
         (methods - [method]).each do |other_method|
           send(other_method, "/method/#{method}")
           expect(last_response).to be_method_not_allowed
+        end
+      end
+
+      if method == 'patch'
+        it "does not route a Rack application if the method is not allowed" do
+          send method, '/hello'
+          expect(last_response).to be_method_not_allowed
+        end
+      else
+        it "directly routes to a Rack application" do
+          send method, '/hello'
+          expect(last_response).to be_successful
+          expect(last_response.body).to eq("Hello, #{method.upcase}!")
+        end
+
+        it "routes to a Rack application using the :to option" do
+          send method, '/hello/world'
+          expect(last_response).to be_successful
+          expect(last_response.body).to eq("Hello, #{method.upcase}!")
         end
       end
     end
