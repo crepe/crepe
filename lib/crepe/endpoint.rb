@@ -23,7 +23,10 @@ module Crepe
     class << self
 
       # @return [Hash] Endpoint configuration
-      attr_reader :config
+      attr_reader :config, :handler
+
+      # @return [Proc] Handler proc
+      delegate :to_proc, to: :handler
 
       # Rack call interface, delegated to instance.
       #
@@ -31,7 +34,8 @@ module Crepe
       delegate :call, to: :new
 
       def handle handler = nil, &block
-        define_method :_run_handler, &(handler || block)
+        @handler = handler || block
+        define_method :_run_handler, &@handler
       end
 
       protected
