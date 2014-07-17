@@ -9,39 +9,53 @@ module Crepe
     class DoubleRenderError < StandardError
     end
 
+    @config = {
+      callbacks: { before: [], after: [] },
+      formats: [:json],
+      parsers: Hash.new(Parser::Simple),
+      renderers: Hash.new(Renderer::Simple),
+      rescuers: {
+        Params::Missing => -> e { error! :bad_request, e.message, e.data },
+        Params::Invalid => -> e { error! :bad_request, e.message, e.data }
+      }
+    }
+
     class << self
 
-      # A default configuration hash.
-      def default_config
-        @default_config ||= {
-          callbacks: {},
-          formats: [:json],
-          parsers: Hash.new(Parser::Simple),
-          renderers: Hash.new(Renderer::Simple),
-          rescuers: {
-            Params::Missing => -> e { error! :bad_request, e.message, e.data },
-            Params::Invalid => -> e { error! :bad_request, e.message, e.data }
-          }
-        }
+      # @return [Hash] Endpoint configuration
+      attr_reader :config, :handler
+
+      # @return [Proc] Handler proc
+      delegate :to_proc, to: :handler
+
+      # Rack call interface, delegated to instance.
+      #
+      # @return [[Numeric, Hash, #each]]
+      delegate :call, to: :new
+
+      def handle handler = nil, &block
+        @handler = handler || block
+        define_method :_run_handler, &@handler
       end
 
-    end
+      protected
 
-    # @return [Hash] Endpoint configuration
-    attr_reader :config
+        attr_writer :config
+
+      private
+
+        def inherited subclass
+          subclass.config = Util.deep_collection_dup config
+        end
+
+    end
 
     # @return [Hash] The Rack env
     attr_reader :env
 
-    # Initializes an {Endpoint} with a given configuration and request handler.
-    #
-    # @param [Hash] config configuration
-    # @param [Proc] handler a block executed against each request
-    # @see .default_config
-    def initialize config = {}, &handler
-      configure! config
-      define_singleton_method :_run_handler, &handler
-    end
+    # @return [Hash]
+    # @see .config
+    delegate :config, to: :class
 
     # Convenience method accesses the {Logger} currently assigned to
     # {Crepe.logger}.
@@ -54,26 +68,6 @@ module Crepe
     # @return [Logger]
     # @see Crepe.logger
     delegate :logger, to: :Crepe
-
-    # Configures an endpoint.
-    #
-    # @param [Hash] new_config a hash of configuration options
-    # @return [void]
-    def configure! new_config
-      @config ||= self.class.default_config
-      @config = Util.deep_merge config, new_config
-      if config[:formats].empty?
-        raise ArgumentError, 'wrong number of formats (at least 1)'
-      end
-    end
-
-    # Rack call interface.
-    #
-    # @param [Hash] env the Rack request environment
-    # @return [[Integer, Hash, #each]]
-    def call env
-      clone.call! env
-    end
 
     # An object representing the current request.
     #
@@ -242,33 +236,30 @@ module Crepe
       response.cache_control.replace no_cache: true
     end
 
-    protected
+    # Rack call logic.
+    #
+    # @param [Hash] env the Rack request environment
+    # @return [[Integer, Hash, #each]]
+    def call env
+      @env = env
 
-      # Protected Rack call logic. Executed on a cloned instance of an
-      # endpoint.
-      #
-      # @param [Hash] env the Rack request environment
-      # @return [[Integer, Hash, #each]]
-      def call! env
-        @env = env
-
-        halt = catch :halt do
-          begin
-            not_acceptable! unless format
-            parse request.body if request.body.present?
-            run_callbacks :before
-            payload = _run_handler
-            render payload if payload && response.body.nil?
-            nil
-          rescue => e
-            handle_exception e
-          end
+      halt = catch :halt do
+        begin
+          not_acceptable! unless format
+          parse request.body if request.body.present?
+          run_callbacks :before
+          payload = _run_handler
+          render payload if payload && response.body.nil?
+          nil
+        rescue => e
+          handle_exception e
         end
-        render halt if halt
-        run_callbacks :after
-
-        response.finish
       end
+      render halt if halt
+      run_callbacks :after
+
+      response.finish
+    end
 
     private
 
