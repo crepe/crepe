@@ -194,6 +194,7 @@ module Crepe
       #   end
       #
       # @return [void]
+      # @see .route
       # @todo
       #   Example of an options-based scope (one without a base path).
       def scope namespace = nil, **scoped, &block
