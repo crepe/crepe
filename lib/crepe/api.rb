@@ -110,44 +110,42 @@ module Crepe
         app
       end
 
-      # Defines a GET-based route.
+      # @!method get(*args, &block)
+      #   Defines a GET-based route.
       #
-      # @return [void]
-      # @see .route
-      def get *args, &block
-        route 'GET', *args, &block
-      end
+      #   @return [void]
+      #   @see .route
 
-      # Defines a POST-based route.
+      # @!method post(*args, &block)
+      #   Defines a POST-based route.
       #
-      # @return [void]
-      # @see .route
-      def post *args, &block
-        route 'POST', *args, &block
-      end
+      #   @return [void]
+      #   @see .route
 
-      # Defines a PUT-based route.
+      # @!method put(*args, &block)
+      #   Defines a PUT-based route.
       #
-      # @return [void]
-      # @see .route
-      def put *args, &block
-        route 'PUT', *args, &block
-      end
+      #   @return [void]
+      #   @see .route
 
-      # Defines a PATCH-based route.
+      # @!method patch(*args, &block)
+      #   Defines a PATCH-based route.
       #
-      # @return [void]
-      # @see .route
-      def patch *args, &block
-        route 'PATCH', *args, &block
-      end
+      #   @return [void]
+      #   @see .route
 
-      # Defines a DELETE-based route.
+      # @!method delete(*args, &block)
+      #   Defines a DELETE-based route.
       #
-      # @return [void]
-      # @see .route
-      def delete *args, &block
-        route 'DELETE', *args, &block
+      #   @return [void]
+      #   @see .route
+
+      METHODS.each do |method|
+        class_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{method.downcase} *args, &block # def get *args, &block
+            route '#{method}', *args, &block   #   route 'GET', *args, &block
+          end                                  # end
+        RUBY
       end
 
       # Defines a route that will match any HTTP verb.
