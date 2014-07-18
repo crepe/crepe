@@ -9,7 +9,7 @@ describe Crepe::API, 'paths' do
         param :id, constraints: { id: /\d+/ } do
           get
 
-          resource :posts do
+          scope :posts do
             get
           end
         end
