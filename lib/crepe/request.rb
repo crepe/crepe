@@ -71,9 +71,9 @@ module Crepe
 
     private
 
-      def default_version
-        self.class.config[:version][:default]
-      end
+    def default_version
+      self.class.config[:version][:default]
+    end
 
   end
 end

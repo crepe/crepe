@@ -27,17 +27,17 @@ module Crepe
 
     private
 
-      def cache_control_header
-        return 'max-age=0, private, must-revalidate' if cache_control.empty?
+    def cache_control_header
+      return 'max-age=0, private, must-revalidate' if cache_control.empty?
 
-        header = cache_control.map do |key, value|
-          next unless value
-          key = key.to_s.dasherize
-          value == true ? key : "#{key}=#{value}"
-        end
-
-        header.join ', '
+      header = cache_control.map do |key, value|
+        next unless value
+        key = key.to_s.dasherize
+        value == true ? key : "#{key}=#{value}"
       end
+
+      header.join ', '
+    end
 
   end
 end

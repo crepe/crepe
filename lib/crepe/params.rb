@@ -89,10 +89,10 @@ module Crepe
 
     private
 
-      def method_missing method_name, *args, &block
-        value = @params.send method_name, *args, &block
-        value.is_a?(::Hash) ? ::Crepe::Params.new(value, permitted?) : value
-      end
+    def method_missing method_name, *args, &block
+      value = @params.send method_name, *args, &block
+      value.is_a?(::Hash) ? ::Crepe::Params.new(value, permitted?) : value
+    end
 
   end
 end
