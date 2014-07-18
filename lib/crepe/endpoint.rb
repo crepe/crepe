@@ -57,7 +57,7 @@ module Crepe
     # @see .config
     delegate :config, to: :class
 
-    # Convenience method accesses the {Logger} currently assigned to
+    # Convenience method accesses the Logger currently assigned to
     # {Crepe.logger}.
     #
     #   get do

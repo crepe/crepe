@@ -52,9 +52,9 @@ module Crepe
       @env ||= ActiveSupport::StringInquirer.new ENV['CREPE_ENV']
     end
 
-    # A {Pathname} pointing to the app's root directory. Defaults to the
-    # working directory when the app was launched, but can be overridden with
-    # the +CREPE_ROOT+ environment variable.
+    # A Pathname pointing to the app's root directory. Defaults to the working
+    # directory when the app was launched, but can be overridden with the
+    # +CREPE_ROOT+ environment variable.
     #
     #   database_yml = Crepe.root 'config', 'database.yml'
     #   # => "/path/to/your/app/config/database.yml"

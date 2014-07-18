@@ -57,7 +57,7 @@ module Crepe
     #   Util.normalize_path! 'the//road/less/traveled/by/'
     #   # => "/the/road/less/traveled/by"
     #
-    # @param [String] a path to be normalized
+    # @param [String] path a path to be normalized
     # @return [String] a normalized path
     # @see #normalize_path!
     def normalize_path path
@@ -72,7 +72,7 @@ module Crepe
     #   path
     #   # => "/the/road/less/traveled/by"
     #
-    # @param [String] a path to be normalized
+    # @param [String] path a path to be normalized
     # @return [String] the original path, normalized
     # @see #normalize_path
     def normalize_path! path
