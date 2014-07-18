@@ -162,7 +162,7 @@ module Crepe
       # {.scope} and {.route} are also valid configuration options.
       #
       # @return [Config]
-      # @see .scope
+      # @see .namespace
       # @see .route
       def config **scoped, &block
         return @config if scoped.empty? && block.nil?
@@ -183,21 +183,21 @@ module Crepe
       #   patch  '/users/:id', id: /\d+/ # do ... end
       #   delete '/users/:id', id: /\d+/ # do ... end
       #
-      # Using +scope+, you only have to specify the "users" component once and
-      # the ":id" parameter (and constraint) once:
+      # Using +namespace+, you only have to specify the "users" component once
+      # and the ":id" parameter (and constraint) once:
       #
-      #   scope :users do
+      #   namespace :users do
       #     get  # { ... }
       #     post # { ... }
       #
-      #     scope ':id', id: /\d+/ do
+      #     namespace ':id', id: /\d+/ do
       #       get    # { ... }
       #       patch  # { ... }
       #       delete # { ... }
       #     end
       #   end
       #
-      # Scopes accept the same options routes accept and pass them to the
+      # Namespaces accept the same options routes accept and pass them to the
       # routes defined within the scope.
       #
       # The {.param} method can simplify the ":id" scope further:
@@ -209,10 +209,10 @@ module Crepe
       # @return [void]
       # @see .config
       # @see .route
-      def scope namespace = nil, **scoped, &block
-        config scoped.merge(namespace: namespace), &block
+      def namespace path = nil, **options, &block
+        config options.merge(namespace: path), &block
       end
-      alias namespace scope
+      alias scope namespace
 
       # Specifies a named parameter at the current scope. For example:
       #
