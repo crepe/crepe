@@ -10,8 +10,6 @@ module Crepe
 
     @config = Config.new(
       handler: Endpoint,
-      endpoint: Endpoint.config,
-      helper: Module.new,
       middleware: [
         Middleware::JSCallback,
         Middleware::RestfulStatus,
@@ -167,7 +165,7 @@ module Crepe
         return @config if scoped.empty? && block.nil?
 
         scoped = scoped.merge(
-          helper: @config[:helper].dup,
+          handler: Class.new(scoped.fetch(:handler, @config[:handler])),
           route_options: normalize_route_options(scoped)
         )
         @config.scope scoped, &block
@@ -294,195 +292,6 @@ module Crepe
         config[:middleware] << [middleware, args, block]
       end
 
-      # Defines supported formats (mime types) for a scope.
-      #
-      #   respond_to :json, :xml
-      #
-      # These formats will override any that are defined in parent scopes.
-      #
-      # Renderers can be defined at the same time:
-      #
-      #   respond_to csv: CSVRenderer.new
-      #   # class CSVRenderer < Crepe::Renderer::Base
-      #   #   def render resource, options = {}
-      #   #     super.to_csv
-      #   #   end
-      #   # end
-      #
-      # @return [void]
-      # @see .render
-      def respond_to *formats, **renderers
-        config[:endpoint][:formats] = formats | renderers.keys
-        renderers.each { |format, renderer| render format, with: renderer }
-      end
-
-      # Defines a custom renderer for the specified formats (mime types).
-      #
-      #   render :json, with: MyCustomRenderer.new
-      #
-      # An endpoint must respond to the specified format for it to render.
-      #
-      # @return [void]
-      # @see .respond_to
-      def render *formats, **options
-        renderer = options.fetch :with
-        formats.each { |f| config[:endpoint][:renderers][f] = renderer }
-      end
-
-      # Defines a custom request body parser for the specified content types.
-      #
-      #   parse :csv, with: CSVParser.new
-      #   # class CSVParser < Struct.new :endpoint
-      #   #   def parse body
-      #   #     CSV.parse body
-      #   #   end
-      #   # end
-      #
-      # @return [void]
-      def parse *media_types, **options
-        parser = options.fetch :with
-        media_types = Util.media_types media_types
-        media_types.each { |t| config[:endpoint][:parsers][t] = parser }
-      end
-
-      # Rescues exceptions raised in endpoints.
-      #
-      #   rescue_from ActiveRecord::RecordNotFound do |e|
-      #     error! :not_found, e.message
-      #   end
-      #
-      # Helper methods can be used (instead of blocks).
-      #
-      #   rescue_from ActiveRecord::RecordNotFound, with: :not_found
-      #   helper do
-      #     def not_found e
-      #       error! :not_found, e.message
-      #     end
-      #   end
-      #
-      # @return [void]
-      # @raise [ArgumentError] if a block/method handler isn't set
-      # @see .helper
-      # @see Endpoint#error!
-      def rescue_from *exceptions, with: nil, &block
-        warn 'block takes precedence over handler' if block && with
-        handler = block || with
-        raise ArgumentError, 'block or handler required' unless handler
-        exceptions.each { |e| config[:endpoint][:rescuers][e] = handler }
-      end
-
-      # Defines a DSL method for creating callbacks.
-      #
-      # Used, for example, to define {.before} and {.after}.
-      #
-      # @param [Symbol] type the name of the DSL method
-      # @return [void]
-      # @see .before
-      # @see .after
-      def define_callback type
-        config[:endpoint][:callbacks][type] ||= []
-
-        instance_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{type} filter = nil, &block
-            warn 'block takes precedence over object' if block && filter
-            callback = block || filter
-            raise ArgumentError, 'block or filter required' unless callback
-            config[:endpoint][:callbacks][:#{type}] << callback
-          end
-
-          def skip_#{type} filter = nil, &block
-            warn 'block takes precedence over object' if block && filter
-            callback = block || -> c { filter == c || filter === c }
-            raise ArgumentError, 'block or filter required' unless callback
-            config[:endpoint][:callbacks][:#{type}].delete_if(&callback)
-          end
-        RUBY
-      end
-
-      # Configures a before filter for basic authorization.
-      #
-      #   basic_auth realm: 'My App' do |username, password|
-      #     return username == 'admin' && password == 'secret'
-      #   end
-      #
-      # Renders a 401 Unauthorized error if the block fails.
-      #
-      # @return [void]
-      # @see .before
-      # @see Endpoint#unauthorized!
-      def basic_auth *args, &block
-        skip_before Filter::BasicAuth
-        before Filter::BasicAuth.new(*args, &block)
-      end
-
-      # Extends endpoints with helper methods.
-      #
-      # It accepts a block:
-      #
-      #   helper do
-      #     def present resource
-      #       UserPresenter.new(resource).present
-      #     end
-      #   end
-      #   get do
-      #     user = User.find params[:id]
-      #     present user
-      #   end
-      #
-      # Or a module:
-      #
-      #   helper AuthenticationHelper
-      #
-      # @return [void]
-      def helper mod = nil, prepend: false, &block
-        if block
-          warn 'block takes precedence over module' if mod
-          mod = Module.new(&block)
-        end
-        method = prepend ? :prepend : :include
-        config[:helper].send method, mod
-      end
-
-      # Defines a memoized helper method.
-      #
-      #   let(:user) { User.find params[:id] }
-      #   get { user }
-      #
-      # {.let} is not evaluated till the first time the method it defines is
-      # invoked. To force a method's invocation before the endpoint runs, use
-      # {.let!}.
-      #
-      # @return [void]
-      # @see .let!
-      def let name, &block
-        if Endpoint.method_defined? name
-          raise ArgumentError, "can't redefine Crepe::Endpoint##{name}"
-        end
-        helper do
-          module_eval { define_method "_eval_#{name}", &block }
-          module_eval <<-RUBY, __FILE__, __LINE__ + 1
-            def #{name} *args
-              return @_memo_#{name}[args] if (@_memo_#{name} ||= {}).key? args
-              @_memo_#{name}[args] = _eval_#{name}(*args)
-            end
-          RUBY
-        end
-      end
-
-      # Defines a memoized helper method that is invoked before an endpoint is
-      # called.
-      #
-      #   let! :current_user do
-      #     User.authenticate!(*request.credentials)
-      #   end
-      #
-      # @return [void]
-      # @see .let
-      def let! name, &block
-        let name, &block
-        before { send name }
-      end
-
       # Rack call interface. Runs each time a request enters the stack.
       #
       # @param [Hash] env the Rack request environment
@@ -572,8 +381,17 @@ module Crepe
 
       def inherited subclass
         subclass.config = config.deep_collection_dup
-        subclass.config[:helper] = config[:helper].dup
+        subclass.config[:handler] = Class.new config[:handler]
         subclass.routes = routes.dup
+      end
+
+      def method_missing name, *args, &block
+        return super unless config[:handler].respond_to? name
+        config[:handler].send name, *args, &block
+      end
+
+      def respond_to_missing? name, include_private = false
+        config[:handler].respond_to? name or super
       end
 
       def app
@@ -618,7 +436,7 @@ module Crepe
           allowed.sort!
 
           formats = options.inject([]) do |f, (_, _, _, config)|
-            f + config[:endpoint][:formats]
+            f + config[:handler].config[:formats]
           end
           formats.uniq!
 
@@ -654,7 +472,7 @@ module Crepe
         routes.map do |app, conditions, defaults, config|
           if app.is_a?(Class) && app < API
             app = configure_api_subclass app, exclude: exclude
-          elsif app.is_a?(Class) && app < Endpoint
+          elsif app.is_a?(Class) && app < config[:handler]
             app = configure_endpoint_subclass app, config
           end
 
@@ -663,66 +481,18 @@ module Crepe
       end
 
       def configure_api_subclass klass, options
-        api = Class.new(klass)
+        api = Class.new klass
         Crepe.const_set "#{klass.name || 'API'}_#{api.object_id}", api
         api.to_app options
       end
 
       def configure_endpoint_subclass klass, config
         Class.new(klass).tap do |ep|
-          Util.deep_merge! ep.config, config.to_h[:endpoint]
-          config.all(:helper).each { |helper| ep.send :include, helper }
           Crepe.const_set "#{klass.name || 'Endpoint'}_#{ep.object_id}", ep
         end
       end
 
     end
-
-    # Runs a given block _before_ a request runs through a route's handler.
-    #
-    #   before do
-    #     @current_user = User.authenticate!(*request.credentials)
-    #   end
-    #
-    # Alternatively, calls an object's #filter method, passing the {Endpoint}
-    # instance as an argument.
-    #
-    #   before UserAuthenticator.new
-    #   # class UserAuthenticator
-    #   #   def filter endpoint
-    #   #     User.authenticate!(*endpoint.request.credentials)
-    #   #   end
-    #   # end
-    #
-    # @method (filter = nil, &block)
-    # @scope class
-    # @return [void]
-    # @raise [ArgumentError] if a block/filter isn't set
-    # @see .let!
-    # @see .basic_auth
-    define_callback :before
-
-    # Runs a given block _after_ a request runs through a route's handler.
-    #
-    #   after do
-    #     Jobs.schedule AnalyticsJob, request
-    #   end
-    #
-    # Alternatively, calls an object's #filter method, passing the {Endpoint}
-    # instance as an argument.
-    #
-    #   after JobScheduler.new
-    #   # class JobScheduler.new
-    #   #   def filter endpoint
-    #   #     Jobs.schedule AnalyticsJob, endpoint.request
-    #   #   end
-    #   # end
-    #
-    # @method (filter = nil, &block)
-    # @scope class
-    # @return [void]
-    # @raise [ArgumentError] if a block/filter isn't set
-    define_callback :after
 
   end
 end
