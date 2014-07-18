@@ -567,115 +567,115 @@ module Crepe
 
       protected
 
-        attr_writer :config, :routes
+      attr_writer :config, :routes
 
       private
 
-        def inherited subclass
-          subclass.config = config.deep_collection_dup
-          subclass.config[:helper] = config[:helper].dup
-          subclass.routes = routes.dup
-        end
+      def inherited subclass
+        subclass.config = config.deep_collection_dup
+        subclass.config[:helper] = config[:helper].dup
+        subclass.routes = routes.dup
+      end
 
-        def app
-          @app ||= to_app
-        end
+      def app
+        @app ||= to_app
+      end
 
-        def normalize_route_options options
-          options = Util.deep_merge config[:route_options], options
-          options.except(*config[:route_options].keys).each_key do |key|
-            value = options.delete key
-            option = value.is_a?(Regexp) ? :constraints : :defaults
-            options[option][key] = value
+      def normalize_route_options options
+        options = Util.deep_merge config[:route_options], options
+        options.except(*config[:route_options].keys).each_key do |key|
+          value = options.delete key
+          option = value.is_a?(Regexp) ? :constraints : :defaults
+          options[option][key] = value
+        end
+        options
+      end
+
+      def mount_path path, options
+        return path if path.is_a? Regexp
+
+        path = Util.normalize_path [*config.all(:namespace), path].join '/'
+        path << '(.:format)' if options[:anchor]
+        Rack::Mount::Strexp.compile(
+          path, *options.values_at(:constraints, :separators, :anchor)
+        )
+      end
+
+      def request_class
+        Request.dup.tap { |r| r.config = config }
+      end
+
+      # Generates OPTIONS and "Method Not Allowed" routes against every path
+      # in the route set at compile time, making Crepe APIs easier to
+      # inspect.
+      def generate_options_routes!
+        paths = routes.group_by { |_, cond| cond[:path_info] }
+        paths.each do |path, options|
+          allowed = options.map { |_, cond| cond[:request_method] }
+          next if allowed.include?('OPTIONS') || allowed.none?
+
+          allowed << 'HEAD' if allowed.include? 'GET'
+          allowed << 'OPTIONS'
+          allowed.sort!
+
+          formats = options.inject([]) do |f, (_, _, _, config)|
+            f + config[:endpoint][:formats]
           end
-          options
+          formats.uniq!
+
+          generate_options_route! path, allowed, formats
         end
+      end
 
-        def mount_path path, options
-          return path if path.is_a? Regexp
-
-          path = Util.normalize_path [*config.all(:namespace), path].join '/'
-          path << '(.:format)' if options[:anchor]
-          Rack::Mount::Strexp.compile(
-            path, *options.values_at(:constraints, :separators, :anchor)
-          )
-        end
-
-        def request_class
-          Request.dup.tap { |r| r.config = config }
-        end
-
-        # Generates OPTIONS and "Method Not Allowed" routes against every path
-        # in the route set at compile time, making Crepe APIs easier to
-        # inspect.
-        def generate_options_routes!
-          paths = routes.group_by { |_, cond| cond[:path_info] }
-          paths.each do |path, options|
-            allowed = options.map { |_, cond| cond[:request_method] }
-            next if allowed.include?('OPTIONS') || allowed.none?
-
-            allowed << 'HEAD' if allowed.include? 'GET'
-            allowed << 'OPTIONS'
-            allowed.sort!
-
-            formats = options.inject([]) do |f, (_, _, _, config)|
-              f + config[:endpoint][:formats]
-            end
-            formats.uniq!
-
-            generate_options_route! path, allowed, formats
+      # Generates an OPTIONS route and "Method Not Allowed" routes for a
+      # given path.
+      #
+      # @param [String] path a path to generate an OPTIONS route for
+      # @param [Array<String>] allowed a list of allowed methods
+      # @param [Array<Symbol>] formats a list of formats to respond to
+      # @see .generate_options_routes!
+      def generate_options_route! path, allowed, formats
+        scope do
+          respond_to(*formats)
+          route 'OPTIONS', path do
+            headers['Allow'] = allowed.join ', '
+            { allow: allowed }
           end
-        end
-
-        # Generates an OPTIONS route and "Method Not Allowed" routes for a
-        # given path.
-        #
-        # @param [String] path a path to generate an OPTIONS route for
-        # @param [Array<String>] allowed a list of allowed methods
-        # @param [Array<Symbol>] formats a list of formats to respond to
-        # @see .generate_options_routes!
-        def generate_options_route! path, allowed, formats
-          scope do
-            respond_to(*formats)
-            route 'OPTIONS', path do
-              headers['Allow'] = allowed.join ', '
-              { allow: allowed }
-            end
-            route METHODS - allowed, path do
-              headers['Allow'] = allowed.join ', '
-              error! :method_not_allowed, allow: allowed
-            end
-          end
-        end
-
-        def configured_routes(exclude: [])
-          generate_options_routes!
-          @@catch ||= any('*catch') { error! :not_found } # generate root 404
-
-          routes.map do |app, conditions, defaults, config|
-            if app.is_a?(Class) && app < API
-              app = configure_api_subclass app, exclude: exclude
-            elsif app.is_a?(Class) && app < Endpoint
-              app = configure_endpoint_subclass app, config
-            end
-
-            [app, conditions, defaults]
+          route METHODS - allowed, path do
+            headers['Allow'] = allowed.join ', '
+            error! :method_not_allowed, allow: allowed
           end
         end
+      end
 
-        def configure_api_subclass klass, options
-          api = Class.new(klass)
-          Crepe.const_set "#{klass.name || 'API'}_#{api.object_id}", api
-          api.to_app options
-        end
+      def configured_routes(exclude: [])
+        generate_options_routes!
+        @@catch ||= any('*catch') { error! :not_found } # generate root 404
 
-        def configure_endpoint_subclass klass, config
-          Class.new(klass).tap do |ep|
-            Util.deep_merge! ep.config, config.to_h[:endpoint]
-            config.all(:helper).each { |helper| ep.send :include, helper }
-            Crepe.const_set "#{klass.name || 'Endpoint'}_#{ep.object_id}", ep
+        routes.map do |app, conditions, defaults, config|
+          if app.is_a?(Class) && app < API
+            app = configure_api_subclass app, exclude: exclude
+          elsif app.is_a?(Class) && app < Endpoint
+            app = configure_endpoint_subclass app, config
           end
+
+          [app, conditions, defaults]
         end
+      end
+
+      def configure_api_subclass klass, options
+        api = Class.new(klass)
+        Crepe.const_set "#{klass.name || 'API'}_#{api.object_id}", api
+        api.to_app options
+      end
+
+      def configure_endpoint_subclass klass, config
+        Class.new(klass).tap do |ep|
+          Util.deep_merge! ep.config, config.to_h[:endpoint]
+          config.all(:helper).each { |helper| ep.send :include, helper }
+          Crepe.const_set "#{klass.name || 'Endpoint'}_#{ep.object_id}", ep
+        end
+      end
 
     end
 

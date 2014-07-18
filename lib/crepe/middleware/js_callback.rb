@@ -31,12 +31,12 @@ module Crepe
 
       private
 
-        def camelize headers
-          headers = headers.each_with_object({}) do |(key, value), hash|
-            hash[key.to_s.underscore.camelize :lower] = value
-          end
-          headers.to_json
+      def camelize headers
+        headers = headers.each_with_object({}) do |(key, value), hash|
+          hash[key.to_s.underscore.camelize :lower] = value
         end
+        headers.to_json
+      end
 
     end
   end

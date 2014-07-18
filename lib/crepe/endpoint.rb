@@ -40,13 +40,13 @@ module Crepe
 
       protected
 
-        attr_writer :config
+      attr_writer :config
 
       private
 
-        def inherited subclass
-          subclass.config = Util.deep_collection_dup config
-        end
+      def inherited subclass
+        subclass.config = Util.deep_collection_dup config
+      end
 
     end
 
@@ -263,46 +263,46 @@ module Crepe
 
     private
 
-      def run_callbacks type
-        config[:callbacks][type].each do |c|
-          c.respond_to?(:filter) ? c.filter(self) : instance_eval(&c)
-        end
+    def run_callbacks type
+      config[:callbacks][type].each do |c|
+        c.respond_to?(:filter) ? c.filter(self) : instance_eval(&c)
       end
+    end
 
-      def handle_exception exception
-        classes = config[:rescuers].keys.select { |c| exception.is_a? c }
+    def handle_exception exception
+      classes = config[:rescuers].keys.select { |c| exception.is_a? c }
 
-        if handler = config[:rescuers][classes.sort.first]
-          handler = method handler if handler.is_a? Symbol
-          instance_exec(*(exception unless handler.arity.zero?), &handler)
-        else
-          log_exception exception
-          code = :internal_server_error
-          data = { backtrace: exception.backtrace } if Crepe.env.development?
-          error! code, exception.message, data || {}
-        end
+      if handler = config[:rescuers][classes.sort.first]
+        handler = method handler if handler.is_a? Symbol
+        instance_exec(*(exception unless handler.arity.zero?), &handler)
+      else
+        log_exception exception
+        code = :internal_server_error
+        data = { backtrace: exception.backtrace } if Crepe.env.development?
+        error! code, exception.message, data || {}
       end
+    end
 
-      def log_exception exception
-        logger.error "%{message}\n%{backtrace}" % {
-          message: exception.message,
-          backtrace: exception.backtrace.map { |l| "\t#{l}" }.join("\n")
-        }
-      end
+    def log_exception exception
+      logger.error "%{message}\n%{backtrace}" % {
+        message: exception.message,
+        backtrace: exception.backtrace.map { |l| "\t#{l}" }.join("\n")
+      }
+    end
 
-      def parser
-        config[:parsers][request.content_type].new self
-      end
+    def parser
+      config[:parsers][request.content_type].new self
+    end
 
-      def renderer
-        config[:renderers][format].new self
-      end
+    def renderer
+      config[:renderers][format].new self
+    end
 
-      def error code, message = nil, **data
-        status code
-        message ||= Rack::Utils::HTTP_STATUS_CODES[status]
-        { error: { message: message }.merge(data) }
-      end
+    def error code, message = nil, **data
+      status code
+      message ||= Rack::Utils::HTTP_STATUS_CODES[status]
+      { error: { message: message }.merge(data) }
+    end
 
   end
 end
