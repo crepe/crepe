@@ -159,33 +159,6 @@ module Crepe
         before Filter::BasicAuth.new(*args, &block)
       end
 
-      # Extends endpoints with helper methods.
-      #
-      # It accepts a block:
-      #
-      #   helper do
-      #     def present resource
-      #       UserPresenter.new(resource).present
-      #     end
-      #   end
-      #   get do
-      #     user = User.find params[:id]
-      #     present user
-      #   end
-      #
-      # Or a module:
-      #
-      #   helper AuthenticationHelper
-      #
-      # @return [void]
-      def helper mod = nil, prepend: false, &block
-        if block
-          warn 'block takes precedence over module' if mod
-          mod = Module.new(&block)
-        end
-        send prepend ? :prepend : :include, mod
-      end
-
       # Defines a memoized helper method.
       #
       #   let(:user) { User.find params[:id] }
@@ -201,15 +174,13 @@ module Crepe
         if Endpoint.method_defined? name
           raise ArgumentError, "can't redefine #{self}##{name}"
         end
-        helper do
-          module_eval { define_method "_eval_#{name}", &block }
-          module_eval <<-RUBY, __FILE__, __LINE__ + 1
-            def #{name} *args
-              return @_memo_#{name}[args] if (@_memo_#{name} ||= {}).key? args
-              @_memo_#{name}[args] = _eval_#{name}(*args)
-            end
-          RUBY
-        end
+        define_method "_eval_#{name}", &block
+        class_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{name} *args
+            return @_memo_#{name}[args] if (@_memo_#{name} ||= {}).key? args
+            @_memo_#{name}[args] = _eval_#{name}(*args)
+          end
+        RUBY
       end
 
       # Defines a memoized helper method that is invoked before an endpoint is

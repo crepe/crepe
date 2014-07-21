@@ -276,6 +276,34 @@ module Crepe
         scope path, version: options.merge(level: level, with: with), &block
       end
 
+      # Extends endpoints with helper methods.
+      #
+      # It accepts a block:
+      #
+      #   helper do
+      #     let(:user) { User.find params[:id] }
+      #     def present resource
+      #       UserPresenter.new(resource).present
+      #     end
+      #   end
+      #   get do
+      #     present user
+      #   end
+      #
+      # Or a module:
+      #
+      #   helper AuthenticationHelper
+      #
+      # @return [void]
+      def helper mod = nil, prepend: false, &block
+        if block
+          warn 'block takes precedence over module' if mod
+          config[:handler].class_eval(&block)
+        else
+          config[:handler].send prepend ? :prepend : :include, mod
+        end
+      end
+
       # Pushes the given Rack middleware and its arguments onto the API's
       # middleware stack.
       #

@@ -14,6 +14,16 @@ describe Crepe::API, '.helper' do
       end
     end
 
+    scope :block_let do
+      get do
+        { name: name }
+      end
+
+      helper do
+        let(:name) { 'block let' }
+      end
+    end
+
     scope :module do
       get do
         { name: name }
@@ -51,6 +61,10 @@ describe Crepe::API, '.helper' do
 
   it 'extends endpoints with block methods' do
     expect(get('/block').body).to include 'block'
+  end
+
+  it 'extends endpoints with block lets' do
+    expect(get('/block_let').body).to include 'block let'
   end
 
   it 'extends endpoints with module methods' do
