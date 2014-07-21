@@ -194,7 +194,7 @@ module Crepe
       # @see .let
       def let! name, &block
         let name, &block
-        before { send name }
+        before name.to_sym
       end
 
       protected
