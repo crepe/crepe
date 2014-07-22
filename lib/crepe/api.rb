@@ -9,7 +9,7 @@ module Crepe
     SEPARATORS = %w[ / . ? ]
 
     @config = Config.new(
-      handler: Endpoint,
+      endpoint: Endpoint,
       middleware: [
         Middleware::JSCallback,
         Middleware::RestfulStatus,
@@ -102,7 +102,7 @@ module Crepe
       def route method, path = '/', **options, &block
         app, path = path, '/' if path.respond_to? :call
         app ||= options.delete :to do
-          Class.new(config[:handler]) { handle block || ->{ head } }
+          Class.new(config[:endpoint]) { respond block || ->{ head } }
         end
 
         mount app, options.merge(at: path, method: method, anchor: true)
@@ -165,7 +165,7 @@ module Crepe
         return @config if scoped.empty? && block.nil?
 
         scoped = scoped.merge(
-          handler: Class.new(scoped.fetch(:handler, @config[:handler])),
+          endpoint: Class.new(scoped.fetch(:endpoint, @config[:endpoint])),
           route_options: normalize_route_options(scoped)
         )
         @config.scope scoped, &block
@@ -298,9 +298,9 @@ module Crepe
       def helper mod = nil, prepend: false, &block
         if block
           warn 'block takes precedence over module' if mod
-          config[:handler].class_eval(&block)
+          config[:endpoint].class_eval(&block)
         else
-          config[:handler].send prepend ? :prepend : :include, mod
+          config[:endpoint].send prepend ? :prepend : :include, mod
         end
       end
 
@@ -409,17 +409,17 @@ module Crepe
 
       def inherited subclass
         subclass.config = config.deep_collection_dup
-        subclass.config[:handler] = Class.new config[:handler]
+        subclass.config[:endpoint] = Class.new config[:endpoint]
         subclass.routes = routes.dup
       end
 
       def method_missing name, *args, &block
-        return super unless config[:handler].respond_to? name
-        config[:handler].send name, *args, &block
+        return super unless config[:endpoint].respond_to? name
+        config[:endpoint].send name, *args, &block
       end
 
       def respond_to_missing? name, include_private = false
-        config[:handler].respond_to? name or super
+        config[:endpoint].respond_to? name or super
       end
 
       def app
@@ -464,7 +464,7 @@ module Crepe
           allowed.sort!
 
           formats = options.inject([]) do |f, (_, _, _, config)|
-            f + config[:handler].config[:formats]
+            f + config[:endpoint].config[:formats]
           end
           formats.uniq!
 
@@ -500,7 +500,7 @@ module Crepe
         routes.map do |app, conditions, defaults, config|
           if app.is_a?(Class) && app < API
             app = configure_api_subclass app, exclude: exclude
-          elsif app.is_a?(Class) && app < config[:handler]
+          elsif app.is_a?(Class) && app < config[:endpoint]
             app = configure_endpoint_subclass app, config
           end
 

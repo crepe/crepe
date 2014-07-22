@@ -7,7 +7,7 @@ describe Crepe::Endpoint do
   let(:endpoint) do
     Class.new(described_class).tap do |endpoint|
       endpoint.config.update config
-      endpoint.handle(&handler)
+      endpoint.respond(&handler)
     end
   end
   let(:config) { {} }

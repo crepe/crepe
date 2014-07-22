@@ -33,7 +33,7 @@ module Crepe
       # @return [[Numeric, Hash, #each]]
       delegate :call, to: :new
 
-      def handle handler = nil, &block
+      def respond handler = nil, &block
         @handler = handler || block
         define_method :_run_handler, &@handler
       end
