@@ -21,9 +21,9 @@ Gem::Specification.new do |s|
   s.add_dependency 'rack',          '~> 1.5.x'
   s.add_dependency 'rack-mount',    '~> 0.8.x'
 
-  s.add_development_dependency 'cane',       '~> 2.6.x'
-  s.add_development_dependency 'rake',       '~> 10.3.x'
-  s.add_development_dependency 'rspec',      '~> 3.0.x'
-  s.add_development_dependency 'rack-test',  '~> 0.6.x'
-  s.add_development_dependency 'yard',       '~> 0.8.x'
+  s.add_development_dependency 'cane',      '~> 2.6.x'
+  s.add_development_dependency 'rake',      '~> 10.3.x'
+  s.add_development_dependency 'rspec',     '~> 3.0.x'
+  s.add_development_dependency 'rack-test', '~> 0.6.x'
+  s.add_development_dependency 'yard',      '~> 0.8.x'
 end
