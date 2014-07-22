@@ -102,7 +102,7 @@ module Crepe
       def route method, path = '/', **options, &block
         app, path = path, '/' if path.respond_to? :call
         app ||= options.delete :to do
-          Class.new(config[:endpoint]) { handle block || ->{ head } }
+          Class.new(config[:endpoint]) { respond block || ->{ head } }
         end
 
         mount app, options.merge(at: path, method: method, anchor: true)
