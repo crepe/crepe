@@ -20,9 +20,6 @@ module Crepe
       # @param [Array<#to_param>] components a list of path components
       # @param [Hash] query a hash of query parameters
       # @return [String] a fully-qualified, compiled URL
-      #--
-      # FIXME: doesn't work with path/query versioning
-      #++
       def url_for *components, **query
         url = "#{request.scheme}://#{request.host_with_port}"
         url << Util.normalize_path!(components.map(&:to_param).join('/'))

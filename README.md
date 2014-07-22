@@ -17,37 +17,33 @@ require 'twitter_api/v1'
 class TwitterAPI < Crepe::API
   extend Crepe::Streaming
 
-  version '1.1' do
-    let!(:current_user)       { User.authorize!(*request.credentials) }
+  let!(:current_user)       { User.authorize!(*request.credentials) }
 
-    namespace :statuses do
-      # helpers
-      let(:tweet_params)      {
-        params.require(:status).permit :message, :in_reply_to_status_id
-      }
-      let(:current_tweet)     { current_user.tweets.find params[:id] }
+  namespace :statuses do
+    # helpers
+    let(:tweet_params)      {
+      params.require(:status).permit :message, :in_reply_to_status_id
+    }
+    let(:current_tweet)     { current_user.tweets.find params[:id] }
 
-      # endpoints
-      get(:home_timeline)     { current_user.timeline }
-      get(:mentions_timeline) { current_user.mentions }
-      get(:user_timeline)     { current_user.tweets }
-      get(:retweets_of_me)    { current_user.tweets.retweeted }
+    # endpoints
+    get(:home_timeline)     { current_user.timeline }
+    get(:mentions_timeline) { current_user.mentions }
+    get(:user_timeline)     { current_user.tweets }
+    get(:retweets_of_me)    { current_user.tweets.retweeted }
 
-      post(:update)           { current_user.tweets.create! tweet_params }
-      get('show/:id')         { current_tweet }
-      get('retweets/:id')     { current_tweet.retweets }
-      post('destroy/:id')     { current_tweet.destroy }
-      post('retweet/:id')     { current_user.retweet! Tweet.find params[:id] }
+    post(:update)           { current_user.tweets.create! tweet_params }
+    get('show/:id')         { current_tweet }
+    get('retweets/:id')     { current_tweet.retweets }
+    post('destroy/:id')     { current_tweet.destroy }
+    post('retweet/:id')     { current_user.retweet! Tweet.find params[:id] }
 
-      stream(:firehose)       { Tweet.stream { |t| render t } }
-      stream(:sample)         { Tweet.sample.stream { |t| render t } }
-    end
-
-    get('search/tweets')      { Tweet.search params.slice Tweet::SEARCH_KEYS }
-    stream(:user)             { current_user.timeline.stream { |t| render t } }
+    stream(:firehose)       { Tweet.stream { |t| render t } }
+    stream(:sample)         { Tweet.sample.stream { |t| render t } }
   end
 
-  mount TwitterAPI::V1 # legacy version 1
+  get('search/tweets')      { Tweet.search params.slice Tweet::SEARCH_KEYS }
+  stream(:user)             { current_user.timeline.stream { |t| render t } }
 
   rescue_from ActiveRecord::RecordNotFound do |e|
     error! :not_found, e.message

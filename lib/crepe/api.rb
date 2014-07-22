@@ -23,10 +23,6 @@ module Crepe
         defaults: {},
         separators: SEPARATORS,
         anchor: false
-      },
-      version: {
-        name: 'v',
-        with: :path
       }
     )
 
@@ -232,50 +228,6 @@ module Crepe
         namespace "/:#{name}", options, &block
       end
 
-      # Specifies a version:
-      #
-      #   version :v1 do
-      #     # ...
-      #   end
-      #
-      # Crepe supports versioning by path prefix, header, or query string.
-      # Path-based versioning is the default (so the above behaves much like
-      # {.scope}, namespacing its endpoints with a '/v1' path component).
-      #
-      # To use header-based versioning (versioning by content negotiation),
-      # configure versioning before any specific versions are declared:
-      #
-      #   version with: :header, vendor: 'my-app'
-      #
-      #   version :v1 do
-      #     # ...
-      #   end
-      #
-      # To explicitly match a route in the above scope, set your request's
-      # accept header:
-      #
-      #   Accept: application/vnd.my-app-v1+json
-      #
-      # In case you want to version with a query parameter:
-      #
-      #   version with: :query, name: 'v'
-      #
-      # With header or query parameter versioning, the first version declared
-      # will be considered the default, and requests that are not explicitly
-      # versioned will be directed to it. Alternatively, you can specify a
-      # default version explicitly:
-      #
-      #   version with: :header, vendor: 'my-app', default: :v1
-      #
-      # @return [void]
-      # @see .scope
-      def version level = nil, **options, &block
-        config[:version][:default] ||= level
-        with = options.fetch :with, config[:version][:with]
-        path = level if with == :path
-        scope path, version: options.merge(level: level, with: with), &block
-      end
-
       # Extends endpoints with helper methods.
       #
       # It accepts a block:
@@ -359,20 +311,10 @@ module Crepe
           options.delete app if app
         end
 
-        method = options.delete :method
-        method = %r{#{method.join '|'}}i if method.respond_to? :join
-
-        options = normalize_route_options options
-
-        conditions = {
-          path_info: mount_path(path, options), request_method: method
-        }
-        if level = config[:version][:level]
-          case config[:version][:with]
-            when :query  then conditions[:query_version]   = /\A#{level}\Z/
-            when :header then conditions[:header_versions] = /\A#{level}\Z/
-          end
-        end
+        method     = options.delete :method
+        method     = %r{#{method.join '|'}}i if method.respond_to? :join
+        options    = normalize_route_options options
+        conditions = mount_conditions mount_path(path, options), method
 
         routes << [app, conditions, options[:defaults], config.dup]
       end
@@ -406,6 +348,19 @@ module Crepe
       attr_writer :config, :routes
 
       private
+
+      # Construct conditions to pass to +Rack::Mount+ with an application is
+      # mounted into a +Crepe::API+. This provides a place for plugins to define
+      # additional conditions that they need when {.mount} is called.
+      #
+      # @param [String] path_info a path at which the app will be mounted
+      # @param [String] method the HTTP request method to use for the app
+      # @return [Hash] conditions to pass to Rack::Mount
+      # @see {.mount}
+      # @api public
+      def mount_conditions path_info, method
+        { path_info: path_info, request_method: method }
+      end
 
       def inherited subclass
         subclass.config = config.deep_collection_dup
