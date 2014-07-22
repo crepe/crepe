@@ -1,4 +1,5 @@
 require 'json'
+require 'rack/request'
 
 module Crepe
   module Parser
@@ -15,17 +16,16 @@ module Crepe
 
       def parse body
         case request.media_type
-        when %r{application/x-www-form-urlencoded}, %r{multipart/form-data}
+        when *Rack::Request::FORM_DATA_MEDIA_TYPES
           request.POST
-        when %r{application/json}
+        when 'application/json'
           begin
             JSON.parse body
           rescue JSON::ParserError
             error! :bad_request, "Invalid JSON"
           end
         else
-          error! :unsupported_media_type,
-            %(Content-Type "#{request.media_type}" not supported)
+          body
         end
       end
 
