@@ -293,7 +293,8 @@ module Crepe
     # @return [Symbol]
     def format
       return @format if defined? @format
-      media_type = request.accepts.best_of Util.media_types config[:formats]
+      formats = Util.media_types config[:formats]
+      media_type = Rack::Utils.best_q_match accepts, formats
       @format = config[:formats].find { |f| Util.media_type(f) == media_type }
     end
 
@@ -507,6 +508,10 @@ module Crepe
       status code
       message ||= Rack::Utils::HTTP_STATUS_CODES[status]
       { error: { message: message }.merge(data) }
+    end
+
+    def accepts
+      Util.media_type(params[:format]) || request.headers['Accept'] || '*/*'
     end
 
   end

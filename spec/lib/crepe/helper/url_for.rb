@@ -36,23 +36,6 @@ describe Crepe::Helper::URLFor
         get('/').body.should eq '"http://example.org/users/1/posts"'
       end
     end
-
-    context 'versioning' do
-      app { version(:v2) { get { url_for :users } } }
-
-      it 'renders the URL with a path-based version' do
-        get('/v2').body.should eq '"http://example.org/v2/users"'
-      end
-
-      it 'renders the URL with a query-based version' do
-        get('/?v=v2').body.should eq '"http://example.org/users?v=v2"'
-      end
-
-      it 'renders the URL without a version' do
-        get('/', {}, 'HTTP_ACCEPT' => 'application/vnd.crepe-v2')
-        last_response.body.should eq '"http://example.org/users"'
-      end
-    end
   end
 
 end
