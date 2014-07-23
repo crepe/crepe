@@ -11,8 +11,12 @@ Gem::Specification.new do |s|
 
   s.has_rdoc    = false
 
-  s.authors     = ['Stephen Celis', 'Evan Owen']
-  s.email       = %w[stephen@stephencelis.com kainosnoema@gmail.com]
+  s.authors     = ['Stephen Celis', 'Evan Owen', 'David Celis']
+  s.email       = %w[
+    stephen@stephencelis.com
+    kainosnoema@gmail.com
+    me@davidcel.is
+  ]
   s.homepage    = 'https://github.com/crepe/crepe'
 
   s.required_ruby_version = '>= 2.0.0'
