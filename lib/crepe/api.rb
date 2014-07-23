@@ -435,22 +435,22 @@ module Crepe
       # @param [Array<Symbol>] formats a list of formats to respond to
       # @see .generate_options_routes!
       def generate_options_route! path, allowed, formats
-        scope do
-          respond_to(*formats)
-          route 'OPTIONS', path do
-            headers['Allow'] = allowed.join ', '
-            { allow: allowed }
-          end
-          route METHODS - allowed, path do
-            headers['Allow'] = allowed.join ', '
-            error! :method_not_allowed, allow: allowed
-          end
+        respond_to(*formats)
+        route 'OPTIONS', path do
+          headers['Allow'] = allowed.join ', '
+          { allow: allowed }
+        end
+        route METHODS - allowed, path do
+          headers['Allow'] = allowed.join ', '
+          error! :method_not_allowed, allow: allowed
         end
       end
 
       def configured_routes(exclude: [])
-        generate_options_routes!
-        @@catch ||= any('*catch') { error! :not_found } # generate root 404
+        config endpoint: Endpoint do
+          generate_options_routes!
+          @@catch ||= any('*catch') { error! :not_found } # generate root 404
+        end
 
         routes.map do |app, conditions, defaults, config|
           if app.is_a?(Class) && app < API
