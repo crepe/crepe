@@ -339,7 +339,7 @@ module Crepe
     #
     # @note Called automatically before an endpoint executes.
     # @return [void]
-    # @see API.parse
+    # @see .parse
     def parse body, options = {}
       request.body = parser.parse body
       @params = params.merge request.body if request.body.is_a? Hash
@@ -350,8 +350,8 @@ module Crepe
     # @note Called automatically with an endpoint's return value.
     # @return [String] the rendered response body
     # @raise [DoubleRenderError] if the response body has already rendered
-    # @see API.render
-    # @see API.respond_to
+    # @see .render
+    # @see .respond_to
     def render object, options = {}
       headers['Content-Type'] ||= content_type
       raise DoubleRenderError, 'body already rendered' if response.body
@@ -393,7 +393,7 @@ module Crepe
     #   ]
     #
     # @return [void]
-    # @see API.rescue_from
+    # @see .rescue_from
     def error! code = :bad_request, message = nil, **data
       throw :halt, error(code, message, data)
     end
@@ -404,7 +404,7 @@ module Crepe
     #
     # @return [void]
     # @see #error!
-    # @see API.basic_auth
+    # @see .basic_auth
     def unauthorized! message = nil, **data
       realm = data.delete(:realm) { config[:vendor] }
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
