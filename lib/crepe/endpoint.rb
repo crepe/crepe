@@ -12,8 +12,9 @@ module Crepe
     @config = {
       callbacks: { before: [], after: [] },
       formats: [:json],
-      parsers: Hash.new(Parser::Simple),
       renderers: Hash.new(Renderer::Simple),
+      parses: [:json],
+      parsers: Hash.new(Parser::Simple),
       rescuers: {
         Params::Missing => -> e { error! :bad_request, e.message, e.data },
         Params::Invalid => -> e { error! :bad_request, e.message, e.data }
@@ -38,15 +39,15 @@ module Crepe
         define_method :_run_handler, &@handler
       end
 
-      # Defines supported formats (mime types) for a scope.
+      # Defines supported response formats (mime types) for a scope.
       #
       #   respond_to :json, :xml
       #
       # These formats will override any that are defined in parent scopes.
       #
-      # Renderers can be defined at the same time:
+      # Renderers can be defined at the same time.
       #
-      #   respond_to csv: CSVRenderer.new
+      #   respond_to csv: CSVRenderer
       #   # class CSVRenderer < Crepe::Renderer::Base
       #   #   def render resource, options = {}
       #   #     super.to_csv
@@ -73,20 +74,38 @@ module Crepe
         formats.each { |f| config[:renderers][f] = renderer }
       end
 
+      # Defines supported request formats (mime types) for a scope.
+      #
+      # E.g., to parse form data instead of the default, JSON:
+      #
+      #   parses(*Rack::Request::FORM_DATA_MEDIA_TYPES)
+      #
+      # These formats will override any that are defined in parent scopes.
+      #
+      # Parsers can be defined at the same time.
+      #
+      #   parses csv: CSVParser
+      #   # class CSVParser < Struct.new :endpoint
+      #   #   def parse body
+      #   #     CSV.table body
+      #   #   end
+      #   # end
+      def parses *media_types, **parsers
+        config[:parses] = media_types | parsers.keys
+        parsers.each { |media_type, parser| parse media_type, with: parser }
+      end
+
       # Defines a custom request body parser for the specified content types.
       #
       #   parse :csv, with: CSVParser.new
-      #   # class CSVParser < Struct.new :endpoint
-      #   #   def parse body
-      #   #     CSV.parse body
-      #   #   end
-      #   # end
+      #
+      # An endpoint must support the media type for it to be parsed.
       #
       # @return [void]
+      # @see .parses
       def parse *media_types, **options
         parser = options.fetch :with
-        media_types = Util.media_types media_types
-        media_types.each { |t| config[:parsers][t] = parser }
+        Util.media_types(media_types).each { |t| config[:parsers][t] = parser }
       end
 
       # Rescues exceptions raised in endpoints.
@@ -341,6 +360,10 @@ module Crepe
     # @return [void]
     # @see .parse
     def parse body, options = {}
+      unless Util.media_types(config[:parses]).include? request.media_type
+        error! :unsupported_media_type,
+          %(Content-Type "#{request.media_type}" not supported)
+      end
       request.body = parser.parse body
       @params = params.merge request.body if request.body.is_a? Hash
     end
