@@ -12,7 +12,6 @@ The thin API stack.
 ``` ruby
 # config.ru
 require 'crepe'
-require 'twitter_api/v1'
 
 class TwitterAPI < Crepe::API
   extend Crepe::Streaming
@@ -20,11 +19,12 @@ class TwitterAPI < Crepe::API
   let!(:current_user)       { User.authorize!(*request.credentials) }
 
   namespace :statuses do
-    # helpers
-    let(:tweet_params)      {
-      params.require(:status).permit :message, :in_reply_to_status_id
-    }
-    let(:current_tweet)     { current_user.tweets.find params[:id] }
+    helper do
+      let(:tweet_params)    {
+        params.require(:status).permit :message, :in_reply_to_status_id
+      }
+      let(:current_tweet)   { current_user.tweets.find params[:id] }
+    end
 
     # endpoints
     get(:home_timeline)     { current_user.timeline }
