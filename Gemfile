@@ -3,6 +3,6 @@ gemspec
 
 group :development do
   gem 'rack', github: 'rack/rack'
-  gem 'puma', github: 'puma/puma'
+  gem 'puma'
   gem 'pry'
 end
