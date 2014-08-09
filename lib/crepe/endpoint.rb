@@ -428,10 +428,9 @@ module Crepe
     # @return [void]
     # @see #error!
     # @see .basic_auth
-    def unauthorized! message = nil, **data
-      realm = data.delete(:realm) { config[:vendor] }
+    def unauthorized! message = 'Unauthorized', realm: 'API', **data
       headers['WWW-Authenticate'] = %(Basic realm="#{realm}")
-      error! :unauthorized, message || data.delete(:message), data
+      error! :unauthorized, message, data
     end
 
     # Throws a formatted 406 Not Acceptable error response.
