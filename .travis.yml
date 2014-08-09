@@ -1,6 +1,5 @@
 language: ruby
 rvm:
-  - 2.0.0
   - 2.1.2
 before_install:
   - gem install minitest -v '4.7.5' --no-document --quiet
