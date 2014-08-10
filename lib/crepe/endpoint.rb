@@ -69,9 +69,8 @@ module Crepe
       #
       # @return [void]
       # @see .respond_to
-      def render *formats, **options
-        renderer = options.fetch :with
-        formats.each { |f| config[:renderers][f] = renderer }
+      def render(*formats, with:)
+        formats.each { |f| config[:renderers][f] = with }
       end
 
       # Defines supported request formats (mime types) for a scope.
@@ -103,9 +102,8 @@ module Crepe
       #
       # @return [void]
       # @see .parses
-      def parse *media_types, **options
-        parser = options.fetch :with
-        Util.media_types(media_types).each { |t| config[:parsers][t] = parser }
+      def parse(*media_types, with:)
+        Util.media_types(media_types).each { |t| config[:parsers][t] = with }
       end
 
       # Rescues exceptions raised in endpoints.
