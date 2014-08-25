@@ -454,21 +454,13 @@ module Crepe
 
         routes.map do |app, conditions, defaults, config|
           if app.is_a?(Class) && app < API
-            app = configure_api_subclass app, exclude: exclude
+            app = configure_subclass(app, :API).to_app exclude: exclude
           elsif app.is_a?(Class) && app < config[:endpoint]
-            app = configure_endpoint_subclass app
+            app = configure_subclass app, :Endpoint
           end
 
           [app, conditions, defaults]
         end
-      end
-
-      def configure_api_subclass klass, options
-        configure_subclass(klass, 'API').to_app options
-      end
-
-      def configure_endpoint_subclass klass
-        configure_subclass(klass, 'Endpoint')
       end
 
       def configure_subclass klass, name
