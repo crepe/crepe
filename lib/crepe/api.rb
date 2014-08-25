@@ -456,7 +456,7 @@ module Crepe
           if app.is_a?(Class) && app < API
             app = configure_api_subclass app, exclude: exclude
           elsif app.is_a?(Class) && app < config[:endpoint]
-            app = configure_endpoint_subclass app, config
+            app = configure_endpoint_subclass app
           end
 
           [app, conditions, defaults]
@@ -464,15 +464,17 @@ module Crepe
       end
 
       def configure_api_subclass klass, options
-        api = Class.new klass
-        Crepe.const_set "#{klass.name || 'API'}_#{api.object_id}", api
-        api.to_app options
+        configure_subclass(klass, 'API').to_app options
       end
 
-      def configure_endpoint_subclass klass, config
-        Class.new(klass).tap do |ep|
-          Crepe.const_set "#{klass.name || 'Endpoint'}_#{ep.object_id}", ep
-        end
+      def configure_endpoint_subclass klass
+        configure_subclass(klass, 'Endpoint')
+      end
+
+      def configure_subclass klass, name
+        sub = Class.new klass
+        name = "#{klass.name.try(:gsub, /\W/, '_') || name}_#{sub.object_id}"
+        Crepe.const_set name, sub
       end
 
     end
