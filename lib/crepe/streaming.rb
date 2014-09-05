@@ -49,7 +49,7 @@ module Crepe
     # @see API.route
     # @see Helper#stream
     def stream *args, &block
-      get(*args) { stream { instance_eval(&block) } }
+      get(*args) { stream { |io| instance_exec io, &block } }
     end
 
     # Streaming helper method module.
@@ -66,20 +66,20 @@ module Crepe
           headers['Transfer-Encoding'] = 'chunked'
           headers['rack.hijack'] = -> io do
             begin
-              @stream = ChunkedIO.new io
+              @_stream = ChunkedIO.new io
               run_callbacks :before_stream
-              yield
+              yield @_stream
             ensure
               begin
                 run_callbacks :after_stream
               ensure
-                @stream.close
+                @_stream.close
               end
             end
           end
           throw :halt
         end
-        @stream if defined? @stream
+        @_stream if defined? @_stream
       end
 
       # Renders a resource and newline to the stream.
