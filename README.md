@@ -1,4 +1,4 @@
-# Crêpe [![Build Status][1]][2] [![Code Climate][3]][4]
+# Crepe [![Build Status][1]][2] [![Code Climate][3]][4]
 
 The thin API stack.
 
