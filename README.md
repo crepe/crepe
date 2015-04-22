@@ -1,69 +1,143 @@
 # Crepe [![Build Status][1]][2] [![Code Climate][3]][4]
 
-The thin API stack.
+Crepe is a lightweight API framework designed to help you write clean, fast web services in Ruby. With an elegant and intuitive DSL inspired by RSpec, and with a nod to Grape, Crepe makes API design simple.
 
 [1]: https://img.shields.io/travis/crepe/crepe.svg?style=flat
 [2]: https://travis-ci.org/crepe/crepe
 [3]: https://img.shields.io/codeclimate/github/crepe/crepe.svg?style=flat
 [4]: https://codeclimate.com/github/crepe/crepe
 
-## Example
+## Installation
 
-``` ruby
+In your application's Gemfile:
+
+```ruby
+gem 'crepe', github: 'crepe/crepe'
+```
+
+If you're coming from Rails and/or you want a Crepe application with a thought-out file structure, you can use [creperie][creperie] to generate a new API:
+
+```bash
+$ gem install creperie
+$ crepe new my_api
+```
+
+[creperie]: https://github.com/crepe/creperie
+
+## Usage
+
+Crepe APIs are, at their core, Rack applications. They can be created by subclassing `Crepe::API`. To detail Crepe's major features, we'll show how [GitHub's Gist API][gist-api] could be written using Crepe:
+
+[gist-api]: https://developer.github.com/v3/gists/
+
+```ruby
 # config.ru
+require 'bundler/setup'
 require 'crepe'
 
-class TwitterAPI < Crepe::API
-  extend Crepe::Streaming
+module Gist
+  class API < Crepe::API
+    # Like `let` in RSpec, this defines a lazy-loading helper.
+    let(:current_user) { User.authorize!(request.headers['Authorization']) }
 
-  let!(:current_user)       { User.authorize!(*request.credentials) }
+    namespace :gists do
+      let(:gist_params) { params.slice(:files, :description, :public) }
 
-  namespace :statuses do
-    helper do
-      let(:tweet_params)    {
-        params.require(:status).permit :message, :in_reply_to_status_id
-      }
-      let(:current_tweet)   { current_user.tweets.find params[:id] }
+      get do
+        begin
+          current_user.gists.limit(30)
+        rescue User::Unauthorized
+          Gist.limit(30)
+        end
+      end
+
+      post { Gist.create(gist_params) }
+
+      get(:public) { Gist.limit(30) }
+
+      get(:starred) { current_user.starred_gists }
+
+      # Specify a parameter as part of the namespace: /gists/:id/...
+      param :id do
+        let(:gist) { Gist.find(params[:id]) }
+
+        get    { gist }
+        put    { gist.update_attributes(gist_params) }
+        patch  { gist.update_attributes(gist_params) }
+        delete do
+          if gist.user == current_user
+            gist.destroy && head :no_content
+          else
+            error! :unauthorized
+          end
+        end
+
+        get('/:sha') { gist.revisions.find(params[:sha]) }
+        get(:commits) { gist.commits.limit(30) }
+
+        get :star do
+          current_user.starred?(gist)
+            head :no_content
+          else
+            head :not_found
+          end
+        end
+        put(:star)    { current_user.star(gist) }
+        delete(:star) { current_user.unstar(gist) }
+
+        get(:forks)  { gist.forks.limit(30) }
+        post(:forks) { current_user.fork(gist) }
+      end
     end
 
-    # endpoints
-    get(:home_timeline)     { current_user.timeline }
-    get(:mentions_timeline) { current_user.mentions }
-    get(:user_timeline)     { current_user.tweets }
-    get(:retweets_of_me)    { current_user.tweets.retweeted }
+    rescue_from ActiveRecord::RecordNotFound do |e|
+      error! :not_found, e.message
+    end
 
-    post(:update)           { current_user.tweets.create! tweet_params }
-    get('show/:id')         { current_tweet }
-    get('retweets/:id')     { current_tweet.retweets }
-    post('destroy/:id')     { current_tweet.destroy }
-    post('retweet/:id')     { current_user.retweet! Tweet.find params[:id] }
+    rescue_from ActiveRecord::InvalidRecord do |e|
+      error! :unprocessable_entity, e.message, errors: e.record.errors
+    end
 
-    stream(:firehose)       { Tweet.stream { |t| render t } }
-    stream(:sample)         { Tweet.sample.stream { |t| render t } }
-  end
-
-  get('search/tweets')      { Tweet.search params.slice Tweet::SEARCH_KEYS }
-  stream(:user)             { current_user.timeline.stream { |t| render t } }
-
-  rescue_from ActiveRecord::RecordNotFound do |e|
-    error! :not_found, e.message
-  end
-  rescue_from ActiveRecord::InvalidRecord do |e|
-    error! :unprocessable_entity, e.message, errors: e.record.errors
-  end
-  rescue_from User::Unauthorized do |e|
-    unauthorized! realm: 'Twitter API'
+    rescue_from User::Unauthorized do |e|
+      unauthorized! realm: 'Gist API'
+    end
   end
 end
 
-run TwitterAPI
+run Gist::API
 ```
+
+The above example will give you a Rack application that you can run with the `rackup` command, respoding to the following routes:
+
+```
+GET    /gists
+POST   /gists
+GET    /gists/public
+GET    /gists/starred
+GET    /gists/:id
+PUT    /gists/:id
+PATCH  /gists/:id
+DELETE /gists/:id
+GET    /gists/:id/:sha
+GET    /gists/:id/commits
+GET    /gists/:id/star
+PUT    /gists/:id/star
+DELETE /gists/:id/star
+GET    /gists/:id/forks
+POST   /gists/:id/forks
+```
+
+## Advanced usage
+
+The above example only skims the surface of what Crepe can do. For more information, see the [Crepe wiki][wiki].
+
+[wiki]: https://github.com/crepe/crepe/wiki
 
 ## License
 
 (The MIT License.)
 
-© 2013–2014 Stephen Celis <stephen@stephencelis.com>
+© 2013–2015 Stephen Celis <stephen@stephencelis.com>, Evan Owen <kainosnoema@gmail.com>, David Celis <me@davidcel.is>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal
