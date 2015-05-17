@@ -1,6 +1,8 @@
 # Crepe [![Build Status][1]][2] [![Code Climate][3]][4]
 
-Crepe is a lightweight API framework designed to help you write clean, fast web services in Ruby. With an elegant and intuitive DSL inspired by RSpec, and with a nod to Grape, Crepe makes API design simple.
+Crepe is a lightweight API framework designed to help you write clean, fast web
+services in Ruby. With an elegant and intuitive DSL inspired by RSpec, and with
+a nod to Grape, Crepe makes API design simple.
 
 [1]: https://img.shields.io/travis/crepe/crepe.svg?style=flat
 [2]: https://travis-ci.org/crepe/crepe
@@ -15,7 +17,9 @@ In your application's Gemfile:
 gem 'crepe', github: 'crepe/crepe'
 ```
 
-If you're coming from Rails and/or you want a Crepe application with a thought-out file structure, you can use [creperie][creperie] to generate a new API:
+If you're coming from Rails and/or you want a Crepe application with a
+thought-out file structure, you can use [creperie][creperie] to generate a new
+API:
 
 ```bash
 $ gem install creperie
@@ -26,7 +30,9 @@ $ crepe new my_api
 
 ## Usage
 
-Crepe APIs are, at their core, Rack applications. They can be created by subclassing `Crepe::API`. To detail Crepe's major features, we'll show how [GitHub's Gist API][gist-api] could be written using Crepe:
+Crepe APIs are, at their core, Rack applications. They can be created by
+subclassing `Crepe::API`. To detail Crepe's major features, we'll show how
+[GitHub's Gist API][gist-api] could be written using Crepe:
 
 [gist-api]: https://developer.github.com/v3/gists/
 
@@ -108,7 +114,8 @@ end
 run Gist::API
 ```
 
-The above example will give you a Rack application that you can run with the `rackup` command, responding to the following routes:
+The above example will give you a Rack application that you can run with the
+`rackup` command, responding to the following routes:
 
 ```
 GET    /gists
@@ -130,7 +137,8 @@ POST   /gists/:id/forks
 
 ## Advanced usage
 
-The above example only skims the surface of what Crepe can do. For more information, see the [Crepe wiki][wiki].
+The above example only skims the surface of what Crepe can do. For more
+information, see the [Crepe wiki][wiki].
 
 [wiki]: https://github.com/crepe/crepe/wiki
 
