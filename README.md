@@ -66,13 +66,14 @@ module Gist
         patch  { gist.update_attributes(gist_params) }
         delete do
           if gist.user == current_user
-            gist.destroy && head :no_content
+            gist.destroy and head :no_content
           else
             error! :unauthorized
           end
         end
 
-        get('/:sha') { gist.revisions.find(params[:sha]) }
+        # Specify a parameter constraint, e.g. a 40-character hex string
+        param(sha: /\h{40}/) { gist.revisions.find(params[:sha]) }
         get(:commits) { gist.commits.limit(30) }
 
         get :star do
@@ -107,7 +108,7 @@ end
 run Gist::API
 ```
 
-The above example will give you a Rack application that you can run with the `rackup` command, respoding to the following routes:
+The above example will give you a Rack application that you can run with the `rackup` command, responding to the following routes:
 
 ```
 GET    /gists
