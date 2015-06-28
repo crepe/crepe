@@ -22,7 +22,7 @@ thought-out file structure, you can use [creperie][creperie] to generate a new
 API:
 
 ```bash
-$ gem install creperie
+$ gem install creperie --pre
 $ crepe new my_api
 ```
 
