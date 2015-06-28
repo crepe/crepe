@@ -83,7 +83,7 @@ module Gist
         get(:commits) { gist.commits.limit(30) }
 
         get :star do
-          current_user.starred?(gist)
+          if current_user.starred?(gist)
             head :no_content
           else
             head :not_found
