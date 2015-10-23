@@ -8,6 +8,8 @@ module Crepe
 
     attr_accessor :status
 
+    attr_accessor :headers
+
     attr_accessor :body
 
     def initialize
