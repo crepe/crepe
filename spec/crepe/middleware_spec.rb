@@ -47,7 +47,7 @@ describe Crepe::API, "middleware" do
       app { scope(:api) { use middleware } }
 
       it "raises an exception" do
-        expect { app }.to raise_error
+        expect { app }.to raise_error(ArgumentError)
       end
     end
 

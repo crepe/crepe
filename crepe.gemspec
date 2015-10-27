@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.1.0'
 
   s.add_dependency 'activesupport', '>= 4.0.0'
-  s.add_dependency 'rack',          '~> 2.0.x'
+  s.add_dependency 'rack',          '~> 1.6.x'
   s.add_dependency 'rack-mount',    '~> 0.8.x'
 
   s.add_development_dependency 'cane',      '~> 2.6.x'

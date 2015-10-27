@@ -13,7 +13,9 @@ describe Crepe::Params do
     end
 
     context 'with a missing key' do
-      it { expect { params.require :missing }.to raise_error }
+      subject { params.require :missing }
+
+      it { expect { subject }.to raise_error(Crepe::Params::Missing) }
     end
   end
 
@@ -35,9 +37,10 @@ describe Crepe::Params do
 
     context 'with an insecure key' do
       let(:input) { { permitted: 1 } }
+      subject { params.permit :invalid }
 
       it { expect(params).not_to be_permitted }
-      it { expect { params.permit :invalid }.to raise_error }
+      it { expect { subject }.to raise_error(Crepe::Params::Invalid) }
     end
   end
 
