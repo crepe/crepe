@@ -3,3 +3,4 @@ rvm:
   - 2.1.2
 before_install:
   - gem install minitest -v '4.7.5' --no-document --quiet
+sudo: false
