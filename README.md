@@ -6,7 +6,7 @@ a nod to Grape, Crepe makes API design simple.
 
 [1]: https://img.shields.io/travis/crepe/crepe.svg?style=flat
 [2]: https://travis-ci.org/crepe/crepe
-[3]: https://img.shields.io/codeclimate/github/crepe/crepe.svg?style=flat
+[3]: https://img.shields.io/codeclimate/maintainability/crepe/crepe.svg?style=flat&label=code%20climate
 [4]: https://codeclimate.com/github/crepe/crepe
 
 ## Installation
